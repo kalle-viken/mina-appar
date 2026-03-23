@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TransSäk – Affärssystem v4</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0D3A6E;--navy2:#1A5A9E;--orange:#F47C20;--od:#D4630E;
+  --light:#EAF0F7;--lg:#F7F8FB;--gray:#8A9BB0;--text:#1C2B3A;
+  --white:#fff;--green:#1A6E3A;--red:#A32D2D;--bd:#D0D8E8;
+  --purple:#5B3FA0;--teal:#0F6E56;--amber:#B45309;
+}
+body{font-family:Arial,sans-serif;background:var(--lg);color:var(--text);font-size:14px}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:228px;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
+.main{margin-left:228px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:2px solid var(--orange);padding:11px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.content{padding:24px;flex:1}
+.logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-name{font-size:22px;font-weight:700;color:var(--white)}.logo-name span{color:var(--orange)}
+.logo-sub{font-size:10px;color:var(--gray);letter-spacing:2px;margin-top:2px}
+nav{padding:10px 0;flex:1}
+nav a{display:flex;align-items:center;gap:9px;padding:10px 16px;color:var(--gray);font-size:13px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+nav a:hover{color:var(--white);background:rgba(255,255,255,.06)}
+nav a.active{color:var(--white);background:rgba(244,124,32,.15);border-left-color:var(--orange)}
+nav a.alert-item{color:#FCA5A5}
+nav a.alert-item.active{background:rgba(163,45,45,.2);border-left-color:var(--red)}
+.nav-section{padding:10px 16px 4px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2px;font-weight:700;margin-top:4px}
+.sidebar-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:var(--gray)}
+.page-title{font-size:17px;font-weight:700;color:var(--navy)}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--orange);color:var(--white)}.btn-primary:hover{background:var(--od)}
+.btn-secondary{background:var(--white);color:var(--navy);border:1.5px solid var(--bd)}.btn-secondary:hover{border-color:var(--navy)}
+.btn-navy{background:var(--navy);color:var(--white)}.btn-navy:hover{background:var(--navy2)}
+.btn-success{background:var(--green);color:var(--white)}
+.btn-danger{background:var(--red);color:var(--white)}
+.btn-amber{background:var(--amber);color:var(--white)}
+.btn-teal{background:var(--teal);color:var(--white)}
+.btn-sm{padding:5px 10px;font-size:12px}.btn-xs{padding:3px 8px;font-size:11px}
+.card{background:var(--white);border-radius:10px;border:1px solid var(--bd);overflow:hidden;margin-bottom:20px}
+.card:last-child{margin-bottom:0}
+.card-header{padding:13px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:13px;font-weight:700;color:var(--navy)}
+.card-body{padding:18px}
+.stats{display:grid;gap:14px;margin-bottom:20px}
+.s4{grid-template-columns:repeat(4,1fr)}.s3{grid-template-columns:repeat(3,1fr)}.s2{grid-template-columns:repeat(2,1fr)}
+.stat{background:var(--white);border-radius:10px;padding:16px 18px;border:1px solid var(--bd);border-bottom:3px solid var(--bd)}
+.stat.c-or{border-bottom-color:var(--orange)}.stat.c-nv{border-bottom-color:var(--navy)}
+.stat.c-gn{border-bottom-color:var(--green)}.stat.c-rd{border-bottom-color:var(--red)}
+.stat.c-pu{border-bottom-color:var(--purple)}.stat.c-tl{border-bottom-color:var(--teal)}
+.stat.c-am{border-bottom-color:var(--amber)}
+.stat-label{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-sub{font-size:11px;color:var(--gray);margin-top:3px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--navy);color:var(--white);padding:9px 12px;font-size:11px;font-weight:600;text-align:left;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--bd);font-size:12px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--lg)}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-green{background:#D4EDDA;color:var(--green)}.b-red{background:#F8D7DA;color:var(--red)}
+.b-orange{background:#FFE8D0;color:var(--od)}.b-gray{background:var(--light);color:var(--gray)}
+.b-navy{background:#dce8f5;color:var(--navy)}.b-purple{background:#EDE7F6;color:var(--purple)}
+.b-teal{background:#D4EDE8;color:var(--teal)}.b-amber{background:#FEF3C7;color:var(--amber)}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fg label{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{padding:8px 11px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;font-family:Arial,sans-serif;color:var(--text);background:var(--white)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--navy)}
+.fg textarea{resize:vertical;min-height:70px}
+.fg input[readonly]{background:var(--lg);color:var(--gray)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)}
+.inv-row{display:grid;grid-template-columns:3fr 70px 110px 70px 100px 28px;gap:6px;align-items:center;margin-bottom:6px}
+.inv-row-hdr{display:grid;grid-template-columns:3fr 70px 110px 70px 100px 28px;gap:6px;margin-bottom:4px}
+.inv-row-hdr span{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.inv-row-hdr span:nth-child(n+2){text-align:right}
+.inv-row input,.inv-row select{padding:6px 8px;border:1.5px solid var(--bd);border-radius:5px;font-size:12px}
+.inv-row input:nth-child(n+2){text-align:right}
+.del-btn{background:none;border:none;color:var(--gray);cursor:pointer;font-size:14px;border-radius:4px;padding:3px}
+.del-btn:hover{color:var(--red)}
+.totals-block{background:var(--lg);border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.total-line{display:flex;gap:60px;font-size:13px}
+.total-line span:first-child{color:var(--gray)}.total-line span:last-child{font-weight:600;min-width:90px;text-align:right}
+.total-grand{border-top:2px solid var(--orange);padding-top:8px;margin-top:4px;font-size:15px;font-weight:700;color:var(--navy)}
+.total-grand span:last-child{color:var(--orange)}
+.inv-preview{background:var(--white);padding:28px;max-width:700px;margin:0 auto;font-size:12px}
+.inv-ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid var(--orange)}
+.inv-logo .big{font-size:28px;font-weight:700;color:var(--navy)}.inv-logo .big span{color:var(--orange)}
+.inv-logo .sub{font-size:10px;color:var(--gray);letter-spacing:2px}
+.inv-meta-r{text-align:right}.inv-meta-r .nr{font-size:20px;font-weight:700;color:var(--navy)}
+.inv-parties{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.inv-pl{font-size:9px;font-weight:700;color:var(--gray);letter-spacing:2px;margin-bottom:5px;padding-bottom:3px;border-bottom:2px solid var(--orange)}
+.inv-pn{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px}.inv-pd{color:var(--gray)}
+.inv-tbl{width:100%;border-collapse:collapse;margin-bottom:14px}
+.inv-tbl th{background:var(--navy);color:var(--white);padding:7px 9px;font-size:10px;text-align:left}
+.inv-tbl th:nth-child(n+2),.inv-tbl td:nth-child(n+2){text-align:right}
+.inv-tbl td{padding:7px 9px;border-bottom:1px solid var(--bd);font-size:11px}
+.inv-sum{display:flex;justify-content:flex-end;margin-bottom:16px}
+.inv-sum-box{width:240px}
+.inv-sum-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd)}
+.inv-total{display:flex;justify-content:space-between;padding:7px 10px;background:var(--navy);color:var(--white);font-weight:700;font-size:13px;margin-top:3px}
+.inv-total span:last-child{color:var(--orange)}
+.inv-pay{background:var(--light);padding:10px 14px;border-radius:6px;line-height:1.9;margin-bottom:14px;color:var(--gray)}
+.inv-pay strong{color:var(--navy)}
+.inv-foot{text-align:center;font-style:italic;color:var(--gray);padding-top:10px;border-top:1px solid var(--bd)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:12px;padding:26px;width:92%;max-width:860px;max-height:92vh;overflow-y:auto;position:relative}
+.modal-sm{max-width:560px}.modal h2{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:18px}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)}
+.modal-close:hover{color:var(--red)}
+.tabs{display:flex;gap:2px;margin-bottom:18px;background:var(--bd);padding:3px;border-radius:8px;width:fit-content}
+.tab{padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--gray)}
+.tab.active{background:var(--white);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.page{display:none}.page.active{display:block}
+.flex-end{display:flex;justify-content:flex-end;margin-bottom:14px;gap:8px}
+.flex-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.notice{padding:10px 14px;border-radius:7px;font-size:12px;margin-bottom:14px;line-height:1.7}
+.notice-info{background:#dce8f5;color:var(--navy2);border-left:3px solid var(--navy2)}
+.notice-warn{background:#FFE8D0;color:var(--od);border-left:3px solid var(--orange)}
+.notice-green{background:#D4EDDA;color:var(--green);border-left:3px solid var(--green)}
+.notice-red{background:#F8D7DA;color:var(--red);border-left:3px solid var(--red)}
+.result-bar{display:flex;align-items:stretch;border-radius:10px;overflow:hidden;border:1px solid var(--bd);margin-bottom:20px}
+.rb-item{flex:1;padding:16px 18px;background:var(--white);border-right:1px solid var(--bd);text-align:center}
+.rb-item:last-child{border-right:none}
+.rb-label{font-size:10px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.rb-value{font-size:20px;font-weight:700;color:var(--navy)}
+.rb-sign{font-size:20px;display:flex;align-items:center;justify-content:center;padding:0 10px;background:var(--lg);color:var(--gray);font-weight:700}
+.rb-result{background:var(--navy);padding:16px 24px}
+.rb-result .rb-label{color:rgba(255,255,255,.6)}
+.pipeline{display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid var(--bd)}
+.pipeline-step{flex:1;padding:14px;background:var(--white);border-right:1px solid var(--bd);cursor:pointer;transition:background .15s;text-align:center}
+.pipeline-step:last-child{border-right:none}
+.pipeline-step:hover{background:var(--lg)}
+.pipeline-step.active{background:var(--navy)}
+.pipeline-step .ps-count{font-size:26px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.pipeline-step.active .ps-count{color:var(--orange)}
+.pipeline-step .ps-label{font-size:10px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.pipeline-step.active .ps-label{color:rgba(255,255,255,.7)}
+.pipeline-arrow{display:flex;align-items:center;padding:0 4px;background:var(--white);color:var(--orange);font-size:18px;border-right:1px solid var(--bd)}
+.quote-chain{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray);flex-wrap:wrap}
+.chain-item{padding:2px 7px;border-radius:4px;background:var(--light);color:var(--navy);font-weight:600;cursor:pointer}
+.chain-item:hover{background:var(--navy);color:var(--white)}
+.chain-arrow{color:var(--orange)}
+
+/* ── INCIDENT SPECIFIC ── */
+.inc-tabs{display:flex;border-bottom:2px solid var(--bd);margin-bottom:0;gap:0}
+.inc-tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gray);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s}
+.inc-tab:hover{color:var(--navy)}
+.inc-tab.active{color:var(--navy);border-bottom-color:var(--orange)}
+.inc-tab.done{color:var(--green)}
+.inc-tab.done::after{content:" ✓";font-size:11px}
+.inc-pane{display:none;padding:20px 0 0}.inc-pane.active{display:block}
+.countdown{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700}
+.countdown.urgent{background:#F8D7DA;color:var(--red)}
+.countdown.warning{background:#FEF3C7;color:var(--amber)}
+.countdown.ok{background:#D4EDDA;color:var(--green)}
+.countdown.none{background:var(--light);color:var(--gray)}
+.chk-group{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.chk-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:6px;border:1.5px solid var(--bd);transition:all .15s}
+.chk-item:hover{border-color:var(--orange)}
+.chk-item input{cursor:pointer;accent-color:var(--orange)}
+.chk-item.checked{background:var(--light);border-color:var(--navy)}
+.inc-print{font-size:12px;line-height:1.8}
+.inc-print h3{color:var(--navy);font-size:13px;margin:14px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--orange)}
+.inc-print table{width:100%;border-collapse:collapse;margin-bottom:10px}
+.inc-print table td{padding:5px 8px;border:1px solid var(--bd);vertical-align:top}
+.inc-print table td:first-child{background:var(--light);font-weight:700;color:var(--navy);width:35%;font-size:11px}
+.inc-print .red-box{background:#F8D7DA;border-left:4px solid var(--red);padding:8px 12px;margin:10px 0;font-size:11px;color:#6B1C1C}
+.inc-print .section-nr{display:inline-block;background:var(--navy);color:var(--white);font-weight:700;font-size:10px;padding:2px 8px;border-radius:3px;margin-right:6px}
+
+@media print{.sidebar,.topbar,.btn,.overlay,.inc-tabs{display:none!important}.main{margin-left:0}.content{padding:0}.inv-preview,.inc-print{border:none;padding:0;max-width:100%}body{background:white}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">Trans<span>Säk</span></div>
+    <div class="logo-sub">AFFÄRSSYSTEM v4</div>
+  </div>
+  <nav>
+    <div class="nav-section">ÖVERSIKT</div>
+    <a class="active" onclick="nav('dashboard')" id="nav-dashboard">📊 Dashboard</a>
+    <a onclick="nav('pipeline')" id="nav-pipeline">🔄 Pipeline</a>
+    <div class="nav-section">FÖRSÄLJNING</div>
+    <a onclick="nav('quotes')" id="nav-quotes">📋 Offerter</a>
+    <a onclick="nav('new-quote')" id="nav-new-quote">✦ Ny offert</a>
+    <a onclick="nav('invoices')" id="nav-invoices">🧾 Fakturor</a>
+    <a onclick="nav('new-invoice')" id="nav-new-invoice">✦ Ny faktura</a>
+    <div class="nav-section">EKONOMI</div>
+    <a onclick="nav('expenses')" id="nav-expenses">🧾 Utgifter</a>
+    <a onclick="nav('new-expense')" id="nav-new-expense">✦ Ny utgift</a>
+    <a onclick="nav('drawings')" id="nav-drawings">💰 Eget uttag</a>
+    <a onclick="nav('kassabok')" id="nav-kassabok">📒 Kassabok</a>
+    <div class="nav-section">SÄKERHET</div>
+    <a onclick="nav('incidents')" id="nav-incidents">🚨 Incidenter</a>
+    <a onclick="nav('new-incident')" id="nav-new-incident">✦ Ny incident</a>
+    <div class="nav-section">REGISTER</div>
+    <a onclick="nav('customers')" id="nav-customers">🏢 Kunder</a>
+    <div class="nav-section">SYSTEM</div>
+    <a onclick="nav('backup')" id="nav-backup">💾 Backup & Export</a>
+  </nav>
+  <div class="sidebar-footer">Kalle Ericsson · TransSäk<br>kalle@viken.nu</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <div id="incident-alert" style="display:none"></div>
+      <button class="btn btn-secondary btn-sm" onclick="nav('backup')">💾 Backup</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportExcel()">⬇ Excel</button>
+      <button class="btn btn-primary btn-sm" onclick="nav('new-invoice')">+ Ny faktura</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div id="dash-incident-banner"></div>
+      <div class="stats s4">
+        <div class="stat c-or"><div class="stat-label">Inkomster exkl. moms</div><div class="stat-value" id="d-rev">0 kr</div><div class="stat-sub">innevarande år</div></div>
+        <div class="stat c-rd"><div class="stat-label">Utgifter exkl. moms</div><div class="stat-value" id="d-exp">0 kr</div><div class="stat-sub">innevarande år</div></div>
+        <div class="stat c-gn"><div class="stat-label">Resultat</div><div class="stat-value" id="d-profit">0 kr</div><div class="stat-sub">inkomster – utgifter</div></div>
+        <div class="stat c-nv"><div class="stat-label">Moms att betala</div><div class="stat-value" id="d-vat">0 kr</div><div class="stat-sub">utgående – ingående</div></div>
+      </div>
+      <div class="stats s4">
+        <div class="stat c-rd"><div class="stat-label">Obetalt</div><div class="stat-value" id="d-unpaid">0 kr</div><div class="stat-sub" id="d-unpaid-n"></div></div>
+        <div class="stat c-pu"><div class="stat-label">Aktiva offerter</div><div class="stat-value" id="d-qopen">0</div><div class="stat-sub" id="d-qval"></div></div>
+        <div class="stat c-tl"><div class="stat-label">Eget uttag i år</div><div class="stat-value" id="d-draw">0 kr</div><div class="stat-sub">påverkar ej resultatet</div></div>
+        <div class="stat c-am"><div class="stat-label">Aktiva incidenter</div><div class="stat-value" id="d-inc">0</div><div class="stat-sub" id="d-inc-sub">inga öppna</div></div>
+      </div>
+      <div class="notice notice-info">💡 <strong>Tumregel:</strong> Avsätt ca 40–45 % av resultatet för skatt. Du bör ha satt av ca <strong id="d-tax-set">0 kr</strong>.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><div class="card-header"><h3>Senaste aktivitet</h3></div><table><tbody id="d-recent"></tbody></table></div>
+        <div class="card"><div class="card-header"><h3>Obetalda + aktiva incidenter</h3></div><table><tbody id="d-unpaid-list"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="page" id="page-pipeline">
+      <div class="pipeline" id="pipeline-bar"></div>
+      <div class="card"><div class="card-header"><h3 id="pipeline-title">Alla affärer</h3></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Nr</th><th>Kund</th><th>Belopp</th><th>Datum</th><th>Status</th><th>Kedja</th><th>Åtgärd</th></tr></thead>
+          <tbody id="pipeline-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- QUOTES -->
+    <div class="page" id="page-quotes">
+      <div class="flex-between">
+        <div class="tabs">
+          <div class="tab active" onclick="filterQ('all',this)">Alla</div>
+          <div class="tab" onclick="filterQ('draft',this)">Utkast</div>
+          <div class="tab" onclick="filterQ('sent',this)">Skickade</div>
+          <div class="tab" onclick="filterQ('accepted',this)">Accepterade</div>
+          <div class="tab" onclick="filterQ('invoiced',this)">Fakturerade</div>
+          <div class="tab" onclick="filterQ('rejected',this)">Avvisade</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="nav('new-quote')">+ Ny offert</button>
+      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Offert nr</th><th>Datum</th><th>Gäller t.o.m.</th><th>Kund</th><th>Belopp</th><th>Status</th><th>Länkad till</th><th>Åtgärd</th></tr></thead>
+        <tbody id="quotes-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- NEW QUOTE -->
+    <div class="page" id="page-new-quote">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:18px">
+        <div class="card"><div class="card-header"><h3 id="qform-title">Ny offert</h3></div>
+          <div class="card-body">
+            <input type="hidden" id="q-edit-id">
+            <div class="g3">
+              <div class="fg"><label>Offertnummer</label><input type="text" id="q-nr" readonly></div>
+              <div class="fg"><label>Datum</label><input type="date" id="q-date"></div>
+              <div class="fg"><label>Giltig t.o.m.</label><input type="date" id="q-valid"></div>
+              <div class="fg span2"><label>Kund *</label><select id="q-customer" onchange="fillQC()"></select></div>
+              <div class="fg"><label>Er referens</label><input type="text" id="q-ref"></div>
+              <div class="fg span2"><label>Rubrik / ärende</label><input type="text" id="q-subject"></div>
+              <div class="fg span2"><label>Meddelande</label><textarea id="q-msg"></textarea></div>
+            </div>
+            <div class="inv-row-hdr" style="margin-top:8px"><span>Beskrivning</span><span>Antal</span><span>À-pris (kr)</span><span>Moms %</span><span>Rad totalt</span><span></span></div>
+            <div id="q-rows"></div>
+            <button class="btn btn-secondary btn-sm" onclick="addQR()" style="margin-top:8px">+ Rad</button>
+            <div class="totals-block"><div class="total-line"><span>Netto</span><span id="qt-net">0 kr</span></div><div class="total-line"><span>Moms</span><span id="qt-vat">0 kr</span></div><div class="total-line total-grand"><span>OFFERTPRIS</span><span id="qt-gross">0 kr</span></div></div>
+            <div class="form-actions"><button class="btn btn-secondary" onclick="clearQF()">Rensa</button><button class="btn btn-navy" onclick="saveQ('draft')">Utkast</button><button class="btn btn-primary" onclick="saveQ('sent')">Skapa &amp; förhandsgranska</button></div>
+          </div></div>
+        <div>
+          <div class="card" style="margin-bottom:14px"><div class="card-header"><h3>Kundinfo</h3></div><div class="card-body" id="q-cp" style="font-size:12px;color:var(--gray)">Välj kund</div></div>
+          <div class="card"><div class="card-header"><h3>Flöde</h3></div><div class="card-body" style="font-size:11px;color:var(--gray);line-height:2">Offert → Accepterad → Länka avtal → Faktura</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="flex-between">
+        <div class="tabs"><div class="tab active" onclick="filterI('all',this)">Alla</div><div class="tab" onclick="filterI('unpaid',this)">Obetalda</div><div class="tab" onclick="filterI('paid',this)">Betalda</div></div>
+        <div style="display:flex;gap:8px"><input type="text" placeholder="Sök…" oninput="searchI(this.value)" style="padding:6px 10px;border:1.5px solid var(--bd);border-radius:6px;font-size:12px;width:200px"><button class="btn btn-primary btn-sm" onclick="nav('new-invoice')">+ Ny faktura</button></div>
+      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Nr</th><th>Datum</th><th>Kund</th><th>Netto</th><th>Inkl.moms</th><th>Förfall</th><th>Status</th><th>Åtgärd</th></tr></thead>
+        <tbody id="inv-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- NEW INVOICE -->
+    <div class="page" id="page-new-invoice">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:18px">
+        <div class="card"><div class="card-header"><h3 id="iform-title">Ny faktura</h3></div>
+          <div class="card-body">
+            <input type="hidden" id="i-edit-id"><input type="hidden" id="i-qref">
+            <div class="g3">
+              <div class="fg"><label>Fakturanummer</label><input type="text" id="i-nr" readonly></div>
+              <div class="fg"><label>Datum</label><input type="date" id="i-date"></div>
+              <div class="fg"><label>Förfallodatum</label><input type="date" id="i-due"></div>
+              <div class="fg span2"><label>Kund *</label><select id="i-customer" onchange="fillIC()"></select></div>
+              <div class="fg"><label>Er referens</label><input type="text" id="i-ref"></div>
+              <div class="fg span2"><label>Fakturaadress</label><input type="text" id="i-addr"></div>
+            </div>
+            <div id="i-from-q" style="display:none" class="notice notice-green"></div>
+            <div class="inv-row-hdr" style="margin-top:8px"><span>Beskrivning</span><span>Antal</span><span>À-pris (kr)</span><span>Moms %</span><span>Rad totalt</span><span></span></div>
+            <div id="i-rows"></div>
+            <button class="btn btn-secondary btn-sm" onclick="addIR()" style="margin-top:8px">+ Rad</button>
+            <div class="totals-block"><div class="total-line"><span>Netto</span><span id="it-net">0 kr</span></div><div class="total-line"><span>Moms</span><span id="it-vat">0 kr</span></div><div class="total-line total-grand"><span>ATT BETALA</span><span id="it-gross">0 kr</span></div></div>
+            <div class="form-actions"><button class="btn btn-secondary" onclick="clearIF()">Rensa</button><button class="btn btn-navy" onclick="saveI('draft')">Utkast</button><button class="btn btn-primary" onclick="saveI('sent')">Skapa &amp; förhandsgranska</button></div>
+          </div></div>
+        <div>
+          <div class="card" style="margin-bottom:14px"><div class="card-header"><h3>Kundinfo</h3></div><div class="card-body" id="i-cp" style="font-size:12px;color:var(--gray)">Välj kund</div></div>
+          <div class="card"><div class="card-header"><h3>Betalningsinfo</h3></div><div class="card-body" style="font-size:11px;line-height:2"><strong>Bankgiro:</strong> XXXX-XXXX<br><strong>Villkor:</strong> 30 dagar netto<br><strong>Dröjsmålsränta:</strong> Ref.ränta + 8%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="page" id="page-expenses">
+      <div class="flex-between">
+        <div class="tabs"><div class="tab active" onclick="filterE('all',this)">Alla</div><div class="tab" onclick="filterE('Kursmaterial',this)">Material</div><div class="tab" onclick="filterE('Representation',this)">Fika/Rep.</div><div class="tab" onclick="filterE('Resor',this)">Resor</div><div class="tab" onclick="filterE('Lokal',this)">Lokal</div></div>
+        <button class="btn btn-primary btn-sm" onclick="nav('new-expense')">+ Ny utgift</button>
+      </div>
+      <div class="stats s3" id="exp-stats"></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Datum</th><th>Kategori</th><th>Beskrivning</th><th>Leverantör</th><th style="text-align:right">Belopp exkl.</th><th style="text-align:right">Moms</th><th>Kvitto</th><th>Åtgärd</th></tr></thead>
+        <tbody id="exp-tbody"></tbody>
+        <tfoot id="exp-tfoot"></tfoot>
+      </table></div></div>
+    </div>
+
+    <!-- NEW EXPENSE -->
+    <div class="page" id="page-new-expense">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:18px">
+        <div class="card"><div class="card-header"><h3 id="eform-title">Ny utgift</h3></div>
+          <div class="card-body">
+            <input type="hidden" id="e-edit-id">
+            <div class="g2">
+              <div class="fg"><label>Datum *</label><input type="date" id="e-date"></div>
+              <div class="fg"><label>Kategori *</label><select id="e-cat"><option value="">— Välj —</option><option>Kursmaterial</option><option>Böcker & facklitteratur</option><option>Representation & fika</option><option>Resor & milersättning</option><option>Lokal & hyra</option><option>IT & programvara</option><option>Telefon & internet</option><option>Försäkringar</option><option>Kontorsmaterial</option><option>Marknadsföring</option><option>Övrigt</option></select></div>
+              <div class="fg span2"><label>Beskrivning *</label><input type="text" id="e-desc"></div>
+              <div class="fg"><label>Leverantör</label><input type="text" id="e-supplier"></div>
+              <div class="fg"><label>Belopp exkl. moms (kr)</label><input type="number" id="e-net" step="1" oninput="calcE()"></div>
+              <div class="fg"><label>Moms %</label><select id="e-vat" onchange="calcE()"><option value="25">25 %</option><option value="12">12 %</option><option value="6">6 %</option><option value="0">0 %</option></select></div>
+              <div class="fg"><label>Totalt inkl. moms</label><input type="text" id="e-gross" readonly></div>
+              <div class="fg"><label>Kvittonummer</label><input type="text" id="e-receipt"></div>
+              <div class="fg span2"><label>Anteckning</label><textarea id="e-note"></textarea></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-secondary" onclick="clearEF()">Rensa</button><button class="btn btn-primary" onclick="saveExpense()">Spara utgift</button></div>
+          </div></div>
+        <div class="card"><div class="card-header"><h3>Avdragsgilla utgifter</h3></div><div class="card-body" style="font-size:12px;line-height:2">✓ Böcker & kursmaterial<br>✓ Kursfika (max 300kr/pers)<br>✓ Lokalhyra för kurser<br>✓ Milersättning<br>✓ IT & program<br>✓ Ansvarsförsäkring<br>✓ Marknadsföring</div></div>
+      </div>
+    </div>
+
+    <!-- DRAWINGS -->
+    <div class="page" id="page-drawings">
+      <div class="notice notice-info"><strong>Eget uttag:</strong> I enskild firma tar du inte lön – du gör uttag. Uttag påverkar <strong>inte</strong> resultatet. Du betalar skatt på överskottet oavsett uttag.</div>
+      <div class="stats s3"><div class="stat c-tl"><div class="stat-label">Totalt uttaget i år</div><div class="stat-value" id="dr-total">0 kr</div></div><div class="stat c-gn"><div class="stat-label">Resultat i år</div><div class="stat-value" id="dr-profit">0 kr</div></div><div class="stat c-nv"><div class="stat-label">Kvar i firman</div><div class="stat-value" id="dr-left">0 kr</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card"><div class="card-header"><h3>Registrera uttag</h3></div><div class="card-body"><div class="g2"><div class="fg"><label>Datum *</label><input type="date" id="dr-date"></div><div class="fg"><label>Belopp (kr) *</label><input type="number" id="dr-amount" min="0"></div><div class="fg span2"><label>Ändamål</label><input type="text" id="dr-note" placeholder="t.ex. Lön mars"></div></div><div class="form-actions" style="justify-content:flex-start"><button class="btn btn-teal" onclick="saveDrawing()">+ Registrera uttag</button></div></div></div>
+        <div class="card"><div class="card-header"><h3>Uttag i år</h3></div><table><thead><tr><th>Datum</th><th>Belopp</th><th>Ändamål</th><th></th></tr></thead><tbody id="dr-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- KASSABOK -->
+    <div class="page" id="page-kassabok">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="tabs"><div class="tab active" onclick="kbTab('all',this)">Allt</div><div class="tab" onclick="kbTab('income',this)">Inkomster</div><div class="tab" onclick="kbTab('expense',this)">Utgifter</div><div class="tab" onclick="kbTab('drawing',this)">Eget uttag</div></div>
+        <div style="display:flex;gap:8px"><select id="kb-year" onchange="renderKB()" style="padding:5px 9px;font-size:12px;border:1.5px solid var(--bd);border-radius:5px"><option>2025</option><option>2026</option><option>2027</option></select><button class="btn btn-secondary btn-sm" onclick="exportExcel()">⬇ Excel</button></div>
+      </div>
+      <div class="result-bar" id="kb-result-bar"></div>
+      <div class="card"><div class="card-header"><h3>Transaktioner</h3></div><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Typ</th><th>Nr</th><th>Beskrivning</th><th>Kategori</th><th style="text-align:right">Inkomst</th><th style="text-align:right">Utgift</th><th style="text-align:right">Moms ut</th><th style="text-align:right">Moms in</th></tr></thead><tbody id="kb-tbody"></tbody><tfoot id="kb-tfoot"></tfoot></table></div></div>
+    </div>
+
+    <!-- ═══ INCIDENTS LIST ═══ -->
+    <div class="page" id="page-incidents">
+      <div class="flex-between">
+        <div class="tabs">
+          <div class="tab active" onclick="filterInc('all',this)">Alla</div>
+          <div class="tab" onclick="filterInc('open',this)">Öppna</div>
+          <div class="tab" onclick="filterInc('reported',this)">Rapporterade</div>
+          <div class="tab" onclick="filterInc('closed',this)">Avslutade</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="nav('new-incident')">🚨 Ny incident</button>
+      </div>
+      <div class="stats s4" id="inc-stats"></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Rapport nr</th><th>Datum</th><th>Kund / Plats</th><th>Typ</th><th>Klassificering</th><th>Frist</th><th>Status</th><th>Åtgärd</th></tr></thead>
+        <tbody id="inc-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- ═══ NEW INCIDENT ═══ -->
+    <div class="page" id="page-new-incident">
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start">
+
+        <!-- MAIN FORM -->
+        <div class="card">
+          <div class="card-header">
+            <h3 id="incform-title">Ny incidentrapport</h3>
+            <div id="inc-countdown-badge"></div>
+          </div>
+          <div class="card-body" style="padding-bottom:0">
+            <input type="hidden" id="inc-edit-id">
+            <!-- TABS -->
+            <div class="inc-tabs">
+              <div class="inc-tab active" onclick="incTab(0)" id="itab-0">1. Grundinfo</div>
+              <div class="inc-tab" onclick="incTab(1)" id="itab-1">2. Händelse</div>
+              <div class="inc-tab" onclick="incTab(2)" id="itab-2">3. Konsekvenser</div>
+              <div class="inc-tab" onclick="incTab(3)" id="itab-3">4. Orsak & Åtgärd</div>
+              <div class="inc-tab" onclick="incTab(4)" id="itab-4">5. Myndigheter</div>
+            </div>
+
+            <!-- PANE 0: GRUNDINFO -->
+            <div class="inc-pane active" id="inc-pane-0">
+              <div class="g3">
+                <div class="fg"><label>Rapportnummer</label><input type="text" id="inc-nr" readonly></div>
+                <div class="fg"><label>Händelsedatum *</label><input type="date" id="inc-date" oninput="updateIncCountdown()"></div>
+                <div class="fg"><label>Rapportdatum</label><input type="date" id="inc-report-date"></div>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Kund / Uppdragsgivare</label><select id="inc-customer" onchange="fillIncCustomer()"><option value="">— Välj kund (valfritt) —</option></select></div>
+                <div class="fg"><label>Kontaktperson vid kund</label><input type="text" id="inc-contact" placeholder="Namn + telefon"></div>
+              </div>
+              <div class="fg"><label>Klassificering *</label>
+                <div class="chk-group" id="inc-class-group">
+                  <label class="chk-item"><input type="radio" name="inc-class" value="accident"> 🔴 Olycka (rapporteringsplikt)</label>
+                  <label class="chk-item"><input type="radio" name="inc-class" value="incident"> 🟠 Tillbud / Incident</label>
+                  <label class="chk-item"><input type="radio" name="inc-class" value="near-miss"> 🟡 Nära-olycka</label>
+                  <label class="chk-item"><input type="radio" name="inc-class" value="deviation"> ⚪ Intern avvikelse</label>
+                </div>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Plats (adress / väg)</label><input type="text" id="inc-location" placeholder="t.ex. E4 vid Helsingborg"></div>
+                <div class="fg"><label>Tidpunkt (klockslag)</label><input type="time" id="inc-time"></div>
+              </div>
+              <div class="fg"><label>Inblandat farligt gods (klass, UN-nr, benämning)</label>
+                <textarea id="inc-goods" placeholder="t.ex. Klass 3, UN 1203, Motorbensin, ca 500 L"></textarea>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Fordon (reg.nr)</label><input type="text" id="inc-vehicle"></div>
+                <div class="fg"><label>Förarens namn</label><input type="text" id="inc-driver"></div>
+              </div>
+              <div class="form-actions" style="justify-content:flex-end">
+                <button class="btn btn-primary" onclick="incTab(1)">Nästa →</button>
+              </div>
+            </div>
+
+            <!-- PANE 1: HÄNDELSE -->
+            <div class="inc-pane" id="inc-pane-1">
+              <div class="fg"><label>Beskriv händelseförloppet *</label>
+                <textarea id="inc-description" style="min-height:140px" placeholder="Vad hände? I vilken ordning? Vad observerades? Var detaljerad – rapporten kan användas i myndighetskontakter."></textarea>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Väder vid tillfället</label>
+                  <select id="inc-weather"><option value="">— Välj —</option><option>Klart/soligt</option><option>Mulet</option><option>Regn</option><option>Snö / Slask</option><option>Dimma</option><option>Stark vind</option></select>
+                </div>
+                <div class="fg"><label>Väglag</label>
+                  <select id="inc-road"><option value="">— Välj —</option><option>Torrt</option><option>Blött</option><option>Halt (is/snö)</option><option>Ej på väg</option></select>
+                </div>
+              </div>
+              <div class="fg"><label>Färdväg (från → till)</label><input type="text" id="inc-route" placeholder="t.ex. Malmö → Helsingborg via E6"></div>
+              <div class="fg"><label>Foton tagna?</label>
+                <div class="chk-group">
+                  <label class="chk-item"><input type="radio" name="inc-photos" value="yes"> Ja – antal: <input type="number" id="inc-photo-count" style="width:60px;padding:2px 6px;border:1.5px solid var(--bd);border-radius:4px;font-size:12px" min="0" value="0"></label>
+                  <label class="chk-item"><input type="radio" name="inc-photos" value="no"> Nej</label>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" onclick="incTab(0)">← Tillbaka</button>
+                <button class="btn btn-primary" onclick="incTab(2)">Nästa →</button>
+              </div>
+            </div>
+
+            <!-- PANE 2: KONSEKVENSER -->
+            <div class="inc-pane" id="inc-pane-2">
+              <div class="fg"><label>Personskador</label>
+                <div class="chk-group">
+                  <label class="chk-item"><input type="radio" name="inc-injury" value="none" checked> Inga personskador</label>
+                  <label class="chk-item"><input type="radio" name="inc-injury" value="minor"> Lindriga skador</label>
+                  <label class="chk-item"><input type="radio" name="inc-injury" value="serious"> Allvarliga skador</label>
+                  <label class="chk-item"><input type="radio" name="inc-injury" value="fatal"> Dödsfall</label>
+                </div>
+              </div>
+              <div class="fg"><label>Beskriv eventuella personskador</label>
+                <textarea id="inc-injuries" placeholder="Namn, typ av skada, transporterad till..."></textarea>
+              </div>
+              <div class="fg"><label>Utsläpp av farligt gods</label>
+                <div class="chk-group">
+                  <label class="chk-item"><input type="radio" name="inc-spill" value="no" checked> Inget utsläpp</label>
+                  <label class="chk-item"><input type="radio" name="inc-spill" value="minor"> Litet utsläpp</label>
+                  <label class="chk-item"><input type="radio" name="inc-spill" value="major"> Stort utsläpp</label>
+                </div>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Uppskattad utsläppt mängd</label><input type="text" id="inc-spill-amount" placeholder="t.ex. 20 liter"></div>
+                <div class="fg"><label>Sanering utförd av</label><input type="text" id="inc-cleanup" placeholder="t.ex. Räddningstjänsten Helsingborg"></div>
+              </div>
+              <div class="fg"><label>Egendomsskador</label>
+                <textarea id="inc-property" placeholder="Skadade fordon, last, infrastruktur... Uppskattad kostnad?"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" onclick="incTab(1)">← Tillbaka</button>
+                <button class="btn btn-primary" onclick="incTab(3)">Nästa →</button>
+              </div>
+            </div>
+
+            <!-- PANE 3: ORSAK & ÅTGÄRD -->
+            <div class="inc-pane" id="inc-pane-3">
+              <div class="fg"><label>Bidragande orsaker (välj alla som stämmer)</label>
+                <div class="chk-group" id="inc-causes-group" style="flex-direction:column">
+                  <label class="chk-item"><input type="checkbox" value="classification"> Felaktig klassificering</label>
+                  <label class="chk-item"><input type="checkbox" value="packaging"> Bristfällig förpackning / emballage</label>
+                  <label class="chk-item"><input type="checkbox" value="marking"> Fel märkning eller etikettering</label>
+                  <label class="chk-item"><input type="checkbox" value="securing"> Otillräcklig säkring av lasten</label>
+                  <label class="chk-item"><input type="checkbox" value="docs"> Bristande dokumentation</label>
+                  <label class="chk-item"><input type="checkbox" value="driver"> Förarens agerande / körning</label>
+                  <label class="chk-item"><input type="checkbox" value="vehicle"> Fordonshaveri / tekniskt fel</label>
+                  <label class="chk-item"><input type="checkbox" value="road"> Vägförhållanden / yttre omständigheter</label>
+                  <label class="chk-item"><input type="checkbox" value="training"> Otillräcklig utbildning</label>
+                  <label class="chk-item"><input type="checkbox" value="other"> Annan / okänd orsak</label>
+                </div>
+              </div>
+              <div class="fg"><label>Djupare orsaksanalys</label>
+                <textarea id="inc-cause-detail" style="min-height:80px" placeholder="Bakomliggande faktorer, systemfel, rutinproblem..."></textarea>
+              </div>
+              <div class="fg"><label>Omedelbara åtgärder vidtagna</label>
+                <textarea id="inc-immediate" style="min-height:80px" placeholder="Vad gjordes direkt på platsen?"></textarea>
+              </div>
+              <div class="fg"><label>Korrigerande åtgärder (förebyggande)</label>
+                <textarea id="inc-corrective" style="min-height:80px" placeholder="Vad ska göras för att förhindra upprepning? Vem ansvarar? När?"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" onclick="incTab(2)">← Tillbaka</button>
+                <button class="btn btn-primary" onclick="incTab(4)">Nästa →</button>
+              </div>
+            </div>
+
+            <!-- PANE 4: MYNDIGHETER & AVSLUT -->
+            <div class="inc-pane" id="inc-pane-4">
+              <div class="notice notice-warn" id="inc-rapplikt-notice" style="display:none">
+                ⚠ <strong>Rapporteringsplikt!</strong> Olycka med farligt gods ska rapporteras till Transportstyrelsen inom <strong>7 dagar</strong> från händelsedatumet.
+              </div>
+              <div class="fg"><label>Kontaktade myndigheter</label>
+                <div class="chk-group" id="inc-authorities-group" style="flex-direction:column">
+                  <label class="chk-item"><input type="checkbox" value="rescue"> Räddningstjänsten</label>
+                  <label class="chk-item"><input type="checkbox" value="police"> Polisen – ärendenr: <input type="text" id="inc-police-nr" style="width:160px;padding:2px 8px;border:1.5px solid var(--bd);border-radius:4px;font-size:12px" placeholder="2025-XXXXXX"></label>
+                  <label class="chk-item"><input type="checkbox" value="ambulance"> Ambulans / SOS Alarm</label>
+                  <label class="chk-item"><input type="checkbox" value="transport"> Transportstyrelsen – ärendenr: <input type="text" id="inc-ts-nr" style="width:160px;padding:2px 8px;border:1.5px solid var(--bd);border-radius:4px;font-size:12px" placeholder="TST XXXX-XXXX"></label>
+                  <label class="chk-item"><input type="checkbox" value="env"> Länsstyrelse / Miljökontor</label>
+                  <label class="chk-item"><input type="checkbox" value="insurance"> Försäkringsbolag</label>
+                </div>
+              </div>
+              <div class="g2">
+                <div class="fg"><label>Rapport skickad till Transportstyrelsen</label>
+                  <select id="inc-reported">
+                    <option value="no">Nej / Ej aktuellt</option>
+                    <option value="yes">Ja – rapport inskickad</option>
+                    <option value="pending">Ska skickas (väntar)</option>
+                  </select>
+                </div>
+                <div class="fg"><label>Rapportdatum Transportstyrelsen</label><input type="date" id="inc-ts-date"></div>
+              </div>
+              <div class="fg"><label>Övriga noteringar / bilagor</label>
+                <textarea id="inc-notes" placeholder="Övrig information, bifogade dokument, vittnesmål..."></textarea>
+              </div>
+              <div class="fg"><label>Ärendestatus</label>
+                <select id="inc-status">
+                  <option value="open">Öppen – pågår</option>
+                  <option value="reported">Rapporterad till myndighet</option>
+                  <option value="closed">Avslutad</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" onclick="incTab(3)">← Tillbaka</button>
+                <button class="btn btn-navy" onclick="saveIncident('open')">Spara öppen</button>
+                <button class="btn btn-danger" onclick="saveIncident(document.getElementById('inc-status').value)">💾 Spara rapport</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR INFO -->
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-header"><h3>⏱ Rapporteringsfrist</h3></div>
+            <div class="card-body" id="inc-side-countdown" style="font-size:13px;color:var(--gray)">
+              Välj händelsedatum för att se fristen.
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-header"><h3>Kundinfo</h3></div>
+            <div class="card-body" id="inc-cust-preview" style="font-size:12px;color:var(--gray)">Välj kund</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Checklista – att göra</h3></div>
+            <div class="card-body" style="font-size:11px;line-height:2;color:var(--text)">
+              ☐ Fotografera platsen<br>
+              ☐ Notera alla vittnen<br>
+              ☐ Spara transportdokument<br>
+              ☐ Kontakta TransSäk (24h)<br>
+              ☐ Kontakta försäkring<br>
+              ☐ Rapport till Transportstyrelsen (7 dagar om olycka)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="page" id="page-customers">
+      <div class="flex-end"><button class="btn btn-primary btn-sm" onclick="openCM()">+ Ny kund</button></div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Företag</th><th>Kontakt</th><th>E-post</th><th>Org.nr</th><th>Fakturor</th><th>Incidenter</th><th>Åtgärd</th></tr></thead>
+        <tbody id="cust-tbody"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- BACKUP -->
+    <div class="page" id="page-backup">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card"><div class="card-header"><h3>💾 Spara backup</h3></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Exporterar all data inklusive incidentrapporter.</p>
+            <div class="notice notice-info">💡 Gör backup varje månad – incidentrapporter är viktiga att bevara.</div>
+            <div class="fg" style="margin-top:14px"><label>Exportera</label><select id="backup-scope"><option value="all">Allt</option><option value="invoices">Fakturor</option><option value="quotes">Offerter</option><option value="expenses">Utgifter</option><option value="incidents">Incidenter</option><option value="customers">Kunder</option></select></div>
+            <!-- Auto-folder picker -->
+            <div style="margin-top:14px;padding:12px 14px;background:var(--lg);border-radius:8px;border:1.5px solid var(--bd)" id="folder-box">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px">📁 Automatisk sparning</div>
+                  <div id="folder-status" style="font-size:11px;color:var(--gray)">Ingen mapp vald – backup sparas i Hämtade filer</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-secondary btn-sm" onclick="pickFolder()">Välj mapp…</button>
+                  <button class="btn btn-danger btn-xs" id="forget-btn" onclick="forgetFolder()" style="display:none">✕ Glöm mapp</button>
+                </div>
+              </div>
+              <div id="folder-support-warn" style="display:none;margin-top:8px;font-size:11px;color:var(--amber)">⚠ Din webbläsare stöder inte automatisk mappval – använd Chrome eller Edge.</div>
+            </div>
+            <div class="form-actions" style="justify-content:flex-start">
+              <button class="btn btn-primary" onclick="doBackup()">💾 Spara backup</button>
+              <button class="btn btn-secondary" onclick="exportExcel()">⬇ Excel kassabok</button>
+            </div>
+          </div></div>
+        <div class="card"><div class="card-header"><h3>📂 Återställ</h3></div>
+          <div class="card-body">
+            <div class="notice notice-warn">⚠ Ersätt-läge skriver över all data. Ta backup först!</div>
+            <div class="fg" style="margin-top:14px"><label>Importläge</label><select id="import-mode"><option value="merge">Slå ihop</option><option value="replace">Ersätt all data</option></select></div>
+            <div class="fg"><label>Välj backup-fil (.json)</label><input type="file" id="restore-file" accept=".json" style="padding:8px;border:1.5px solid var(--bd);border-radius:6px;font-size:12px"></div>
+            <div class="form-actions" style="justify-content:flex-start"><button class="btn btn-navy" onclick="doRestore()">📂 Återställ</button></div>
+          </div></div>
+        <div class="card"><div class="card-header"><h3>📊 Status</h3></div><div class="card-body" id="db-status"></div></div>
+        <div class="card"><div class="card-header"><h3>🗑 Rensa</h3></div><div class="card-body"><div class="notice notice-warn">⚠ Går inte att ångra utan backup.</div><div class="form-actions" style="justify-content:flex-start;margin-top:10px"><button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 Rensa ALL data</button></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="modal-qp"><div class="modal"><button class="modal-close" onclick="closeM('modal-qp')">✕</button>
+  <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap"><button class="btn btn-primary" onclick="printDoc()">🖨 Skriv ut</button><button class="btn btn-success" onclick="acceptQFP()">✓ Accepterad</button><button class="btn btn-danger btn-sm" onclick="rejectQFP()">✕ Avvisad</button><button class="btn btn-secondary" onclick="closeM('modal-qp')">Stäng</button></div>
+  <div id="qp-content"></div>
+</div></div>
+
+<div class="overlay" id="modal-accept"><div class="modal modal-sm"><button class="modal-close" onclick="closeM('modal-accept')">✕</button>
+  <h2>✓ Offert accepterad</h2><input type="hidden" id="acc-qid">
+  <div class="fg"><label>Avtalsnummer (valfritt)</label><input type="text" id="acc-contract"></div>
+  <div class="fg"><label>Notering</label><textarea id="acc-note"></textarea></div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="confirmAcc(false)">Spara</button><button class="btn btn-primary" onclick="confirmAcc(true)">Spara &amp; skapa faktura →</button></div>
+</div></div>
+
+<div class="overlay" id="modal-ip"><div class="modal"><button class="modal-close" onclick="closeM('modal-ip')">✕</button>
+  <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap"><button class="btn btn-primary" onclick="printDoc()">🖨 Skriv ut</button><button class="btn btn-success" onclick="markPaidFP()">✓ Betald</button><button class="btn btn-secondary" onclick="closeM('modal-ip')">Stäng</button></div>
+  <div id="ip-content"></div>
+</div></div>
+
+<div class="overlay" id="modal-inc"><div class="modal"><button class="modal-close" onclick="closeM('modal-inc')">✕</button>
+  <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap"><button class="btn btn-primary" onclick="printDoc()">🖨 Skriv ut / PDF</button><button class="btn btn-secondary" onclick="closeM('modal-inc')">Stäng</button></div>
+  <div id="inc-content"></div>
+</div></div>
+
+<div class="overlay" id="modal-cust"><div class="modal modal-sm"><button class="modal-close" onclick="closeM('modal-cust')">✕</button>
+  <h2>Kund</h2><input type="hidden" id="c-id">
+  <div class="g2">
+    <div class="fg span2"><label>Företagsnamn *</label><input type="text" id="c-name"></div>
+    <div class="fg"><label>Kontaktperson</label><input type="text" id="c-contact"></div>
+    <div class="fg"><label>Org.nr</label><input type="text" id="c-orgnr"></div>
+    <div class="fg"><label>E-post</label><input type="email" id="c-email"></div>
+    <div class="fg"><label>Telefon</label><input type="tel" id="c-phone"></div>
+    <div class="fg span2"><label>Adress</label><input type="text" id="c-addr"></div>
+    <div class="fg span2"><label>Fakturaadress</label><input type="text" id="c-iaddr"></div>
+    <div class="fg span2"><label>Anteckning</label><textarea id="c-note"></textarea></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeM('modal-cust')">Avbryt</button><button class="btn btn-primary" onclick="saveCust()">Spara kund</button></div>
+</div></div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────
+const S={get:k=>{try{return JSON.parse(localStorage.getItem('ts4_'+k)||'null')}catch{return null}},set:(k,v)=>localStorage.setItem('ts4_'+k,JSON.stringify(v))};
+const gI=()=>S.get('inv')||[]; const sI=d=>S.set('inv',d);
+const gQ=()=>S.get('q')||[];   const sQ=d=>S.set('q',d);
+const gE=()=>S.get('exp')||[]; const sE=d=>S.set('exp',d);
+const gD=()=>S.get('draw')||[];const sD=d=>S.set('draw',d);
+const gC=()=>S.get('cust')||[];const sC=d=>S.set('cust',d);
+const gInc=()=>S.get('inc')||[];const sInc=d=>S.set('inc',d);
+const gSeq=k=>S.get('seq_'+k)||1;
+const bSeq=k=>{const s=gSeq(k);S.set('seq_'+k,s+1);return s};
+const pSeq=k=>gSeq(k);
+
+const fmt=n=>Number(n||0).toLocaleString('sv-SE',{maximumFractionDigits:0})+' kr';
+const fD=s=>{if(!s)return'';return new Date(s).toLocaleDateString('sv-SE')};
+const tod=()=>new Date().toISOString().slice(0,10);
+const due30=()=>{const d=new Date();d.setDate(d.getDate()+30);return d.toISOString().slice(0,10)};
+const yr=()=>new Date().getFullYear();
+const yStr=()=>String(yr());
+
+// ── INCIDENT COUNTDOWN ────────────────────────────────────────────
+function daysUntilDeadline(dateStr) {
+  if (!dateStr) return null;
+  const incident = new Date(dateStr);
+  const deadline = new Date(incident);
+  deadline.setDate(deadline.getDate() + 7);
+  const now = new Date();
+  return Math.ceil((deadline - now) / (1000*60*60*24));
+}
+function countdownBadge(days) {
+  if (days === null) return '';
+  if (days < 0) return `<span class="countdown urgent">⏰ Frist passerad (${Math.abs(days)} dagar sedan)</span>`;
+  if (days === 0) return `<span class="countdown urgent">⏰ IDAG – sista dag!</span>`;
+  if (days <= 2) return `<span class="countdown urgent">⏰ ${days} dag${days>1?'ar':''} kvar!</span>`;
+  if (days <= 4) return `<span class="countdown warning">⏱ ${days} dagar kvar</span>`;
+  return `<span class="countdown ok">✓ ${days} dagar kvar</span>`;
+}
+function updateIncCountdown() {
+  const dateVal = document.getElementById('inc-date').value;
+  const cls = document.querySelector('input[name="inc-class"]:checked')?.value;
+  const isAccident = cls === 'accident';
+  const days = isAccident ? daysUntilDeadline(dateVal) : null;
+  const badge = document.getElementById('inc-countdown-badge');
+  const side = document.getElementById('inc-side-countdown');
+  const notice = document.getElementById('inc-rapplikt-notice');
+  if (isAccident && days !== null) {
+    badge.innerHTML = countdownBadge(days);
+    side.innerHTML = `<div style="margin-bottom:8px">${countdownBadge(days)}</div><div style="font-size:11px;color:var(--gray)">Deadline: ${fD(new Date(new Date(dateVal).getTime()+7*86400000).toISOString().slice(0,10))}</div>`;
+    notice.style.display = 'block';
+  } else {
+    badge.innerHTML = '';
+    side.innerHTML = isAccident ? 'Välj händelsedatum' : '<span style="color:var(--green);font-size:12px">✓ Ingen rapporteringsplikt för denna typ</span>';
+    notice.style.display = isAccident ? 'block' : 'none';
+  }
+}
+
+// ── NAV ──────────────────────────────────────────────────────────
+const titles={dashboard:'Dashboard',pipeline:'Pipeline',quotes:'Offerter','new-quote':'Ny offert',
+  invoices:'Fakturor','new-invoice':'Ny faktura',expenses:'Utgifter','new-expense':'Ny utgift',
+  drawings:'Eget uttag',kassabok:'Kassabok',incidents:'Incidenter','new-incident':'Ny incidentrapport',
+  customers:'Kunder',backup:'Backup & Export'};
+
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  document.getElementById('page-title').textContent=titles[id];
+  const r={dashboard:renderDash,pipeline:()=>renderPipeline('all'),quotes:()=>renderQuotes('all'),
+    invoices:renderInvoices,expenses:()=>renderExpenses('all'),drawings:renderDrawings,
+    kassabok:renderKB,incidents:()=>renderIncidents('all'),customers:renderCustomers,
+    backup:()=>{renderDBStatus();loadFolderUI();},'new-invoice':initIF,'new-quote':initQF,'new-expense':initEF,
+    'new-incident':initIncForm};
+  if(r[id])r[id]();
+  // Update incident alert in topbar
+  updateTopbarAlert();
+}
+
+function updateTopbarAlert() {
+  const urgent = gInc().filter(inc=>{
+    if(inc.class!=='accident') return false;
+    const d = daysUntilDeadline(inc.date);
+    return d!==null && d<=2 && inc.status!=='closed' && inc.status!=='reported';
+  });
+  const el = document.getElementById('incident-alert');
+  if(urgent.length>0) {
+    el.style.display='flex';
+    el.innerHTML=`<span class="countdown urgent" style="cursor:pointer" onclick="nav('incidents')">🚨 ${urgent.length} incident${urgent.length>1?'er':''} – frist snart!</span>`;
+  } else {
+    el.style.display='none';
+  }
+}
+
+// ── INCIDENT TABS ─────────────────────────────────────────────────
+let currentIncTab = 0;
+function incTab(n) {
+  currentIncTab = n;
+  document.querySelectorAll('.inc-pane').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.inc-tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  // update rapporteringsplikt notice based on class
+  const cls = document.querySelector('input[name="inc-class"]:checked')?.value;
+  if(cls==='accident') document.getElementById('inc-rapplikt-notice').style.display='block';
+}
+
+// ── ROW BUILDER ──────────────────────────────────────────────────
+function buildRow(cid,data,cb){
+  const id='r'+Date.now()+Math.random().toString(36).slice(2);
+  const d=data||{desc:'',qty:1,price:'',vat:'25'};
+  const div=document.createElement('div');div.className='inv-row';div.id=id;
+  div.innerHTML=`<input type="text" placeholder="Tjänstebeskrivning" value="${d.desc}" oninput="${cb}()">
+    <input type="number" value="${d.qty}" min="0" step="0.5" oninput="${cb}()">
+    <input type="number" placeholder="0" value="${d.price}" step="1" oninput="${cb}()">
+    <select onchange="${cb}()"><option ${d.vat=='25'?'selected':''}>25</option><option ${d.vat=='12'?'selected':''}>12</option><option ${d.vat=='6'?'selected':''}>6</option><option ${d.vat=='0'?'selected':''}>0</option></select>
+    <input type="text" readonly id="${id}-t">
+    <button class="del-btn" onclick="document.getElementById('${id}').remove();${cb}()">✕</button>`;
+  document.getElementById(cid).appendChild(div);
+}
+function addQR(d){buildRow('q-rows',d,'calcQ')}
+function addIR(d){buildRow('i-rows',d,'calcI')}
+function getRows(cid){
+  return Array.from(document.getElementById(cid).children).map(div=>{
+    const inp=div.querySelectorAll('input,select');
+    const desc=inp[0].value,qty=parseFloat(inp[1].value)||0,price=parseFloat(inp[2].value)||0,vat=inp[3].value;
+    return{desc,qty,price,vat,total:qty*price};
+  });
+}
+function calcRowSet(cid,nid,vid,gid){
+  let net=0,vat=0;
+  document.getElementById(cid).querySelectorAll('.inv-row').forEach(div=>{
+    const inp=div.querySelectorAll('input,select');
+    const q=parseFloat(inp[1].value)||0,p=parseFloat(inp[2].value)||0,v=parseFloat(inp[3].value)||0;
+    const row=q*p;net+=row;vat+=row*(v/100);
+    if(inp[4])inp[4].value=fmt(row);
+  });
+  if(document.getElementById(nid))document.getElementById(nid).textContent=fmt(net);
+  if(document.getElementById(vid))document.getElementById(vid).textContent=fmt(vat);
+  if(document.getElementById(gid))document.getElementById(gid).textContent=fmt(net+vat);
+  return{net,vat};
+}
+function calcQ(){calcRowSet('q-rows','qt-net','qt-vat','qt-gross')}
+function calcI(){calcRowSet('i-rows','it-net','it-vat','it-gross')}
+function calcE(){
+  const net=parseFloat(document.getElementById('e-net').value)||0;
+  const vat=parseFloat(document.getElementById('e-vat').value)||0;
+  document.getElementById('e-gross').value=fmt(net+net*(vat/100));
+}
+
+// ── QUOTE FORM ───────────────────────────────────────────────────
+let editQId=null;
+function initQF(q){
+  editQId=q?q.id:null;
+  document.getElementById('qform-title').textContent=q?'Redigera offert':'Ny offert';
+  document.getElementById('q-nr').value=q?q.nr:`TSO-${yr()}-${String(pSeq('q')).padStart(3,'0')}`;
+  document.getElementById('q-date').value=q?q.date:tod();
+  document.getElementById('q-valid').value=q?q.valid:due30();
+  ['ref','subject','msg'].forEach(f=>document.getElementById('q-'+f).value=q?q[f]||'':'');
+  fillSel('q-customer',q?q.cid:'');
+  document.getElementById('q-rows').innerHTML='';
+  if(q&&q.rows&&q.rows.length)q.rows.forEach(r=>addQR(r));else addQR();
+  calcQ();if(q){document.getElementById('q-customer').value=q.cid||'';fillQC();}
+}
+function clearQF(){initQF()}
+function fillQC(){const c=gC().find(x=>x.id==document.getElementById('q-customer').value);document.getElementById('q-cp').innerHTML=c?`<strong>${c.name}</strong><br>${c.contact||''}<br>${c.email||''}`:'Välj kund';}
+function saveQ(status){
+  const nr=document.getElementById('q-nr').value,cid=document.getElementById('q-customer').value;
+  if(!cid){alert('Välj kund');return}
+  const cust=gC().find(c=>c.id==cid);
+  const rows=getRows('q-rows').filter(r=>r.desc);
+  if(!rows.length){alert('Lägg till minst en rad');return}
+  const net=rows.reduce((s,r)=>s+r.total,0),vat=rows.reduce((s,r)=>s+r.total*(parseFloat(r.vat)/100),0);
+  const q={id:editQId||Date.now(),nr,date:document.getElementById('q-date').value,valid:document.getElementById('q-valid').value,
+    ref:document.getElementById('q-ref').value,subject:document.getElementById('q-subject').value,
+    msg:document.getElementById('q-msg').value,cid,custName:cust?cust.name:'',rows,net,vat,gross:net+vat,
+    status,contractRef:'',acceptNote:'',linkedInvId:null,created:new Date().toISOString()};
+  if(editQId){const ex=gQ().find(x=>x.id==editQId);if(ex){q.contractRef=ex.contractRef||'';q.linkedInvId=ex.linkedInvId;}}
+  const all=gQ().filter(x=>x.id!=q.id);all.unshift(q);
+  const sn=parseInt(nr.split('-').pop());if(sn>=pSeq('q'))S.set('seq_q',sn+1);
+  sQ(all);if(status==='sent'){previewQ(q.id);return}nav('quotes');
+}
+let pQId=null;
+function previewQ(id){const q=gQ().find(x=>x.id==id);if(!q)return;pQId=id;const c=gC().find(x=>x.id==q.cid)||{};document.getElementById('qp-content').innerHTML=buildInvHTML(q,'OFFERT',c,null);document.getElementById('modal-qp').classList.add('open');}
+function acceptQFP(){if(!pQId)return;closeM('modal-qp');openAcc(pQId);}
+function rejectQFP(){if(!pQId)return;if(!confirm('Avvisad?'))return;const all=gQ();const q=all.find(x=>x.id==pQId);if(q)q.status='rejected';sQ(all);closeM('modal-qp');renderQuotes('all');}
+function openAcc(id){document.getElementById('acc-qid').value=id;const q=gQ().find(x=>x.id==id);document.getElementById('acc-contract').value=q?q.contractRef||'':'';document.getElementById('acc-note').value='';document.getElementById('modal-accept').classList.add('open');}
+function confirmAcc(createInv){
+  const qid=parseInt(document.getElementById('acc-qid').value);
+  const all=gQ();const q=all.find(x=>x.id==qid);
+  if(q){q.status='accepted';q.contractRef=document.getElementById('acc-contract').value;q.acceptNote=document.getElementById('acc-note').value;}
+  sQ(all);closeM('modal-accept');
+  if(createInv)convertToInv(qid);else nav('quotes');
+}
+function convertToInv(qid){
+  const q=gQ().find(x=>x.id==qid);if(!q)return;
+  const c=gC().find(x=>x.id==q.cid)||{};
+  fillSel('i-customer',q.cid);
+  document.getElementById('i-nr').value=`TSR-${yr()}-${String(pSeq('i')).padStart(3,'0')}`;
+  document.getElementById('i-date').value=tod();document.getElementById('i-due').value=due30();
+  document.getElementById('i-ref').value=q.ref||'';document.getElementById('i-addr').value=c.invAddress||c.address||'';
+  document.getElementById('i-qref').value=qid;document.getElementById('i-rows').innerHTML='';
+  q.rows.forEach(r=>addIR(r));
+  const el=document.getElementById('i-from-q');el.style.display='block';el.innerHTML=`✓ Skapad från offert <strong>${q.nr}</strong>`;
+  calcI();document.getElementById('i-customer').value=q.cid;fillIC();
+  nav('new-invoice');editIId=null;document.getElementById('iform-title').textContent='Ny faktura (från '+q.nr+')';
+}
+let qFlt='all';
+function filterQ(f,el){qFlt=f;document.querySelectorAll('#page-quotes .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderQuotes(f);}
+function renderQuotes(f){
+  let data=gQ();if(f&&f!=='all')data=data.filter(x=>x.status===f);
+  const tb=document.getElementById('quotes-tbody');
+  tb.innerHTML=data.length?data.map(q=>`<tr>
+    <td><strong>${q.nr}</strong></td><td>${fD(q.date)}</td><td>${fD(q.valid)}</td><td>${q.custName}</td>
+    <td style="font-weight:600">${fmt(q.gross)}</td><td>${qBadge(q.status)}</td>
+    <td>${q.contractRef?`<span class="badge b-navy">Avtal: ${q.contractRef}</span> `:''}${q.linkedInvId?`<span class="badge b-green" style="cursor:pointer" onclick="previewI(${q.linkedInvId})">→</span>`:''}</td>
+    <td style="white-space:nowrap"><button class="btn btn-secondary btn-xs" onclick="previewQ(${q.id})">👁</button>${q.status==='sent'?`<button class="btn btn-success btn-xs" onclick="openAcc(${q.id})">✓</button>`:''} ${q.status==='accepted'&&!q.linkedInvId?`<button class="btn btn-primary btn-xs" onclick="convertToInv(${q.id})">→</button>`:''}<button class="btn btn-secondary btn-xs" onclick="editQ(${q.id})">✎</button><button class="btn btn-danger btn-xs" onclick="delQ(${q.id})">✕</button></td>
+  </tr>`).join(''):`<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:28px">Inga offerter</td></tr>`;
+}
+function qBadge(s){return{'draft':'<span class="badge b-gray">Utkast</span>','sent':'<span class="badge b-orange">Skickad</span>','accepted':'<span class="badge b-green">Accepterad</span>','invoiced':'<span class="badge b-navy">Fakturerad</span>','rejected':'<span class="badge b-red">Avvisad</span>'}[s]||'';}
+function editQ(id){const q=gQ().find(x=>x.id==id);if(!q)return;fillSel('q-customer',q.cid);initQF(q);editQId=q.id;nav('new-quote');}
+function delQ(id){if(!confirm('Ta bort?'))return;sQ(gQ().filter(x=>x.id!=id));renderQuotes(qFlt);}
+
+// ── INVOICE FORM ─────────────────────────────────────────────────
+let editIId=null;
+function initIF(inv){
+  editIId=inv?inv.id:null;
+  document.getElementById('iform-title').textContent=inv?'Redigera faktura':'Ny faktura';
+  document.getElementById('i-qref').value='';
+  document.getElementById('i-nr').value=inv?inv.nr:`TSR-${yr()}-${String(pSeq('i')).padStart(3,'0')}`;
+  document.getElementById('i-date').value=inv?inv.date:tod();
+  document.getElementById('i-due').value=inv?inv.due:due30();
+  document.getElementById('i-ref').value=inv?inv.ref||'':'';
+  document.getElementById('i-addr').value=inv?inv.addr||'':'';
+  document.getElementById('i-from-q').style.display='none';
+  fillSel('i-customer',inv?inv.cid:'');
+  document.getElementById('i-rows').innerHTML='';
+  if(inv&&inv.rows&&inv.rows.length)inv.rows.forEach(r=>addIR(r));else addIR();
+  calcI();if(inv){document.getElementById('i-customer').value=inv.cid||'';fillIC();}
+}
+function clearIF(){initIF()}
+function fillIC(){
+  const c=gC().find(x=>x.id==document.getElementById('i-customer').value);
+  if(c){document.getElementById('i-addr').value=c.invAddress||c.address||'';document.getElementById('i-cp').innerHTML=`<strong>${c.name}</strong><br>${c.contact||''}`;}
+  else document.getElementById('i-cp').innerHTML='Välj kund';
+}
+function saveI(status){
+  const nr=document.getElementById('i-nr').value,cid=document.getElementById('i-customer').value;
+  if(!cid){alert('Välj kund');return}
+  const cust=gC().find(c=>c.id==cid);
+  const rows=getRows('i-rows').filter(r=>r.desc);if(!rows.length){alert('Lägg till rad');return}
+  const net=rows.reduce((s,r)=>s+r.total,0),vat=rows.reduce((s,r)=>s+r.total*(parseFloat(r.vat)/100),0);
+  const qref=parseInt(document.getElementById('i-qref').value)||null;
+  const inv={id:editIId||Date.now(),nr,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,
+    ref:document.getElementById('i-ref').value,addr:document.getElementById('i-addr').value,
+    cid,custName:cust?cust.name:'',rows,net,vat,gross:net+vat,status,paidDate:null,qref,created:new Date().toISOString()};
+  if(editIId){const ex=gI().find(x=>x.id==editIId);if(ex)inv.paidDate=ex.paidDate;}
+  const all=gI().filter(x=>x.id!=inv.id);all.unshift(inv);
+  const sn=parseInt(nr.split('-').pop());if(sn>=pSeq('i'))S.set('seq_i',sn+1);
+  sI(all);
+  if(qref){const qs=gQ();const q=qs.find(x=>x.id==qref);if(q){q.status='invoiced';q.linkedInvId=inv.id;}sQ(qs);}
+  if(status==='sent'){previewI(inv.id);return}nav('invoices');
+}
+let pIId=null;
+function previewI(id){const inv=gI().find(x=>x.id==id);if(!inv)return;pIId=id;const c=gC().find(x=>x.id==inv.cid)||{};const q=inv.qref?gQ().find(x=>x.id==inv.qref):null;document.getElementById('ip-content').innerHTML=buildInvHTML(inv,'FAKTURA',c,q);document.getElementById('modal-ip').classList.add('open');}
+function buildInvHTML(doc,type,c,q){
+  const rowsH=doc.rows.map(r=>`<tr><td>${r.desc}</td><td style="text-align:right">${r.qty}</td><td style="text-align:right">${Number(r.price).toLocaleString('sv-SE')} kr</td><td style="text-align:right">${r.vat}%</td><td style="text-align:right">${fmt(r.total)}</td></tr>`).join('');
+  return`<div class="inv-preview" id="printable">
+    <div class="inv-ph"><div class="inv-logo"><div class="big">Trans<span>Säk</span></div><div class="sub">KALLE ERICSSON · SÄKERHETSRÅDGIVNING</div></div>
+    <div class="inv-meta-r"><div class="nr">${type}</div><div style="color:var(--gray);font-size:11px">${doc.nr}</div><div style="color:var(--gray);font-size:10px">Datum: ${fD(doc.date)}</div><div style="color:var(--gray);font-size:10px">${type==='FAKTURA'?'Förfall: '+fD(doc.due):'Giltig: '+fD(doc.valid||doc.due)}</div>${q?`<div style="color:var(--gray);font-size:10px">Offert: ${q.nr}</div>`:''}</div></div>
+    ${doc.subject?`<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">${doc.subject}</div>`:''}
+    <div class="inv-parties"><div><div class="inv-pl">${type==='FAKTURA'?'FAKTURERAS TILL':'OFFERT TILL'}</div><div class="inv-pn">${doc.custName}</div>${c.contact?`<div class="inv-pd">${c.contact}</div>`:''}${doc.addr||c.address?`<div class="inv-pd">${doc.addr||c.address}</div>`:''}${c.orgnr?`<div class="inv-pd">Org.nr: ${c.orgnr}</div>`:''}</div>
+    <div><div class="inv-pl">FRÅN</div><div class="inv-pn">TransSäk – Kalle Ericsson</div><div class="inv-pd">Viken · kalle@viken.nu · 0708-180150</div></div></div>
+    ${doc.msg?`<div style="background:var(--light);padding:10px 14px;border-radius:6px;font-size:11px;color:var(--text);margin-bottom:14px;border-left:3px solid var(--orange)">${doc.msg}</div>`:''}
+    <table class="inv-tbl"><thead><tr><th>Beskrivning</th><th>Antal</th><th>À-pris</th><th>Moms</th><th>Belopp</th></tr></thead><tbody>${rowsH}</tbody></table>
+    <div class="inv-sum"><div class="inv-sum-box"><div class="inv-sum-row"><span>Netto</span><span>${fmt(doc.net)}</span></div><div class="inv-sum-row"><span>Moms</span><span>${fmt(doc.vat)}</span></div><div class="inv-total"><span>${type==='FAKTURA'?'ATT BETALA':'OFFERTPRIS'}</span><span>${fmt(doc.gross)}</span></div></div></div>
+    ${type==='FAKTURA'?`<div class="inv-pay"><strong>BG:</strong> XXXX-XXXX · <strong>Villkor:</strong> 30 dagar netto</div>`:''}
+    <div class="inv-foot">TransSäk – kalle@viken.nu · 0708-180150 · transak.se</div></div>`;
+}
+function markPaidFP(){if(!pIId)return;markPaid(pIId);closeM('modal-ip');}
+function markPaid(id){const all=gI();const inv=all.find(x=>x.id==id);if(inv){inv.status='paid';inv.paidDate=tod();}sI(all);renderInvoices();renderDash();}
+let iFlt='all',iSrc='';
+function filterI(f,el){iFlt=f;document.querySelectorAll('#page-invoices .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderInvoices();}
+function searchI(v){iSrc=v;renderInvoices();}
+function renderInvoices(){
+  let data=gI();
+  if(iFlt==='paid')data=data.filter(x=>x.status==='paid');
+  if(iFlt==='unpaid')data=data.filter(x=>x.status!=='paid');
+  if(iSrc)data=data.filter(x=>(x.custName+x.nr).toLowerCase().includes(iSrc.toLowerCase()));
+  const tb=document.getElementById('inv-tbody');
+  tb.innerHTML=data.length?data.map(inv=>`<tr><td><strong>${inv.nr}</strong></td><td>${fD(inv.date)}</td><td>${inv.custName}</td><td style="text-align:right">${fmt(inv.net)}</td><td style="text-align:right;font-weight:600">${fmt(inv.gross)}</td><td>${fD(inv.due)}</td><td>${iBadge(inv)}</td>
+    <td style="white-space:nowrap"><button class="btn btn-secondary btn-xs" onclick="previewI(${inv.id})">👁</button>${inv.status!=='paid'?`<button class="btn btn-success btn-xs" onclick="markPaid(${inv.id})">✓</button>`:''}<button class="btn btn-secondary btn-xs" onclick="editI(${inv.id})">✎</button><button class="btn btn-danger btn-xs" onclick="delI(${inv.id})">✕</button></td></tr>`).join(''):`<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:28px">Inga fakturor</td></tr>`;
+}
+function iBadge(inv){if(inv.status==='paid')return'<span class="badge b-green">Betald</span>';if(inv.status==='draft')return'<span class="badge b-gray">Utkast</span>';if(new Date(inv.due)<new Date())return'<span class="badge b-red">Förfallen</span>';return'<span class="badge b-orange">Skickad</span>';}
+function editI(id){const inv=gI().find(x=>x.id==id);if(!inv)return;fillSel('i-customer',inv.cid);initIF(inv);editIId=inv.id;nav('new-invoice');}
+function delI(id){if(!confirm('Ta bort?'))return;sI(gI().filter(x=>x.id!=id));renderInvoices();}
+
+// ── EXPENSES ─────────────────────────────────────────────────────
+let eFlt='all';
+function initEF(exp){
+  document.getElementById('e-edit-id').value=exp?exp.id:'';
+  document.getElementById('eform-title').textContent=exp?'Redigera utgift':'Ny utgift';
+  document.getElementById('e-date').value=exp?exp.date:tod();
+  document.getElementById('e-cat').value=exp?exp.cat:'';
+  document.getElementById('e-desc').value=exp?exp.desc:'';
+  document.getElementById('e-supplier').value=exp?exp.supplier||'':'';
+  document.getElementById('e-net').value=exp?exp.net:'';
+  document.getElementById('e-vat').value=exp?String(exp.vatPct):'25';
+  document.getElementById('e-receipt').value=exp?exp.receipt||'':'';
+  document.getElementById('e-note').value=exp?exp.note||'':'';
+  calcE();
+}
+function clearEF(){initEF()}
+function saveExpense(){
+  const date=document.getElementById('e-date').value,cat=document.getElementById('e-cat').value,desc=document.getElementById('e-desc').value;
+  if(!date||!cat||!desc){alert('Datum, kategori och beskrivning krävs');return}
+  const net=parseFloat(document.getElementById('e-net').value)||0,vatPct=parseFloat(document.getElementById('e-vat').value)||0;
+  const exp={id:parseInt(document.getElementById('e-edit-id').value)||Date.now(),date,cat,desc,supplier:document.getElementById('e-supplier').value,net,vatPct,vat:net*(vatPct/100),gross:net+net*(vatPct/100),receipt:document.getElementById('e-receipt').value,note:document.getElementById('e-note').value,created:new Date().toISOString()};
+  const all=gE().filter(x=>x.id!=exp.id);all.unshift(exp);sE(all);nav('expenses');
+}
+function filterE(f,el){eFlt=f;document.querySelectorAll('#page-expenses .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderExpenses(f);}
+function renderExpenses(f){
+  let data=gE();const yr=yStr();data=data.filter(x=>x.date&&x.date.startsWith(yr));
+  if(f&&f!=='all')data=data.filter(x=>x.cat&&x.cat.toLowerCase().includes(f.toLowerCase()));
+  const tot=data.reduce((s,x)=>s+x.net,0),totV=data.reduce((s,x)=>s+x.vat,0);
+  document.getElementById('exp-stats').innerHTML=`<div class="stat c-rd"><div class="stat-label">Utgifter exkl. moms</div><div class="stat-value">${fmt(tot)}</div></div><div class="stat c-nv"><div class="stat-label">Ingående moms</div><div class="stat-value">${fmt(totV)}</div></div><div class="stat c-or"><div class="stat-label">Totalt inkl. moms</div><div class="stat-value">${fmt(data.reduce((s,x)=>s+x.gross,0))}</div></div>`;
+  const tb=document.getElementById('exp-tbody');
+  tb.innerHTML=data.length?data.map(e=>`<tr><td>${fD(e.date)}</td><td><span class="badge b-gray">${e.cat}</span></td><td>${e.desc}</td><td>${e.supplier||'—'}</td><td style="text-align:right">${fmt(e.net)}</td><td style="text-align:right">${fmt(e.vat)}</td><td style="font-size:11px">${e.receipt||'—'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-xs" onclick="editExp(${e.id})">✎</button><button class="btn btn-danger btn-xs" onclick="delExp(${e.id})">✕</button></td></tr>`).join(''):`<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:28px">Inga utgifter</td></tr>`;
+  document.getElementById('exp-tfoot').innerHTML=data.length?`<tr style="background:var(--navy);color:white"><td colspan="4" style="padding:9px 12px;font-weight:700">TOTALT</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:var(--orange)">${fmt(tot)}</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:var(--orange)">${fmt(totV)}</td><td colspan="2" style="padding:9px 12px"></td></tr>`:'';
+}
+function editExp(id){const e=gE().find(x=>x.id==id);if(!e)return;initEF(e);nav('new-expense');}
+function delExp(id){if(!confirm('Ta bort?'))return;sE(gE().filter(x=>x.id!=id));renderExpenses(eFlt);}
+
+// ── DRAWINGS ─────────────────────────────────────────────────────
+function saveDrawing(){
+  const date=document.getElementById('dr-date').value,amount=parseFloat(document.getElementById('dr-amount').value)||0;
+  if(!date||!amount){alert('Datum och belopp krävs');return}
+  const d={id:Date.now(),date,amount,note:document.getElementById('dr-note').value};
+  const all=gD();all.unshift(d);sD(all);
+  document.getElementById('dr-amount').value='';document.getElementById('dr-note').value='';
+  renderDrawings();
+}
+function renderDrawings(){
+  const yr=yStr(),data=gD().filter(x=>x.date&&x.date.startsWith(yr));
+  const total=data.reduce((s,x)=>s+x.amount,0),profit=calcProfit();
+  document.getElementById('dr-total').textContent=fmt(total);
+  document.getElementById('dr-profit').textContent=fmt(profit);
+  document.getElementById('dr-left').textContent=fmt(profit-total);
+  document.getElementById('dr-date').value=document.getElementById('dr-date').value||tod();
+  document.getElementById('dr-tbody').innerHTML=data.length?data.map(d=>`<tr><td>${fD(d.date)}</td><td style="font-weight:600;color:var(--teal)">${fmt(d.amount)}</td><td style="color:var(--gray)">${d.note||'—'}</td><td><button class="btn btn-danger btn-xs" onclick="delDraw(${d.id})">✕</button></td></tr>`).join(''):`<tr><td colspan="4" style="text-align:center;color:var(--gray);padding:20px">Inga uttag</td></tr>`;
+}
+function delDraw(id){if(!confirm('Ta bort?'))return;sD(gD().filter(x=>x.id!=id));renderDrawings();}
+function calcProfit(){const yr=yStr(),inc=gI().filter(x=>x.date&&x.date.startsWith(yr)&&x.status==='paid').reduce((s,x)=>s+x.net,0),exp=gE().filter(x=>x.date&&x.date.startsWith(yr)).reduce((s,x)=>s+x.net,0);return inc-exp;}
+
+// ══════════════════════════════════════════════════════════════
+// INCIDENT MODULE
+// ══════════════════════════════════════════════════════════════
+function initIncForm(inc) {
+  const isEdit = !!inc;
+  document.getElementById('incform-title').textContent = isEdit ? 'Redigera incidentrapport' : 'Ny incidentrapport';
+  document.getElementById('inc-edit-id').value = isEdit ? inc.id : '';
+  const nr = isEdit ? inc.nr : `INC-${yr()}-${String(pSeq('inc')).padStart(3,'0')}`;
+  document.getElementById('inc-nr').value = nr;
+  document.getElementById('inc-date').value = isEdit ? inc.date||'' : tod();
+  document.getElementById('inc-report-date').value = isEdit ? inc.reportDate||tod() : tod();
+  fillSel('inc-customer', isEdit ? inc.cid||'' : '');
+  if (isEdit && inc.cid) { document.getElementById('inc-customer').value = inc.cid; fillIncCustomer(); }
+  document.getElementById('inc-contact').value = isEdit ? inc.contact||'' : '';
+  // Reset radio
+  document.querySelectorAll('input[name="inc-class"]').forEach(r => r.checked = r.value === (isEdit ? inc.class||'incident' : 'incident'));
+  document.getElementById('inc-location').value = isEdit ? inc.location||'' : '';
+  document.getElementById('inc-time').value = isEdit ? inc.time||'' : '';
+  document.getElementById('inc-goods').value = isEdit ? inc.goods||'' : '';
+  document.getElementById('inc-vehicle').value = isEdit ? inc.vehicle||'' : '';
+  document.getElementById('inc-driver').value = isEdit ? inc.driver||'' : '';
+  document.getElementById('inc-description').value = isEdit ? inc.description||'' : '';
+  document.getElementById('inc-weather').value = isEdit ? inc.weather||'' : '';
+  document.getElementById('inc-road').value = isEdit ? inc.road||'' : '';
+  document.getElementById('inc-route').value = isEdit ? inc.route||'' : '';
+  document.querySelectorAll('input[name="inc-injury"]').forEach(r => r.checked = r.value === (isEdit ? inc.injury||'none' : 'none'));
+  document.getElementById('inc-injuries').value = isEdit ? inc.injuries||'' : '';
+  document.querySelectorAll('input[name="inc-spill"]').forEach(r => r.checked = r.value === (isEdit ? inc.spill||'no' : 'no'));
+  document.getElementById('inc-spill-amount').value = isEdit ? inc.spillAmount||'' : '';
+  document.getElementById('inc-cleanup').value = isEdit ? inc.cleanup||'' : '';
+  document.getElementById('inc-property').value = isEdit ? inc.property||'' : '';
+  // Causes
+  const causes = isEdit ? (inc.causes||[]) : [];
+  document.querySelectorAll('#inc-causes-group input[type=checkbox]').forEach(cb => cb.checked = causes.includes(cb.value));
+  document.getElementById('inc-cause-detail').value = isEdit ? inc.causeDetail||'' : '';
+  document.getElementById('inc-immediate').value = isEdit ? inc.immediate||'' : '';
+  document.getElementById('inc-corrective').value = isEdit ? inc.corrective||'' : '';
+  // Authorities
+  const auth = isEdit ? (inc.authorities||[]) : [];
+  document.querySelectorAll('#inc-authorities-group input[type=checkbox]').forEach(cb => cb.checked = auth.includes(cb.value));
+  document.getElementById('inc-police-nr').value = isEdit ? inc.policeNr||'' : '';
+  document.getElementById('inc-ts-nr').value = isEdit ? inc.tsNr||'' : '';
+  document.getElementById('inc-reported').value = isEdit ? inc.reported||'no' : 'no';
+  document.getElementById('inc-ts-date').value = isEdit ? inc.tsDate||'' : '';
+  document.getElementById('inc-notes').value = isEdit ? inc.notes||'' : '';
+  document.getElementById('inc-status').value = isEdit ? inc.status||'open' : 'open';
+  incTab(0);
+  updateIncCountdown();
+}
+
+function fillIncCustomer() {
+  const c = gC().find(x => x.id == document.getElementById('inc-customer').value);
+  document.getElementById('inc-cust-preview').innerHTML = c ? `<strong>${c.name}</strong><br>${c.contact||''}<br>${c.email||''}` : 'Välj kund';
+}
+
+function saveIncident(status) {
+  const nr = document.getElementById('inc-nr').value;
+  const editId = document.getElementById('inc-edit-id').value;
+  const cls = document.querySelector('input[name="inc-class"]:checked')?.value||'incident';
+  const cid = document.getElementById('inc-customer').value||null;
+  const cust = cid ? gC().find(c=>c.id==cid) : null;
+  const causes = [...document.querySelectorAll('#inc-causes-group input[type=checkbox]:checked')].map(cb=>cb.value);
+  const auth = [...document.querySelectorAll('#inc-authorities-group input[type=checkbox]:checked')].map(cb=>cb.value);
+  const inc = {
+    id: editId ? parseInt(editId) : Date.now(),
+    nr, date: document.getElementById('inc-date').value,
+    reportDate: document.getElementById('inc-report-date').value,
+    cid, custName: cust?cust.name:'Ej kopplad',
+    contact: document.getElementById('inc-contact').value,
+    class: cls, location: document.getElementById('inc-location').value,
+    time: document.getElementById('inc-time').value,
+    goods: document.getElementById('inc-goods').value,
+    vehicle: document.getElementById('inc-vehicle').value,
+    driver: document.getElementById('inc-driver').value,
+    description: document.getElementById('inc-description').value,
+    weather: document.getElementById('inc-weather').value,
+    road: document.getElementById('inc-road').value,
+    route: document.getElementById('inc-route').value,
+    injury: document.querySelector('input[name="inc-injury"]:checked')?.value||'none',
+    injuries: document.getElementById('inc-injuries').value,
+    spill: document.querySelector('input[name="inc-spill"]:checked')?.value||'no',
+    spillAmount: document.getElementById('inc-spill-amount').value,
+    cleanup: document.getElementById('inc-cleanup').value,
+    property: document.getElementById('inc-property').value,
+    causes, causeDetail: document.getElementById('inc-cause-detail').value,
+    immediate: document.getElementById('inc-immediate').value,
+    corrective: document.getElementById('inc-corrective').value,
+    authorities: auth, policeNr: document.getElementById('inc-police-nr').value,
+    tsNr: document.getElementById('inc-ts-nr').value,
+    reported: document.getElementById('inc-reported').value,
+    tsDate: document.getElementById('inc-ts-date').value,
+    notes: document.getElementById('inc-notes').value,
+    status, created: new Date().toISOString()
+  };
+  const all = gInc().filter(x=>x.id!=inc.id); all.unshift(inc);
+  const sn=parseInt(nr.split('-').pop()); if(sn>=pSeq('inc'))S.set('seq_inc',sn+1);
+  sInc(all);
+  updateTopbarAlert();
+  nav('incidents');
+}
+
+function incBadge(status) {
+  return {'open':'<span class="badge b-orange">Öppen</span>','reported':'<span class="badge b-navy">Rapporterad</span>','closed':'<span class="badge b-green">Avslutad</span>'}[status]||'';
+}
+function incClassBadge(cls) {
+  return {'accident':'<span class="badge b-red">🔴 Olycka</span>','incident':'<span class="badge b-orange">🟠 Tillbud</span>','near-miss':'<span class="badge b-amber">🟡 Nära-olycka</span>','deviation':'<span class="badge b-gray">⚪ Avvikelse</span>'}[cls]||'';
+}
+
+let incFlt='all';
+function filterInc(f,el){incFlt=f;document.querySelectorAll('#page-incidents .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderIncidents(f);}
+function renderIncidents(f) {
+  let data = gInc();
+  if(f==='open')data=data.filter(x=>x.status==='open');
+  else if(f==='reported')data=data.filter(x=>x.status==='reported');
+  else if(f==='closed')data=data.filter(x=>x.status==='closed');
+  const open=gInc().filter(x=>x.status==='open').length;
+  const urgent=gInc().filter(x=>x.class==='accident'&&x.status!=='closed'&&x.status!=='reported'&&daysUntilDeadline(x.date)!==null&&daysUntilDeadline(x.date)<=2).length;
+  const total=gInc().length;
+  document.getElementById('inc-stats').innerHTML=`
+    <div class="stat c-am"><div class="stat-label">Öppna incidenter</div><div class="stat-value">${open}</div><div class="stat-sub">kräver uppföljning</div></div>
+    <div class="stat c-rd"><div class="stat-label">Frist inom 2 dagar</div><div class="stat-value">${urgent}</div><div class="stat-sub">rapporteringspliktiga</div></div>
+    <div class="stat c-nv"><div class="stat-label">Totalt alla år</div><div class="stat-value">${total}</div><div class="stat-sub">incidentrapporter</div></div>
+    <div class="stat c-gn"><div class="stat-label">Avslutade</div><div class="stat-value">${gInc().filter(x=>x.status==='closed').length}</div><div class="stat-sub">hanterade ärenden</div></div>`;
+  const tb = document.getElementById('inc-tbody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:28px">Inga incidenter${f!=='all'?' med vald status':''} – bra jobbat! 👍</td></tr>`;return}
+  tb.innerHTML = data.map(inc => {
+    const days = inc.class==='accident' ? daysUntilDeadline(inc.date) : null;
+    const rowStyle = (days!==null&&days<=2&&inc.status!=='closed') ? 'background:#FEF2F2' : '';
+    return `<tr style="${rowStyle}">
+      <td><strong>${inc.nr}</strong></td>
+      <td>${fD(inc.date)}</td>
+      <td>${inc.custName||'—'}<br><span style="font-size:11px;color:var(--gray)">${inc.location||''}</span></td>
+      <td>${incClassBadge(inc.class)}</td>
+      <td>${inc.goods?`<span style="font-size:11px">${inc.goods.slice(0,40)}${inc.goods.length>40?'…':''}</span>`:''}</td>
+      <td>${inc.class==='accident'?countdownBadge(days):'<span class="countdown none">—</span>'}</td>
+      <td>${incBadge(inc.status)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-xs" onclick="previewInc(${inc.id})">👁</button>
+        <button class="btn btn-secondary btn-xs" onclick="editInc(${inc.id})">✎</button>
+        ${inc.status!=='closed'?`<button class="btn btn-success btn-xs" onclick="closeInc(${inc.id})">✓ Avsluta</button>`:''}
+        <button class="btn btn-danger btn-xs" onclick="delInc(${inc.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function editInc(id){const inc=gInc().find(x=>x.id==id);if(!inc)return;initIncForm(inc);nav('new-incident');}
+function closeInc(id){const all=gInc();const inc=all.find(x=>x.id==id);if(inc)inc.status='closed';sInc(all);renderIncidents(incFlt);updateTopbarAlert();}
+function delInc(id){if(!confirm('Ta bort?'))return;sInc(gInc().filter(x=>x.id!=id));renderIncidents(incFlt);}
+
+function previewInc(id) {
+  const inc = gInc().find(x=>x.id==id); if(!inc)return;
+  const c = inc.cid ? gC().find(x=>x.id==inc.cid)||{} : {};
+  const days = inc.class==='accident' ? daysUntilDeadline(inc.date) : null;
+  const clsMap={'accident':'🔴 Olycka (rapporteringsplikt)','incident':'🟠 Tillbud / Incident','near-miss':'🟡 Nära-olycka','deviation':'⚪ Intern avvikelse'};
+  const injMap={'none':'Inga personskador','minor':'Lindriga skador','serious':'Allvarliga skador','fatal':'Dödsfall'};
+  const spillMap={'no':'Inget utsläpp','minor':'Litet utsläpp','major':'Stort utsläpp'};
+  const causeMap={'classification':'Felaktig klassificering','packaging':'Bristfällig förpackning/emballage','marking':'Fel märkning/etikettering','securing':'Otillräcklig säkring av lasten','docs':'Bristande dokumentation','driver':'Förarens agerande/körning','vehicle':'Fordonshaveri/tekniskt fel','road':'Vägförhållanden/yttre omständigheter','training':'Otillräcklig utbildning','other':'Annan/okänd orsak'};
+  const authMap={'rescue':'Räddningstjänsten','police':'Polisen','ambulance':'Ambulans/SOS Alarm','transport':'Transportstyrelsen','env':'Länsstyrelse/Miljökontor','insurance':'Försäkringsbolag'};
+  document.getElementById('inc-content').innerHTML = `
+  <div class="inc-print" id="printable">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:10px;border-bottom:3px solid var(--orange)">
+      <div><span style="font-size:26px;font-weight:700;color:var(--navy)">Trans<span style="color:var(--orange)">Säk</span></span><br><span style="font-size:10px;color:var(--gray);letter-spacing:2px">KALLE ERICSSON · SÄKERHETSRÅDGIVNING</span></div>
+      <div style="text-align:right"><span style="font-size:20px;font-weight:700;color:var(--navy)">INCIDENTRAPPORT</span><br><span style="font-size:12px;color:var(--gray)">${inc.nr}</span><br><span style="font-size:10px;color:var(--gray)">Datum: ${fD(inc.reportDate)}</span></div>
+    </div>
+    ${inc.class==='accident'&&days!==null?`<div class="red-box">⚠ Rapporteringsplikt – rapport ska ha skickats till Transportstyrelsen. ${days<0?`Frist passerades för ${Math.abs(days)} dagar sedan.`:`${days} dagar kvar.`}</div>`:''}
+    <h3><span class="section-nr">1</span> Grundinfo</h3>
+    <table><tr><td>Rapportnummer</td><td>${inc.nr}</td><td>Händelsedatum</td><td>${fD(inc.date)}</td></tr>
+    <tr><td>Kund / Uppdragsgivare</td><td>${inc.custName}</td><td>Kontaktperson</td><td>${inc.contact||'—'}</td></tr>
+    <tr><td>Klassificering</td><td colspan="3"><strong>${clsMap[inc.class]||inc.class}</strong></td></tr>
+    <tr><td>Plats</td><td>${inc.location||'—'}</td><td>Klockslag</td><td>${inc.time||'—'}</td></tr>
+    <tr><td>Fordon (reg.nr)</td><td>${inc.vehicle||'—'}</td><td>Förare</td><td>${inc.driver||'—'}</td></tr>
+    <tr><td>Farligt gods</td><td colspan="3">${inc.goods||'—'}</td></tr></table>
+    <h3><span class="section-nr">2</span> Händelsebeskrivning</h3>
+    <p style="white-space:pre-wrap;padding:8px;background:var(--lg);border-radius:4px;font-size:11px">${inc.description||'—'}</p>
+    <table style="margin-top:8px"><tr><td>Väder</td><td>${inc.weather||'—'}</td><td>Väglag</td><td>${inc.road||'—'}</td><td>Färdväg</td><td>${inc.route||'—'}</td></tr></table>
+    <h3><span class="section-nr">3</span> Konsekvenser</h3>
+    <table><tr><td>Personskador</td><td>${injMap[inc.injury]||inc.injury}</td></tr>
+    ${inc.injuries?`<tr><td>Detaljer</td><td style="white-space:pre-wrap">${inc.injuries}</td></tr>`:''}
+    <tr><td>Utsläpp</td><td>${spillMap[inc.spill]||inc.spill}${inc.spillAmount?' – '+inc.spillAmount:''}</td></tr>
+    ${inc.cleanup?`<tr><td>Sanering</td><td>${inc.cleanup}</td></tr>`:''}
+    ${inc.property?`<tr><td>Egendomsskador</td><td style="white-space:pre-wrap">${inc.property}</td></tr>`:''}</table>
+    <h3><span class="section-nr">4</span> Orsak och åtgärder</h3>
+    ${inc.causes&&inc.causes.length?`<p><strong>Bidragande orsaker:</strong> ${inc.causes.map(c=>causeMap[c]||c).join(', ')}</p>`:''}
+    ${inc.causeDetail?`<p style="white-space:pre-wrap;padding:6px;background:var(--lg);border-radius:4px;font-size:11px;margin-top:6px">${inc.causeDetail}</p>`:''}
+    ${inc.immediate?`<p><strong>Omedelbara åtgärder:</strong></p><p style="white-space:pre-wrap;padding:6px;background:var(--lg);border-radius:4px;font-size:11px">${inc.immediate}</p>`:''}
+    ${inc.corrective?`<p><strong>Korrigerande åtgärder:</strong></p><p style="white-space:pre-wrap;padding:6px;background:var(--lg);border-radius:4px;font-size:11px">${inc.corrective}</p>`:''}
+    <h3><span class="section-nr">5</span> Myndigheter och rapportering</h3>
+    <table><tr><td>Kontaktade myndigheter</td><td>${inc.authorities&&inc.authorities.length?inc.authorities.map(a=>authMap[a]||a).join(', '):'—'}</td></tr>
+    ${inc.policeNr?`<tr><td>Polisens ärendenr</td><td>${inc.policeNr}</td></tr>`:''}
+    ${inc.tsNr?`<tr><td>Transportstyrelsens ärendenr</td><td>${inc.tsNr}</td></tr>`:''}
+    <tr><td>Rapport till Transportstyrelsen</td><td>${{'no':'Nej / Ej aktuellt','yes':'Ja','pending':'Ska skickas'}[inc.reported]||inc.reported}</td></tr>
+    ${inc.tsDate?`<tr><td>Rapportdatum</td><td>${fD(inc.tsDate)}</td></tr>`:''}
+    ${inc.notes?`<tr><td>Övriga noteringar</td><td style="white-space:pre-wrap">${inc.notes}</td></tr>`:''}</table>
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+      <div style="border-top:2px solid var(--navy);padding-top:8px"><div style="font-size:10px;color:var(--gray)">Upprättad av</div><div style="font-weight:700;color:var(--navy);margin-top:4px">Kalle Ericsson, TransSäk</div><div style="font-size:11px;color:var(--gray);margin-top:2px">Datum: ____________________</div></div>
+      <div style="border-top:2px solid var(--navy);padding-top:8px"><div style="font-size:10px;color:var(--gray)">Godkänd av (kund)</div><div style="margin-top:24px;border-bottom:1px solid var(--bd)"></div><div style="font-size:11px;color:var(--gray);margin-top:2px">Datum: ____________________</div></div>
+      <div style="border-top:2px solid var(--navy);padding-top:8px"><div style="font-size:10px;color:var(--gray)">Genomgång med förare</div><div style="margin-top:24px;border-bottom:1px solid var(--bd)"></div><div style="font-size:11px;color:var(--gray);margin-top:2px">Datum: ____________________</div></div>
+    </div>
+    <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--gray);border-top:1px solid var(--bd);padding-top:8px;font-style:italic">TransSäk – Kalle Ericsson · kalle@viken.nu · 0708-180150 · transak.se · Viken, Höganäs</div>
+  </div>`;
+  document.getElementById('modal-inc').classList.add('open');
+}
+
+// ── PIPELINE ─────────────────────────────────────────────────────
+const pSteps=[{key:'q-draft',label:'Utkast'},{key:'q-sent',label:'Skickade'},{key:'q-accepted',label:'Accepterade'},{key:'i-unpaid',label:'Fakturerat'},{key:'i-paid',label:'Betalt'}];
+function renderPipeline(filter){
+  const qs=gQ(),invs=gI();
+  const counts={'q-draft':qs.filter(x=>x.status==='draft').length,'q-sent':qs.filter(x=>x.status==='sent').length,'q-accepted':qs.filter(x=>x.status==='accepted').length,'i-unpaid':invs.filter(x=>x.status!=='paid'&&x.status!=='draft').length,'i-paid':invs.filter(x=>x.status==='paid').length};
+  document.getElementById('pipeline-bar').innerHTML=pSteps.map((s,i)=>`<div class="pipeline-step ${filter===s.key?'active':''}" onclick="renderPipeline('${s.key}')"><div class="ps-count">${counts[s.key]}</div><div class="ps-label">${s.label}</div></div>${i<pSteps.length-1?'<div class="pipeline-arrow">›</div>':''}`).join('');
+  let rows=[];
+  if(filter==='q-draft'||filter==='all')qs.filter(x=>x.status==='draft').forEach(q=>rows.push({type:'offert',obj:q}));
+  if(filter==='q-sent'||filter==='all')qs.filter(x=>x.status==='sent').forEach(q=>rows.push({type:'offert',obj:q}));
+  if(filter==='q-accepted'||filter==='all')qs.filter(x=>x.status==='accepted').forEach(q=>rows.push({type:'offert',obj:q}));
+  if(filter==='i-unpaid'||filter==='all')invs.filter(x=>x.status!=='paid'&&x.status!=='draft').forEach(i=>rows.push({type:'faktura',obj:i}));
+  if(filter==='i-paid'||filter==='all')invs.filter(x=>x.status==='paid').forEach(i=>rows.push({type:'faktura',obj:i}));
+  const tb=document.getElementById('pipeline-tbody');
+  tb.innerHTML=rows.length?rows.map(r=>{const o=r.obj;
+    let chain=`<div class="quote-chain"><span class="chain-item">${o.nr}</span>`;
+    if(r.type==='offert'){if(o.contractRef)chain+=`<span class="chain-arrow">›</span><span class="chain-item">📄 ${o.contractRef}</span>`;if(o.linkedInvId){const inv=gI().find(x=>x.id==o.linkedInvId);if(inv)chain+=`<span class="chain-arrow">›</span><span class="chain-item" onclick="previewI(${inv.id})">${inv.nr}</span>`;}}
+    else if(o.qref){const q=gQ().find(x=>x.id==o.qref);if(q){chain=`<div class="quote-chain"><span class="chain-item" onclick="previewQ(${q.id})">${q.nr}</span>`;if(q.contractRef)chain+=`<span class="chain-arrow">›</span><span class="chain-item">📄 ${q.contractRef}</span>`;chain+=`<span class="chain-arrow">›</span><span class="chain-item">${o.nr}</span>`;}}
+    chain+='</div>';
+    return`<tr><td><strong>${o.nr}</strong><br><span class="badge ${r.type==='offert'?'b-purple':'b-navy'}" style="font-size:9px">${r.type}</span></td><td>${o.custName}</td><td style="font-weight:600">${fmt(o.gross)}</td><td>${fD(o.date)}</td><td>${r.type==='offert'?qBadge(o.status):iBadge(o)}</td><td>${chain}</td>
+    <td style="white-space:nowrap"><button class="btn btn-secondary btn-xs" onclick="${r.type==='offert'?'previewQ':'previewI'}(${o.id})">👁</button>
+    ${r.type==='offert'&&o.status==='sent'?`<button class="btn btn-success btn-xs" onclick="openAcc(${o.id})">✓</button>`:''}
+    ${r.type==='offert'&&o.status==='accepted'&&!o.linkedInvId?`<button class="btn btn-primary btn-xs" onclick="convertToInv(${o.id})">→</button>`:''}
+    ${r.type==='faktura'&&o.status!=='paid'?`<button class="btn btn-success btn-xs" onclick="markPaid(${o.id});renderPipeline('${filter}')">✓</button>`:''}</td></tr>`;}).join(''):`<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:28px">Inget</td></tr>`;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function renderDash(){
+  const y=yStr(),invs=gI(),qs=gQ(),exps=gE(),draws=gD(),incs=gInc();
+  const thisY=invs.filter(x=>x.date&&x.date.startsWith(y));
+  const paid=thisY.filter(x=>x.status==='paid');
+  const unpaid=invs.filter(x=>x.status!=='paid'&&x.status!=='draft');
+  const openQ=qs.filter(x=>['draft','sent','accepted'].includes(x.status));
+  const expYr=exps.filter(x=>x.date&&x.date.startsWith(y));
+  const drawYr=draws.filter(x=>x.date&&x.date.startsWith(y));
+  const openIncs=incs.filter(x=>x.status==='open');
+  const urgentIncs=incs.filter(x=>x.class==='accident'&&x.status!=='closed'&&x.status!=='reported'&&(daysUntilDeadline(x.date)||99)<=2);
+  const totalInc=paid.reduce((s,x)=>s+x.net,0),totalExp=expYr.reduce((s,x)=>s+x.net,0),profit=totalInc-totalExp;
+  const vatOut=paid.reduce((s,x)=>s+x.vat,0),vatIn=expYr.reduce((s,x)=>s+x.vat,0);
+  document.getElementById('d-rev').textContent=fmt(thisY.reduce((s,x)=>s+x.net,0));
+  document.getElementById('d-exp').textContent=fmt(totalExp);
+  document.getElementById('d-profit').textContent=fmt(profit);
+  document.getElementById('d-vat').textContent=fmt(vatOut-vatIn);
+  document.getElementById('d-unpaid').textContent=fmt(unpaid.reduce((s,x)=>s+x.gross,0));
+  document.getElementById('d-unpaid-n').textContent=unpaid.length+' faktura'+(unpaid.length===1?'':'r');
+  document.getElementById('d-qopen').textContent=openQ.length;
+  document.getElementById('d-qval').textContent='värde '+fmt(openQ.reduce((s,x)=>s+x.gross,0));
+  document.getElementById('d-draw').textContent=fmt(drawYr.reduce((s,x)=>s+x.amount,0));
+  document.getElementById('d-inc').textContent=openIncs.length;
+  document.getElementById('d-inc-sub').textContent=urgentIncs.length>0?`⚠ ${urgentIncs.length} med frist snart!`:'inga akuta';
+  document.getElementById('d-tax-set').textContent=fmt(profit*0.42);
+
+  // Incident banner
+  const banner=document.getElementById('dash-incident-banner');
+  if(urgentIncs.length>0){
+    banner.innerHTML=`<div class="notice notice-red" style="cursor:pointer" onclick="nav('incidents')">🚨 <strong>${urgentIncs.length} incidentrapport${urgentIncs.length>1?'er':''} med snabb rapporteringsfrist!</strong> Olycka med farligt gods ska rapporteras till Transportstyrelsen inom 7 dagar. Klicka för att se.</div>`;
+  } else {banner.innerHTML='';}
+
+  const all=[...qs.map(q=>({...q,_t:'offert',_d:q.date})),...invs.map(i=>({...i,_t:'faktura',_d:i.date})),...expYr.map(e=>({...e,_t:'utgift',_d:e.date})),...incs.slice(0,3).map(i=>({...i,_t:'incident',_d:i.date}))].sort((a,b)=>b._d.localeCompare(a._d)).slice(0,7);
+  document.getElementById('d-recent').innerHTML=all.length?all.map(x=>`<tr><td><span class="badge ${x._t==='offert'?'b-purple':x._t==='faktura'?'b-navy':x._t==='incident'?'b-red':'b-gray'}" style="font-size:9px">${x._t}</span> <strong>${x.nr||x.desc?.slice(0,20)||''}</strong></td><td>${x.custName||x.cat||''}</td><td style="text-align:right">${fmt(x.gross||x.net||0)}</td><td>${x._t==='offert'?qBadge(x.status):x._t==='faktura'?iBadge(x):x._t==='incident'?incBadge(x.status):''}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--gray);padding:20px">Inga poster</td></tr>';
+
+  // Combined unpaid + incidents
+  const combinedRows=[...unpaid.map(x=>`<tr><td><strong>${x.nr}</strong></td><td>${x.custName}</td><td style="text-align:right;font-weight:700;color:var(--red)">${fmt(x.gross)}</td><td><button class="btn btn-success btn-xs" onclick="markPaid(${x.id});renderDash()">✓</button></td></tr>`),...openIncs.map(x=>{const d=x.class==='accident'?daysUntilDeadline(x.date):null;return`<tr style="${d!==null&&d<=2?'background:#FEF2F2':''}"><td>${incClassBadge(x.class)}</td><td>${x.custName}</td><td>${d!==null?countdownBadge(d):'—'}</td><td><button class="btn btn-secondary btn-xs" onclick="previewInc(${x.id})">👁</button></td></tr>`;})];
+  document.getElementById('d-unpaid-list').innerHTML=combinedRows.length?combinedRows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--green);padding:20px">Allt klart 🎉</td></tr>';
+}
+
+// ── KASSABOK ─────────────────────────────────────────────────────
+let kbFlt='all';
+function kbTab(f,el){kbFlt=f;document.querySelectorAll('#page-kassabok .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderKB();}
+function renderKB(){
+  const yr=document.getElementById('kb-year').value;
+  const invs=gI().filter(x=>x.date&&x.date.startsWith(yr));
+  const exps=gE().filter(x=>x.date&&x.date.startsWith(yr));
+  const draws=gD().filter(x=>x.date&&x.date.startsWith(yr));
+  const totalInc=invs.reduce((s,x)=>s+x.net,0),totalExp=exps.reduce((s,x)=>s+x.net,0),profit=totalInc-totalExp;
+  const vatOut=invs.filter(x=>x.status==='paid').reduce((s,x)=>s+x.vat,0),vatIn=exps.reduce((s,x)=>s+x.vat,0),totalDraw=draws.reduce((s,x)=>s+x.amount,0);
+  document.getElementById('kb-result-bar').innerHTML=`<div class="rb-item"><div class="rb-label">Inkomster</div><div class="rb-value" style="color:var(--green)">${fmt(totalInc)}</div></div><div class="rb-sign">−</div><div class="rb-item"><div class="rb-label">Utgifter</div><div class="rb-value" style="color:var(--red)">${fmt(totalExp)}</div></div><div class="rb-sign">=</div><div class="rb-item rb-result"><div class="rb-label">Resultat</div><div class="rb-value" style="color:${profit>=0?'#6ECBA0':'#F08080'}">${fmt(profit)}</div></div><div class="rb-sign" style="background:var(--navy);color:var(--gray)">−</div><div class="rb-item" style="background:#071F3D"><div class="rb-label" style="color:rgba(255,255,255,.5)">Eget uttag</div><div class="rb-value" style="color:var(--orange)">${fmt(totalDraw)}</div></div><div class="rb-sign" style="background:var(--navy);color:var(--gray)">=</div><div class="rb-item rb-result"><div class="rb-label">Kvar i firman</div><div class="rb-value" style="color:${(profit-totalDraw)>=0?'#6ECBA0':'#F08080'}">${fmt(profit-totalDraw)}</div></div>`;
+  let rows=[];
+  if(kbFlt==='all'||kbFlt==='income')invs.forEach(x=>rows.push({date:x.date,type:'income',ref:x.nr,desc:x.rows[0]?.desc||'',cat:x.custName,inc:x.net,exp:0,vatOut:x.status==='paid'?x.vat:0,vatIn:0,badge:'<span class="badge b-navy">Faktura</span>',status:iBadge(x)}));
+  if(kbFlt==='all'||kbFlt==='expense')exps.forEach(x=>rows.push({date:x.date,type:'expense',ref:x.receipt||'—',desc:x.desc,cat:x.cat,inc:0,exp:x.net,vatOut:0,vatIn:x.vat,badge:`<span class="badge b-red">Utgift</span>`,status:''}));
+  if(kbFlt==='all'||kbFlt==='drawing')draws.forEach(x=>rows.push({date:x.date,type:'drawing',ref:'—',desc:x.note||'Eget uttag',cat:'Eget uttag',inc:0,exp:x.amount,vatOut:0,vatIn:0,badge:'<span class="badge b-teal">Uttag</span>',status:''}));
+  rows.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('kb-tbody').innerHTML=rows.length?rows.map(r=>`<tr style="${r.type==='drawing'?'opacity:.7':''}"><td>${fD(r.date)}</td><td>${r.badge} ${r.status}</td><td style="font-size:11px">${r.ref}</td><td>${r.desc}</td><td style="font-size:11px;color:var(--gray)">${r.cat}</td><td style="text-align:right;color:var(--green);font-weight:600">${r.inc>0?fmt(r.inc):''}</td><td style="text-align:right;color:var(--red);font-weight:600">${r.exp>0?fmt(r.exp):''}</td><td style="text-align:right">${r.vatOut>0?fmt(r.vatOut):''}</td><td style="text-align:right">${r.vatIn>0?fmt(r.vatIn):''}</td></tr>`).join(''):`<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:28px">Inga transaktioner för ${yr}</td></tr>`;
+  document.getElementById('kb-tfoot').innerHTML=rows.length?`<tr style="background:var(--navy);color:white"><td colspan="5" style="padding:9px 12px;font-weight:700">TOTALT ${yr}</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:#6ECBA0">${fmt(totalInc)}</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:#F08080">${fmt(totalExp+totalDraw)}</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:var(--orange)">${fmt(vatOut)}</td><td style="text-align:right;padding:9px 12px;font-weight:700;color:var(--orange)">${fmt(vatIn)}</td></tr>`:'';
+}
+
+// ── CUSTOMERS ────────────────────────────────────────────────────
+function renderCustomers(){
+  const custs=gC(),invs=gI(),qs=gQ(),incs=gInc();
+  const tb=document.getElementById('cust-tbody');
+  if(!custs.length){tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:28px">Inga kunder</td></tr>`;return}
+  tb.innerHTML=custs.map(c=>`<tr><td><strong>${c.name}</strong>${c.note?`<br><span style="font-size:10px;color:var(--gray)">${c.note}</span>`:''}</td><td>${c.contact||'—'}</td><td>${c.email||'—'}</td><td>${c.orgnr||'—'}</td><td><span class="badge b-navy">${invs.filter(x=>x.cid==c.id).length} st</span></td><td><span class="badge b-red">${incs.filter(x=>x.cid==c.id).length} st</span></td><td style="white-space:nowrap"><button class="btn btn-secondary btn-xs" onclick="openCM(${c.id})">✎</button><button class="btn btn-danger btn-xs" onclick="delCust(${c.id})">✕</button></td></tr>`).join('');
+}
+function openCM(id){
+  const c=id?gC().find(x=>x.id==id):null;
+  ['id','name','contact','orgnr','email','phone','addr','iaddr','note'].forEach(f=>{const el=document.getElementById('c-'+f);const map={id:'id',name:'name',contact:'contact',orgnr:'orgnr',email:'email',phone:'phone',addr:'address',iaddr:'invAddress',note:'note'};if(el)el.value=c?c[map[f]]||'':'';});
+  document.getElementById('modal-cust').classList.add('open');
+}
+function saveCust(){
+  const name=document.getElementById('c-name').value.trim();if(!name){alert('Namn krävs');return}
+  const c={id:parseInt(document.getElementById('c-id').value)||Date.now(),name,contact:document.getElementById('c-contact').value,orgnr:document.getElementById('c-orgnr').value,email:document.getElementById('c-email').value,phone:document.getElementById('c-phone').value,address:document.getElementById('c-addr').value,invAddress:document.getElementById('c-iaddr').value,note:document.getElementById('c-note').value};
+  const all=gC().filter(x=>x.id!=c.id);all.unshift(c);sC(all);closeM('modal-cust');renderCustomers();
+  ['q-customer','i-customer','inc-customer'].forEach(id=>{const el=document.getElementById(id);if(el)fillSel(id,el.value);});
+}
+function delCust(id){if(!confirm('Ta bort?'))return;sC(gC().filter(x=>x.id!=id));renderCustomers();}
+function fillSel(sid,sel){
+  const el=document.getElementById(sid);if(!el)return;
+  const prev=sel||el.value;
+  const isInc=sid==='inc-customer';
+  el.innerHTML=isInc?'<option value="">— Välj kund (valfritt) —</option>':'<option value="">— Välj kund —</option>';
+  gC().forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;if(c.id==prev)o.selected=true;el.appendChild(o);});
+}
+
+// ── BACKUP ───────────────────────────────────────────────────────
+// ── FOLDER HANDLE (IndexedDB) ────────────────────────────────────
+const IDB_KEY = 'ts_backup_folder';
+function idbGet(key){return new Promise((res,rej)=>{const r=indexedDB.open('transsak',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('kv');r.onsuccess=e=>{const db=e.target.result;const tx=db.transaction('kv','readonly');const req=tx.objectStore('kv').get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>res(null);};r.onerror=()=>res(null);});}
+function idbSet(key,val){return new Promise((res,rej)=>{const r=indexedDB.open('transsak',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('kv');r.onsuccess=e=>{const db=e.target.result;const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(val,key);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);};r.onerror=()=>res(false);});}
+function idbDel(key){return new Promise((res)=>{const r=indexedDB.open('transsak',1);r.onsuccess=e=>{const db=e.target.result;const tx=db.transaction('kv','readwrite');tx.objectStore('kv').delete(key);tx.oncomplete=()=>res();};});}
+
+async function loadFolderUI(){
+  if(!('showDirectoryPicker' in window)){
+    document.getElementById('folder-support-warn').style.display='block';
+    return;
+  }
+  const handle=await idbGet(IDB_KEY);
+  updateFolderStatus(handle);
+}
+function updateFolderStatus(handle){
+  const el=document.getElementById('folder-status');
+  const btn=document.getElementById('forget-btn');
+  if(handle){
+    el.textContent='✓ Sparas automatiskt i: '+handle.name;
+    el.style.color='var(--green)';
+    btn.style.display='inline-flex';
+  } else {
+    el.textContent='Ingen mapp vald – backup sparas i Hämtade filer';
+    el.style.color='var(--gray)';
+    btn.style.display='none';
+  }
+}
+async function pickFolder(){
+  if(!('showDirectoryPicker' in window)){alert('Chrome eller Edge krävs för denna funktion.');return;}
+  try{
+    const handle=await window.showDirectoryPicker({mode:'readwrite',startIn:'documents'});
+    await idbSet(IDB_KEY,handle);
+    updateFolderStatus(handle);
+  } catch(e){if(e.name!=='AbortError')alert('Kunde inte välja mapp: '+e.message);}
+}
+async function forgetFolder(){
+  await idbDel(IDB_KEY);
+  updateFolderStatus(null);
+}
+
+function buildBackupData(){
+  const scope=document.getElementById('backup-scope').value;
+  const data={version:4,exported:new Date().toISOString()};
+  if(scope==='all'||scope==='customers')data.customers=gC();
+  if(scope==='all'||scope==='quotes')data.quotes=gQ();
+  if(scope==='all'||scope==='invoices')data.invoices=gI();
+  if(scope==='all'||scope==='expenses'){data.expenses=gE();data.drawings=gD();}
+  if(scope==='all'||scope==='incidents')data.incidents=gInc();
+  if(scope==='all'){data.seq_i=S.get('seq_i');data.seq_q=S.get('seq_q');data.seq_inc=S.get('seq_inc');}
+  return data;
+}
+
+async function doBackup(){
+  const scope=document.getElementById('backup-scope').value;
+  const data=buildBackupData();
+  const json=JSON.stringify(data,null,2);
+  const filename=`TransSäk_Backup_${new Date().toISOString().slice(0,10)}_${scope}.json`;
+
+  // Try auto-save to chosen folder first
+  if('showDirectoryPicker' in window){
+    const handle=await idbGet(IDB_KEY);
+    if(handle){
+      try{
+        // verify permission still valid
+        const perm=await handle.queryPermission({mode:'readwrite'});
+        const ok = perm==='granted'
+          ? true
+          : (await handle.requestPermission({mode:'readwrite'})==='granted');
+        if(ok){
+          const fh=await handle.getFileHandle(filename,{create:true});
+          const w=await fh.createWritable();
+          await w.write(json);
+          await w.close();
+          // feedback
+          const el=document.getElementById('folder-status');
+          el.textContent=`✓ Sparad: ${handle.name}/${filename}`;
+          el.style.color='var(--green)';
+          // flash confirm
+          const box=document.getElementById('folder-box');
+          box.style.borderColor='var(--green)';
+          setTimeout(()=>box.style.borderColor='var(--bd)',2000);
+          renderDBStatus();
+          return;
+        }
+      } catch(e){console.warn('Auto-save failed, falling back:',e);}
+    }
+  }
+
+  // Fallback: classic download to Hämtade filer
+  const blob=new Blob([json],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=filename;a.click();
+  renderDBStatus();
+}
+function doRestore(){
+  const file=document.getElementById('restore-file').files[0];if(!file){alert('Välj fil');return}
+  const mode=document.getElementById('import-mode').value;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!confirm(`Återställa (${mode})?`))return;
+      const merge=(key,getter,setter)=>{if(data[key]){if(mode==='replace')setter(data[key]);else{const ex=getter();const ids=new Set(ex.map(x=>x.id));setter([...ex,...data[key].filter(x=>!ids.has(x.id))]);}}}
+      merge('customers',gC,sC);merge('quotes',gQ,sQ);merge('invoices',gI,sI);merge('expenses',gE,sE);merge('drawings',gD,sD);merge('incidents',gInc,sInc);
+      if(data.seq_i)S.set('seq_i',data.seq_i);if(data.seq_q)S.set('seq_q',data.seq_q);if(data.seq_inc)S.set('seq_inc',data.seq_inc);
+      alert('✓ Återställd!');renderDBStatus();updateTopbarAlert();
+    }catch(err){alert('Fel: '+err.message);}
+  };reader.readAsText(file);
+}
+function renderDBStatus(){
+  document.getElementById('db-status').innerHTML=`<div style="display:grid;gap:6px;font-size:13px">
+    ${[['Kunder',gC().length],['Offerter',gQ().length],['Fakturor',gI().length],['Utgifter',gE().length],['Incidenter',gInc().length],['Eget uttag',gD().length]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--gray)">${l}</span><strong>${v} st</strong></div>`).join('')}
+    <div style="display:flex;justify-content:space-between;padding:7px 0"><span style="color:var(--gray)">Nästa faktura</span><strong>TSR-${yr()}-${String(pSeq('i')).padStart(3,'0')}</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0"><span style="color:var(--gray)">Nästa incident</span><strong>INC-${yr()}-${String(pSeq('inc')).padStart(3,'0')}</strong></div>
+  </div>`;
+}
+function clearAll(){if(!confirm('VARNING: All data raderas!\n\nFortsätta?'))return;['ts4_inv','ts4_q','ts4_exp','ts4_draw','ts4_cust','ts4_inc','ts4_seq_i','ts4_seq_q','ts4_seq_inc'].forEach(k=>localStorage.removeItem(k));alert('Rensat.');renderDBStatus();}
+
+// ── EXCEL EXPORT ─────────────────────────────────────────────────
+function exportExcel(){
+  const yr=document.getElementById('kb-year')?.value||yStr();
+  const invs=gI().filter(x=>x.date&&x.date.startsWith(yr));
+  const exps=gE().filter(x=>x.date&&x.date.startsWith(yr));
+  const draws=gD().filter(x=>x.date&&x.date.startsWith(yr));
+  const bom='\uFEFF';
+  let content=`KASSABOK ${yr} – TransSäk\n\nINKOMSTER\nDatum\tFakturanummer\tKund\tBeskrivning\tInkomst exkl. moms\tMoms\tTotalt\tStatus\n`;
+  invs.forEach(x=>content+=`${x.date}\t${x.nr}\t${x.custName}\t${x.rows[0]?.desc||''}\t${x.net.toFixed(2).replace('.',',')}\t${x.vat.toFixed(2).replace('.',',')}\t${x.gross.toFixed(2).replace('.',',')}\t${x.status==='paid'?'Betald':'Skickad'}\n`);
+  const tI=invs.reduce((s,x)=>s+x.net,0),tV=invs.reduce((s,x)=>s+x.vat,0);
+  content+=`\tTOTALT\t\t\t${tI.toFixed(2).replace('.',',')}\t${tV.toFixed(2).replace('.',',')}\n\nUTGIFTER\nDatum\tKategori\tBeskrivning\tLeverantör\tUtgift exkl. moms\tIngående moms\n`;
+  exps.forEach(x=>content+=`${x.date}\t${x.cat}\t${x.desc}\t${x.supplier||''}\t${x.net.toFixed(2).replace('.',',')}\t${x.vat.toFixed(2).replace('.',',')}\n`);
+  const tE=exps.reduce((s,x)=>s+x.net,0),tVI=exps.reduce((s,x)=>s+x.vat,0);
+  content+=`\tTOTALT\t\t\t${tE.toFixed(2).replace('.',',')}\t${tVI.toFixed(2).replace('.',',')}\n\nRESULTAT\t\t\t\t${(tI-tE).toFixed(2).replace('.',',')}\nMoms att betala\t\t\t\t${(tV-tVI).toFixed(2).replace('.',',')}\n\nEGET UTTAG\nDatum\tBelopp\tÄndamål\n`;
+  draws.forEach(x=>content+=`${x.date}\t${x.amount.toFixed(2).replace('.',',')}\t${x.note||''}\n`);
+  content+=`\tTOTALT\t${draws.reduce((s,x)=>s+x.amount,0).toFixed(2).replace('.',',')}\n`;
+  const blob=new Blob([bom+content],{type:'text/tab-separated-values;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`TransSäk_Kassabok_${yr}.xls`;a.click();
+}
+
+// ── MODALS ───────────────────────────────────────────────────────
+function closeM(id){document.getElementById(id).classList.remove('open')}
+function printDoc(){window.print()}
+document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+// Close radio chk-item styling
+document.addEventListener('change',e=>{
+  if(e.target.type==='radio'||e.target.type==='checkbox'){
+    const grp=e.target.closest('.chk-group');
+    if(grp){
+      if(e.target.type==='radio')grp.querySelectorAll('.chk-item').forEach(l=>l.classList.remove('checked'));
+      e.target.closest('.chk-item')?.classList.toggle('checked',e.target.checked);
+    }
+    if(e.target.name==='inc-class')updateIncCountdown();
+  }
+});
+
+// ── SEED DATA ─────────────────────────────────────────────────────
+function seed(){
+  if(gC().length)return;
+  sC([{id:1001,name:'Svensson Transport AB',contact:'Lars Svensson',orgnr:'556100-1001',email:'lars@svenssonab.se',phone:'042-100 10 10',address:'Industrigatan 1, 251 05 Helsingborg',invAddress:'',note:'Årsavtalskund'},
+      {id:1002,name:'Nilssons Åkeri',contact:'Björn Nilsson',orgnr:'556200-2002',email:'bjorn@nilssons.se',phone:'0708-200 20 02',address:'Hamngatan 5, 263 32 Höganäs',invAddress:'',note:'Kurs + rådgivning'}]);
+  sQ([{id:3001,nr:'TSO-2025-001',date:'2025-01-10',valid:'2025-02-10',ref:'Lars Svensson',subject:'Årsavtal säkerhetsrådgivning 2025',msg:'',cid:1001,custName:'Svensson Transport AB',rows:[{desc:'Årsavtal – Standardpaket',qty:1,price:25000,vat:'25',total:25000}],net:25000,vat:6250,gross:31250,status:'invoiced',contractRef:'TSR-2025-001',acceptNote:'',linkedInvId:2001,created:'2025-01-10T00:00:00'}]);
+  sI([{id:2001,nr:'TSR-2025-001',date:'2025-01-15',due:'2025-02-14',ref:'Lars Svensson',addr:'Industrigatan 1, Helsingborg',cid:1001,custName:'Svensson Transport AB',rows:[{desc:'Årsavtal Q1',qty:1,price:6250,vat:'25',total:6250}],net:6250,vat:1562.5,gross:7812.5,status:'paid',paidDate:'2025-01-28',qref:3001,created:'2025-01-15T00:00:00'},
+      {id:2002,nr:'TSR-2025-002',date:'2025-02-03',due:'2025-03-05',ref:'Lars',addr:'Industrigatan 1, Helsingborg',cid:1001,custName:'Svensson Transport AB',rows:[{desc:'Timarvode riskanalys 2h',qty:2,price:1600,vat:'25',total:3200}],net:3200,vat:800,gross:4000,status:'sent',paidDate:null,qref:null,created:'2025-02-03T00:00:00'}]);
+  sE([{id:4001,date:'2025-01-08',cat:'Böcker & facklitteratur',desc:'ADR 2025 regelverksbok',supplier:'Akademibokhandeln',net:420,vatPct:6,vat:25.2,gross:445.2,receipt:'kvitto-001',note:'',created:'2025-01-08T00:00:00'},
+      {id:4002,date:'2025-01-20',cat:'Representation & fika',desc:'Kursfika ADR-kurs 8 pers',supplier:'ICA Höganäs',net:240,vatPct:12,vat:28.8,gross:268.8,receipt:'kvitto-002',note:'',created:'2025-01-20T00:00:00'}]);
+  // Demo incident - closed, so no alarm
+  sInc([{id:5001,nr:'INC-2025-001',date:'2025-01-25',reportDate:'2025-01-25',cid:1001,custName:'Svensson Transport AB',contact:'Lars Svensson',class:'incident',location:'E4 norr om Helsingborg, km 123',time:'14:30',goods:'Klass 3, UN 1203, Motorbensin, 500 L',vehicle:'ABC 123',driver:'Per Persson',description:'Vätska läckte från påfyllningslock på tankbil under transport. Stoppade omedelbart fordonet och säkrade platsen. Litet utsläpp på ca 2 liter på vägbanan.',weather:'Klart/soligt',road:'Torrt',route:'Helsingborg → Malmö',injury:'none',injuries:'',spill:'minor',spillAmount:'ca 2 liter',cleanup:'Föraren med absorberingsmedel',property:'',causes:['securing','vehicle'],causeDetail:'Påfyllningslocket var inte korrekt åtdraget efter tankning.',immediate:'Stannade fordonet. Säkrade platsen med varningstrianglar. Absorberade utsläppet.',corrective:'Kontroll av alla påfyllningslock inför varje transport. Uppdatera intern checklista.',authorities:['rescue'],policeNr:'',tsNr:'',reported:'no',tsDate:'',notes:'',status:'closed',created:'2025-01-25T00:00:00'}]);
+  S.set('seq_q',2);S.set('seq_i',3);S.set('seq_inc',2);
+}
+seed();
+['q-customer','i-customer','inc-customer'].forEach(id=>fillSel(id,''));
+initQF();initIF();initEF();initIncForm();
+document.getElementById('dr-date').value=tod();
+renderDash();updateTopbarAlert();
+</script>
+</body>
+</html>
