@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#0a2a43">
+  <title>Stödjande kontroll – Farligt gods</title>
+
+  <style>
+    :root{
+      --bg:#f2f2f7; --card:#fff; --ink:#111; --muted:#6b7280;
+      --brand:#0a2a43; --accent:#007aff; --danger:#d92d20;
+      --line:#e5e7eb; --radius:12px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:96px;}
+    header{position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;padding:12px 14px calc(12px + env(safe-area-inset-top));text-align:center;font-weight:800;letter-spacing:.2px;}
+    header small{display:block;font-weight:500;opacity:.92;margin-top:2px}
+    .wrap{max-width:980px;margin:0 auto;}
+    .card{background:var(--card);margin:12px;padding:12px;border-radius:var(--radius);box-shadow:0 1px 0 rgba(0,0,0,.04);border:1px solid var(--line);}    
+    .row{display:grid;grid-template-columns:1fr;gap:10px;}
+    @media(min-width:760px){.row.two{grid-template-columns:1fr 1fr}.row.three{grid-template-columns:1fr 1fr 1fr}}
+    h2{font-size:16px;margin:0 0 8px}
+    h3{font-size:14px;margin:12px 0 6px;color:#111}
+    label{display:block;font-size:13px;color:#111;margin-top:2px}
+    input, select, textarea{width:100%;padding:10px;font-size:15px;border-radius:10px;border:1px solid var(--line);background:#fff;}
+    textarea{min-height:80px;resize:vertical}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:8px 10px;border-radius:999px;background:#fff;}
+    .chip input{width:auto}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px;background:#fff;color:#111;}
+    .pill.ok{border-color:#ccebd6;background:#ecfdf3;color:#0f5132}
+    .pill.warn{border-color:#fde68a;background:#fffbeb;color:#92400e}
+    .pill.bad{border-color:#fecaca;background:#fef2f2;color:#7f1d1d}
+    details summary{cursor:pointer;list-style:none;font-weight:750;padding:10px;background:#fafafa;border:1px solid var(--line);border-radius:10px;}
+    details[open] summary{border-bottom-left-radius:0;border-bottom-right-radius:0}
+    .sub{padding:10px;border:1px solid var(--line);border-top:none;border-bottom-left-radius:10px;border-bottom-right-radius:10px;background:#fff;}
+
+    .checkitem{padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;}
+    .checkitem .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+    .checkitem .code{font-weight:900;color:#111;min-width:70px}
+    .checkitem .title{font-weight:700}
+    .checkitem .grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
+    @media(min-width:760px){.checkitem .grid{grid-template-columns:220px 1fr 1fr}}
+
+    .hidden{display:none !important}
+    .req{color:var(--danger);font-weight:900}
+
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));}
+    .bar .inner{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-width:980px;margin:0 auto;}
+    button{width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;}
+    button.primary{background:var(--accent);color:#fff}
+    button.secondary{background:#111827;color:#fff}
+    button.ghost{background:#fff;border:1px solid var(--line);color:#111}
+    button.danger{background:var(--danger);color:#fff}
+    button.small{padding:10px;font-size:14px;font-weight:750}
+
+    .tiny{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.3}
+    .list{display:flex;flex-direction:column;gap:8px;}
+    .list button{text-align:left;padding:12px;font-size:14px;font-weight:750;background:#fff;border:1px solid var(--line);color:#111;}
+
+    .sigbox{border:1px dashed #cbd5e1;border-radius:12px;background:#fff;padding:10px;}
+    canvas{width:100%;height:170px;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:none;}
+    .sig-actions{display:flex;gap:8px;margin-top:10px}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+
+    /* Photos */
+    .photo-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    @media(min-width:760px){.photo-grid{grid-template-columns:1fr 1fr}}
+    .photo-item{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+    .photo-item img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+    .photo-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px}
+    .photo-meta small{color:var(--muted)}
+    .photo-meta button{width:auto}
+
+    /* Alerts */
+    #alerts{border-left:6px solid var(--danger);}
+    #alerts ul{margin:6px 0 0 18px;padding:0}
+    #alerts li{margin:6px 0}
+
+    /* Print */
+    @media print{
+      header, .bar, .no-print{display:none !important;}
+      body{background:#fff;padding:0;margin:0}
+      .card{border:none;box-shadow:none;margin:0;padding:0}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    Stödjande kontroll – Farligt gods
+    <small>Offline • Safari iPhone/iPad • PDF • Backup • Varningar • Fritext • Foto (kopplat till kontrollpunkt)</small>
+  </header>
+
+  <div class="wrap">
+
+    <div class="card no-print">
+      <h2>Kontroller (lokalt)</h2>
+      <div class="row two">
+        <button class="ghost" onclick="newInspection()">➕ Ny kontroll</button>
+        <button class="ghost" onclick="exportAll()">💾 Exportera backup (JSON)</button>
+      </div>
+      <div class="row two" style="margin-top:10px">
+        <div>
+          <label class="tiny">Importera backup (JSON)</label>
+          <input type="file" accept="application/json,.json" onchange="importBackup(this.files[0])">
+        </div>
+        <button class="ghost" onclick="printSummary()">📊 Skriv ut periodrapport (PDF)</button>
+      </div>
+      <p class="tiny">Tips: Spara backupfilen i t.ex. OneDrive/Teams. Om Safari rensas kan lokal lagring försvinna.</p>
+      <div id="savedList" class="list"></div>
+      <div class="row two" style="margin-top:10px">
+        <button class="danger" onclick="deleteCurrent()">🗑️ Radera aktuell</button>
+        <button class="danger" onclick="wipeAll()">🧨 Radera ALLT lokalt</button>
+      </div>
+      <div class="tiny" id="statusLine"></div>
+    </div>
+
+    <div id="alerts" class="card hidden no-print">
+      <h2>⚠️ Automatiska varningar</h2>
+      <ul id="alertList"></ul>
+      <div class="tiny" id="alertHint"></div>
+    </div>
+
+    <div class="card">
+      <h2>1. Grunduppgifter</h2>
+      <div class="row two">
+        <div>
+          <label>Datum <span class="req">*</span></label>
+          <input type="date" id="f_datum">
+        </div>
+        <div>
+          <label>Kontroll gjord av <span class="req">*</span></label>
+          <input type="text" id="f_kontrollant" placeholder="Namn">
+        </div>
+      </div>
+      <div class="row two">
+        <div>
+          <label>ID nummer</label>
+          <input type="text" id="f_idnummer" placeholder="t.ex. intern-id">
+        </div>
+        <div>
+          <label>Plats</label>
+          <input type="text" id="f_plats" placeholder="t.ex. depå / ort">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Fordon</h2>
+      <div class="row two">
+        <div>
+          <label>2.1 (drag) Fordon</label>
+          <input type="text" id="f_fordon" placeholder="t.ex. lastbil">
+        </div>
+        <div>
+          <label>2.2 Regnr</label>
+          <input type="text" id="f_regnr" placeholder="ABC123">
+        </div>
+      </div>
+      <div class="row two">
+        <div>
+          <label>2.3 Släp</label>
+          <input type="text" id="f_slap" placeholder="t.ex. trailer">
+        </div>
+        <div>
+          <label>2.3 Regnr (släp)</label>
+          <input type="text" id="f_slapregnr" placeholder="ABC123">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Förare</h2>
+      <div class="row two">
+        <div>
+          <label>3.1 Förare namn</label>
+          <input type="text" id="f_forare" placeholder="Namn">
+        </div>
+        <div>
+          <label>3.2 Pnr</label>
+          <input type="text" id="f_pnr" placeholder="ÅÅÅÅMMDD-XXXX">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4–7. Transport & gods</h2>
+      <div class="row two">
+        <div>
+          <label>4.1 Avsändare</label>
+          <select id="f_avsandare"><option value="Ja">Ja</option><option value="Nej">Nej</option></select>
+        </div>
+        <div>
+          <label>4.2 Mottagare</label>
+          <select id="f_mottagare"><option value="Ja">Ja</option><option value="Nej">Nej</option></select>
+        </div>
+      </div>
+
+      <h3>5. Total mängd farligt gods per transportenhet</h3>
+      <div class="row two">
+        <div>
+          <label>Mängd</label>
+          <input type="number" id="f_totalmangd" placeholder="0" inputmode="decimal">
+        </div>
+        <div>
+          <label>Enhet</label>
+          <select id="f_enhet"><option value="kg">kg</option><option value="l">l</option></select>
+        </div>
+      </div>
+      <div class="chips" style="margin-top:10px">
+        <label class="chip"><input type="checkbox" id="f_LQ"> LQ</label>
+        <label class="chip"><input type="checkbox" id="f_EQ"> EQ</label>
+        <label class="chip"><input type="checkbox" id="f_tomd"> Tömd ej rengjord</label>
+      </div>
+
+      <h3>6. Värdeberäknad mängd</h3>
+      <div class="row three">
+        <div>
+          <label>Överskriden</label>
+          <select id="f_vbm_overskriden"><option value="Nej">Nej</option><option value="Ja">Ja</option></select>
+        </div>
+        <div>
+          <label>Riskvärde</label>
+          <input type="text" id="f_riskvarde" placeholder="t.ex. 300p">
+        </div>
+        <div>
+          <label>MIL: Samverkan med säkerhetsrådgivare (Särskild tillämpning A)</label>
+          <select id="f_samverkan"><option value="Nej">Nej</option><option value="Ja">Ja</option></select>
+        </div>
+      </div>
+
+      <h3>7. Transportsätt</h3>
+      <div class="chips">
+        <label class="chip"><input type="radio" name="trans" value="Styckegods" id="t_styck" checked> 7.1 Styckegods</label>
+        <label class="chip"><input type="radio" name="trans" value="Bulk" id="t_bulk"> 7.2 Bulk</label>
+        <label class="chip"><input type="radio" name="trans" value="Tank" id="t_tank"> 7.3 Tank</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>8. Dokument</h2>
+      <p class="tiny">A) Kontrollerat • B) Ej enligt regler • C) Ej tillämpligt • D) Ej kontrollerat</p>
+
+      <details open>
+        <summary>8.1 Godsdeklaration</summary>
+        <div class="sub">
+          <div class="row two">
+            <div>
+              <label>Status</label>
+              <select id="d_godsdeklaration"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+            </div>
+            <div>
+              <label>Anm</label>
+              <input type="text" id="d_godsdeklaration_anm" placeholder="Valfritt">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>8.2 Lastplan</summary>
+        <div class="sub">
+          <div class="row two">
+            <div>
+              <label>Status</label>
+              <select id="d_lastplan"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+            </div>
+            <div>
+              <label>Anm</label>
+              <input type="text" id="d_lastplan_anm" placeholder="Valfritt">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>8.3 Stuvningsintyg</summary>
+        <div class="sub">
+          <div class="row two">
+            <div>
+              <label>Status</label>
+              <select id="d_stuvning"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+            </div>
+            <div>
+              <label>Anm</label>
+              <input type="text" id="d_stuvning_anm" placeholder="Valfritt">
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>9–26. Kontrollpunkter</h2>
+      <p class="tiny">Varje punkt har Resultat + Fritext. Om Avvikelse väljs krävs dessutom en avvikelsekommentar.</p>
+      <div id="checklist"></div>
+
+      <div class="divider"></div>
+
+      <h2>Fotodokumentation</h2>
+      <p class="tiny">Ta foton kopplade till kontrollen och ange <strong>Kontrollpunkt</strong>, <strong>Typ</strong> och <strong>Kommentar</strong> för spårbarhet. Bilder sparas lokalt och följer med i PDF. För att spara utrymme skalas bilder automatiskt ned.</p>
+      <div class="row two no-print">
+        <button class="ghost" type="button" onclick="document.getElementById('photoInput').click()">📷 Lägg till foto</button>
+        <button class="ghost" type="button" onclick="clearPhotos()">🧹 Ta bort alla foton</button>
+      </div>
+      <input id="photoInput" class="hidden" type="file" accept="image/*" capture="environment" multiple>
+      <div id="photoList" class="photo-grid"></div>
+
+      <div class="divider"></div>
+
+      <h2>Signering</h2>
+      <p class="tiny">Skriv med finger/penna. Du kan rensa och skriva om.</p>
+
+      <div class="row two">
+        <div class="sigbox">
+          <h3>Förare</h3>
+          <canvas id="sig_driver"></canvas>
+          <div class="sig-actions">
+            <button class="ghost small" onclick="clearSig('driver')">Rensa</button>
+          </div>
+        </div>
+
+        <div class="sigbox">
+          <h3>Kontrollant</h3>
+          <canvas id="sig_inspector"></canvas>
+          <div class="sig-actions">
+            <button class="ghost small" onclick="clearSig('inspector')">Rensa</button>
+          </div>
+        </div>
+      </div>
+
+      <label style="margin-top:12px">Samlad anmärkning (valfritt)</label>
+      <textarea id="f_anm_all" placeholder="Sammanfattning / beslut / åtgärder"></textarea>
+
+      <div id="validationMsg" class="tiny" style="color:var(--danger);font-weight:900;"></div>
+    </div>
+
+  </div>
+
+  <div class="bar no-print">
+    <div class="inner">
+      <button class="ghost" onclick="exportCurrent()">📤 Exportera (JSON)</button>
+      <button class="secondary" onclick="printCurrent()">📄 Skriv ut kontroll (PDF)</button>
+      <button class="primary" onclick="saveCurrent()">💾 Spara kontroll</button>
+    </div>
+  </div>
+
+<script>
+  // =======================
+  // Checklistpunkter 9–26
+  // =======================
+  const checklistItems = [
+    { code:"9", title:"Skriftliga instruktioner" },
+    { code:"10.1", title:"Förarintyg" },
+    { code:"10.2", title:"Annan ADR-Utb" },
+    { code:"11", title:"Godset tillåtet för transport" },
+    { code:"12", title:"Fordonet godkänt för transporten" },
+    { code:"13", title:"Bestämmelser för transportsätt (kolli, bulk, tank)" },
+    { code:"14", title:"Förbud mot samlastning" },
+    { code:"15.1", title:"Hantering" },
+    { code:"15.2", title:"Lastning/Stuvning" },
+    { code:"15.3", title:"Lastsäkring" },
+    { code:"16.1", title:"Läckage" },
+    { code:"16.2", title:"Skador på kolli alt fordon" },
+    { code:"17", title:"Godkännande märkning av kollin/tankar" },
+    { code:"18", title:"Datum för senaste kontroll ej överskriden/utgången (Tank/IBC/Plast förp) (Cont&IBC 2,5/5, Tankfo 3/6)" },
+    { code:"19", title:"Märkning av kolli" },
+    { code:"20", title:"Etikettering av kolli" },
+    { code:"21", title:"Storetiketter" },
+    { code:"22", title:"Skyltning/märkning av transportenhet" },
+    { code:"23.1", title:"Stoppkloss" },
+    { code:"23.2", title:"Varningsanordning" },
+    { code:"23.3", title:"Väst/ögonskydd/handskar" },
+    { code:"23.4", title:"Bärbar ljuskälla" },
+    { code:"24", title:"Godsspecifik utrustning" },
+    { code:"25", title:"Brandsläckare" },
+    { code:"26.1", title:"Övrigt" },
+    { code:"26.2", title:"Övrigt" },
+    { code:"26.3", title:"Övrigt" },
+  ];
+
+  const RESULT_OPTIONS = [
+    {v:"OK", t:"OK"},
+    {v:"Avvikelse", t:"Avvikelse"},
+    {v:"Ej tillämpligt", t:"Ej tillämpligt"},
+  ];
+
+  // =======================
+  // State & Storage
+  // =======================
+  const STORAGE_KEY = "fgKontroller_v6_foto_kontrollpunkt_versionshist";
+  let state = { currentId: null, records: [] };
+
+  function loadStore(){
+    try{ const raw = localStorage.getItem(STORAGE_KEY); state.records = raw ? JSON.parse(raw) : []; }
+    catch(e){ state.records = []; }
+  }
+  function saveStore(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+    renderSavedList();
+  }
+  function genId(){ return "FG-" + Date.now() + "-" + Math.random().toString(16).slice(2,8).toUpperCase(); }
+  function setStatus(text){ document.getElementById("statusLine").textContent = text || ""; }
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // =======================
+  // Render checklist
+  // =======================
+  function renderChecklist(){
+    const root = document.getElementById("checklist");
+    root.innerHTML = "";
+
+    checklistItems.forEach(item=>{
+      const id = "c_" + item.code.replaceAll(".","_");
+      const wrap = document.createElement("div");
+      wrap.className = "checkitem";
+      wrap.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="code">${item.code}</div>
+            <div class="title">${item.title}</div>
+          </div>
+          <div class="pill ok" id="${id}_pill">OK</div>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Resultat</label>
+            <select id="${id}_sel"></select>
+          </div>
+          <div>
+            <label>Fritext (anteckningar)</label>
+            <textarea id="${id}_free" placeholder="Egna observationer, noteringar, lägesbild"></textarea>
+          </div>
+          <div id="${id}_commentWrap" class="hidden">
+            <label>Avvikelsekommentar (krävs vid Avvikelse) <span class="req">*</span></label>
+            <textarea id="${id}_comment" placeholder="Beskriv avvikelsen och ev åtgärd"></textarea>
+          </div>
+        </div>
+      `;
+      root.appendChild(wrap);
+
+      const sel = document.getElementById(`${id}_sel`);
+      RESULT_OPTIONS.forEach(o=>{
+        const opt = document.createElement("option");
+        opt.value = o.v; opt.textContent = o.t;
+        sel.appendChild(opt);
+      });
+      sel.value = "OK";
+
+      sel.addEventListener("change", ()=>{ onChecklistChange(id); runAlerts(buildRecord(false)); });
+      document.getElementById(`${id}_free`).addEventListener("input", ()=>runAlerts(buildRecord(false)));
+      document.getElementById(`${id}_comment`).addEventListener("input", ()=>runAlerts(buildRecord(false)));
+    });
+  }
+
+  function onChecklistChange(id){
+    const sel = document.getElementById(`${id}_sel`);
+    const wrap = document.getElementById(`${id}_commentWrap`);
+    const pill = document.getElementById(`${id}_pill`);
+
+    if(sel.value === "Avvikelse"){
+      wrap.classList.remove("hidden");
+      pill.textContent = "Avvikelse";
+      pill.className = "pill bad";
+    }else if(sel.value === "Ej tillämpligt"){
+      wrap.classList.add("hidden");
+      pill.textContent = "Ej tillämpligt";
+      pill.className = "pill warn";
+    }else{
+      wrap.classList.add("hidden");
+      pill.textContent = "OK";
+      pill.className = "pill ok";
+    }
+  }
+
+  // =======================
+  // Foto – komprimerat + spårbarhet (kontrollpunkt/typ/kommentar)
+  // =======================
+  const PHOTO_TAGS = ['Märkning','Last','Utrustning','Avvikelse','Annat'];
+  let currentPhotos = []; // [{id, name, ts, dataUrl, tag, note, cpCode}]
+
+  function uid(){
+    return 'P-' + Date.now() + '-' + Math.random().toString(16).slice(2,8);
+  }
+
+  async function fileToCompressedDataUrl(file, maxW=1280, quality=0.78){
+    const dataUrl = await new Promise((res, rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((res, rej)=>{
+      const i = new Image();
+      i.onload = ()=>res(i);
+      i.onerror = rej;
+      i.src = dataUrl;
+    });
+    const w = img.width;
+    const h = img.height;
+    const scale = Math.min(1, maxW / Math.max(w, 1));
+    const nw = Math.round(w * scale);
+    const nh = Math.round(h * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = nw;
+    canvas.height = nh;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, nw, nh);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  async function handlePhotoFiles(fileList){
+    if(!fileList || !fileList.length) return;
+    const MAX_PHOTOS = 8;
+    for(const f of Array.from(fileList)){
+      if(currentPhotos.length >= MAX_PHOTOS){
+        alert('Max antal foton per kontroll är ' + MAX_PHOTOS + '.');
+        break;
+      }
+      try{
+        const compressed = await fileToCompressedDataUrl(f);
+        currentPhotos.push({ id: uid(), name: f.name, ts: new Date().toISOString(), dataUrl: compressed, tag: 'Annat', note: '', cpCode: '' });
+      }catch(e){
+        alert('Kunde inte läsa ett foto.');
+      }
+    }
+    runAlerts(buildRecord(false));
+    renderPhotos();
+  }
+
+  function renderPhotos(){
+    const list = document.getElementById('photoList');
+    if(!list) return;
+    list.innerHTML = '';
+    if(!currentPhotos.length){
+      list.innerHTML = '<div class="tiny">Inga foton tillagda.</div>';
+      return;
+    }
+
+    const cpOptions = ['<option value="">Ej kopplat</option>']
+      .concat(checklistItems.map(it=>{
+        const label = `${it.code} – ${it.title}`;
+        return `<option value="${escapeHtml(it.code)}">${escapeHtml(label)}</option>`;
+      })).join('');
+
+    currentPhotos.forEach(p=>{
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      const date = new Date(p.ts).toLocaleString('sv-SE');
+      const tagOptions = PHOTO_TAGS.map(t=>`<option value="${escapeHtml(t)}" ${p.tag===t?'selected':''}>${escapeHtml(t)}</option>`).join('');
+
+      div.innerHTML = `
+        <img src="${p.dataUrl}" alt="Foto">
+        <div style="margin-top:8px">
+          <label>Koppla till kontrollpunkt</label>
+          <select data-photo-id="${p.id}" data-field="cpCode">${cpOptions}</select>
+        </div>
+        <div style="margin-top:8px">
+          <label>Typ (för spårbarhet)</label>
+          <select data-photo-id="${p.id}" data-field="tag">${tagOptions}</select>
+        </div>
+        <div style="margin-top:8px">
+          <label>Kommentar / vad visar bilden?</label>
+          <input type="text" value="${escapeHtml(p.note||'')}" data-photo-id="${p.id}" data-field="note" placeholder="t.ex. skyltning på transportenhet, brandsläckare saknas">
+        </div>
+        <div class="photo-meta">
+          <small>${escapeHtml(p.name || 'foto')} • ${escapeHtml(date)}</small>
+          <button class="danger small" type="button" onclick="removePhoto('${p.id}')">Ta bort</button>
+        </div>
+      `;
+      list.appendChild(div);
+      const selCp = div.querySelector('select[data-field="cpCode"]');
+      if(selCp) selCp.value = p.cpCode || '';
+    });
+
+    list.querySelectorAll('[data-photo-id]').forEach(el=>{
+      el.addEventListener('change', (e)=>{
+        const id = e.target.getAttribute('data-photo-id');
+        const field = e.target.getAttribute('data-field');
+        const idx = currentPhotos.findIndex(x=>x.id===id);
+        if(idx>=0) currentPhotos[idx][field] = e.target.value;
+      });
+      el.addEventListener('input', (e)=>{
+        if(e.target.tagName !== 'INPUT') return;
+        const id = e.target.getAttribute('data-photo-id');
+        const field = e.target.getAttribute('data-field');
+        const idx = currentPhotos.findIndex(x=>x.id===id);
+        if(idx>=0) currentPhotos[idx][field] = e.target.value;
+      });
+    });
+  }
+
+  function removePhoto(id){
+    currentPhotos = currentPhotos.filter(p=>p.id !== id);
+    runAlerts(buildRecord(false));
+    renderPhotos();
+  }
+
+  function clearPhotos(){
+    if(!currentPhotos.length) return;
+    if(!confirm('Ta bort alla foton från denna kontroll?')) return;
+    currentPhotos = [];
+    runAlerts(buildRecord(false));
+    renderPhotos();
+  }
+
+  // =======================
+  // Signaturer
+  // =======================
+  const sig = {
+    driver: { canvas:null, ctx:null, drawing:false, dirty:false },
+    inspector: { canvas:null, ctx:null, drawing:false, dirty:false }
+  };
+
+  function setupSig(which){
+    const s = sig[which];
+    s.canvas = document.getElementById(which === "driver" ? "sig_driver" : "sig_inspector");
+    s.ctx = s.canvas.getContext("2d");
+
+    const resize = ()=>{
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = s.canvas.getBoundingClientRect();
+      s.canvas.width = Math.floor(rect.width * ratio);
+      s.canvas.height = Math.floor(rect.height * ratio);
+      s.ctx.setTransform(ratio,0,0,ratio,0,0);
+      s.ctx.lineWidth = 2.2;
+      s.ctx.lineCap = "round";
+      s.ctx.strokeStyle = "#111";
+    };
+
+    setTimeout(resize, 0);
+    window.addEventListener("resize", ()=>{ clearSig(which); setTimeout(resize, 0); });
+
+    const pos = (e)=>{
+      const r = s.canvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - r.left, y: t.clientY - r.top };
+    };
+
+    const start = (e)=>{
+      e.preventDefault();
+      s.drawing = true;
+      s.dirty = true;
+      const p = pos(e);
+      s.ctx.beginPath();
+      s.ctx.moveTo(p.x, p.y);
+      runAlerts(buildRecord(false));
+    };
+    const move = (e)=>{
+      if(!s.drawing) return;
+      e.preventDefault();
+      const p = pos(e);
+      s.ctx.lineTo(p.x, p.y);
+      s.ctx.stroke();
+    };
+    const end = (e)=>{
+      if(!s.drawing) return;
+      e.preventDefault();
+      s.drawing = false;
+    };
+
+    s.canvas.addEventListener("mousedown", start);
+    s.canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", end);
+
+    s.canvas.addEventListener("touchstart", start, {passive:false});
+    s.canvas.addEventListener("touchmove", move, {passive:false});
+    s.canvas.addEventListener("touchend", end, {passive:false});
+  }
+
+  function clearSig(which){
+    const s = sig[which];
+    if(!s.canvas) return;
+    const rect = s.canvas.getBoundingClientRect();
+    s.ctx.clearRect(0,0,rect.width,rect.height);
+    s.dirty = false;
+    runAlerts(buildRecord(false));
+  }
+
+  function sigDataUrl(which){
+    const s = sig[which];
+    if(!s.dirty) return "";
+    return s.canvas.toDataURL("image/png");
+  }
+
+  function loadSigToCanvas(which, dataUrl){
+    clearSig(which);
+    if(!dataUrl) return;
+    const s = sig[which];
+    const img = new Image();
+    img.onload = ()=>{
+      const rect = s.canvas.getBoundingClientRect();
+      s.ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      s.dirty = true;
+    };
+    img.src = dataUrl;
+  }
+
+  // =======================
+  // Checklist data
+  // =======================
+  function getTransportType(){
+    const r = document.querySelector('input[name="trans"]:checked');
+    return r ? r.value : "Styckegods";
+  }
+
+  function getChecklistData(){
+    const out = [];
+    checklistItems.forEach(item=>{
+      const id = "c_" + item.code.replaceAll(".","_");
+      const result = document.getElementById(`${id}_sel`).value;
+      const free = document.getElementById(`${id}_free`)?.value || "";
+      const comment = document.getElementById(`${id}_comment`)?.value || "";
+      out.push({ code:item.code, title:item.title, result, free, comment });
+    });
+    return out;
+  }
+
+  function setChecklistData(list){
+    checklistItems.forEach(item=>{
+      const id = "c_" + item.code.replaceAll(".","_");
+      const sel = document.getElementById(`${id}_sel`);
+      const free = document.getElementById(`${id}_free`);
+      const comment = document.getElementById(`${id}_comment`);
+      if(sel) sel.value = "OK";
+      if(free) free.value = "";
+      if(comment) comment.value = "";
+      onChecklistChange(id);
+    });
+    if(!Array.isArray(list)) return;
+    list.forEach(it=>{
+      const id = "c_" + (it.code||"").replaceAll(".","_");
+      const sel = document.getElementById(`${id}_sel`);
+      const free = document.getElementById(`${id}_free`);
+      const comment = document.getElementById(`${id}_comment`);
+      if(sel && it.result) sel.value = it.result;
+      if(free && it.free) free.value = it.free;
+      if(comment && it.comment) comment.value = it.comment;
+      if(sel) onChecklistChange(id);
+    });
+  }
+
+  // =======================
+  // Validation
+  // =======================
+  function validate(){
+    const msg = [];
+    const datum = document.getElementById("f_datum").value;
+    const kontrollant = document.getElementById("f_kontrollant").value.trim();
+
+    if(!datum) msg.push("Datum saknas.");
+    if(!kontrollant) msg.push("Kontroll gjord av saknas.");
+
+    checklistItems.forEach(item=>{
+      const id = "c_" + item.code.replaceAll(".","_");
+      const sel = document.getElementById(`${id}_sel`).value;
+      const comment = (document.getElementById(`${id}_comment`)?.value || "").trim();
+      if(sel === "Avvikelse" && comment.length === 0){
+        msg.push(`Avvikelsekommentar saknas vid punkt ${item.code}.`);
+      }
+    });
+
+    document.getElementById("validationMsg").textContent = msg.join(" ");
+    return msg.length === 0;
+  }
+
+  // =======================
+  // Build record
+  // =======================
+  function findExisting(id){
+    if(!id) return null;
+    return state.records.find(r=>r.id===id) || null;
+  }
+
+  function buildRecord(passNow=true){
+    const baseCreated = passNow ? new Date().toISOString() : (findExisting(state.currentId)?.meta?.createdAt || new Date().toISOString());
+    return {
+      id: state.currentId || genId(),
+      meta: { createdAt: baseCreated, updatedAt: new Date().toISOString(), device: navigator.userAgent },
+      grund: {
+        datum: document.getElementById("f_datum").value,
+        kontrollant: document.getElementById("f_kontrollant").value.trim(),
+        idnummer: document.getElementById("f_idnummer").value.trim(),
+        plats: document.getElementById("f_plats").value.trim()
+      },
+      fordon: {
+        dragfordon: document.getElementById("f_fordon").value.trim(),
+        regnr: document.getElementById("f_regnr").value.trim(),
+        slap: document.getElementById("f_slap").value.trim(),
+        slapregnr: document.getElementById("f_slapregnr").value.trim(),
+      },
+      forare: {
+        namn: document.getElementById("f_forare").value.trim(),
+        pnr: document.getElementById("f_pnr").value.trim()
+      },
+      transport: {
+        avsandare: document.getElementById("f_avsandare").value,
+        mottagare: document.getElementById("f_mottagare").value,
+        totalMangd: document.getElementById("f_totalmangd").value,
+        enhet: document.getElementById("f_enhet").value,
+        LQ: document.getElementById("f_LQ").checked,
+        EQ: document.getElementById("f_EQ").checked,
+        tomdEjRengjord: document.getElementById("f_tomd").checked,
+        vbmOverskriden: document.getElementById("f_vbm_overskriden").value,
+        riskvarde: document.getElementById("f_riskvarde").value.trim(),
+        samverkanSakerhetsradgivare: document.getElementById("f_samverkan").value,
+        transportsatt: getTransportType()
+      },
+      dokument: {
+        godsdeklaration: { status: document.getElementById("d_godsdeklaration").value, anm: document.getElementById("d_godsdeklaration_anm").value.trim() },
+        lastplan: { status: document.getElementById("d_lastplan").value, anm: document.getElementById("d_lastplan_anm").value.trim() },
+        stuvningsintyg: { status: document.getElementById("d_stuvning").value, anm: document.getElementById("d_stuvning_anm").value.trim() },
+      },
+      kontrollpunkter: getChecklistData(),
+      photos: currentPhotos,
+      anmarkning: document.getElementById("f_anm_all").value.trim(),
+      signering: { forare: sigDataUrl("driver"), kontrollant: sigDataUrl("inspector") }
+    };
+  }
+
+  // =======================
+  // Alerts
+  // =======================
+  function runAlerts(record){
+    const alerts = [];
+    const avv = (record.kontrollpunkter||[]).filter(p=>p.result === "Avvikelse");
+    if(avv.length > 0) alerts.push(`Kontrollen innehåller ${avv.length} avvikelse(r).`);
+
+    if(record.transport?.vbmOverskriden === "Ja" && !(record.transport?.riskvarde||"").trim()){
+      alerts.push("Värdeberäknad mängd är överskriden men riskvärde saknas.");
+    }
+
+    const docs = record.dokument || {};
+    const docNames = { godsdeklaration:"Godsdeklaration", lastplan:"Lastplan", stuvningsintyg:"Stuvningsintyg" };
+    Object.keys(docNames).forEach(k=>{
+      const st = docs[k]?.status;
+      if(st === "B" || st === "D") alerts.push(`${docNames[k]} är inte korrekt (status ${st}).`);
+    });
+
+    if(!record.signering?.forare) alerts.push("Förares signering saknas.");
+    if(!record.signering?.kontrollant) alerts.push("Kontrollants signering saknas.");
+
+    const reg = (record.fordon?.regnr||"").trim();
+    if(reg){
+      const totalForReg = state.records
+        .filter(r=> (r.fordon?.regnr||"").trim().toUpperCase() === reg.toUpperCase())
+        .reduce((sum,r)=> sum + (r.kontrollpunkter||[]).filter(p=>p.result==="Avvikelse").length, 0);
+      if(totalForReg >= 6) alerts.push(`Mönster: Fordon ${reg} har totalt ${totalForReg} avvikelse(r) i historiken.`);
+    }
+
+    renderAlerts(alerts);
+    return alerts;
+  }
+
+  function renderAlerts(alerts){
+    const box = document.getElementById("alerts");
+    const list = document.getElementById("alertList");
+    const hint = document.getElementById("alertHint");
+
+    if(!alerts || alerts.length === 0){
+      box.classList.add("hidden");
+      return;
+    }
+    list.innerHTML = "";
+    alerts.forEach(a=>{
+      const li = document.createElement("li");
+      li.textContent = a;
+      list.appendChild(li);
+    });
+    hint.textContent = "Tips: Du kan ändå spara, men appen vill att du uppmärksammar riskerna.";
+    box.classList.remove("hidden");
+  }
+
+  // =======================
+  // Saved list + CRUD
+  // =======================
+  function renderSavedList(){
+    const list = document.getElementById("savedList");
+    list.innerHTML = "";
+    if(state.records.length === 0){
+      list.innerHTML = `<div class="tiny">Inga sparade kontroller ännu.</div>`;
+      setStatus("Ingen aktiv kontroll.");
+      return;
+    }
+    state.records
+      .slice()
+      .sort((a,b)=> (b.meta?.updatedAt||b.meta?.createdAt||"").localeCompare(a.meta?.updatedAt||a.meta?.createdAt||""))
+      .forEach(rec=>{
+        const b = document.createElement("button");
+        const d = rec.grund?.datum || "";
+        const r = rec.fordon?.regnr || "";
+        const who = rec.grund?.kontrollant || "";
+        const active = rec.id === state.currentId ? " • (aktiv)" : "";
+        b.textContent = `${rec.id} — ${d} — ${r} — ${who}${active}`;
+        b.onclick = ()=>loadInspection(rec.id);
+        list.appendChild(b);
+      });
+    setStatus(state.currentId ? `Aktiv: ${state.currentId}` : "Ingen aktiv kontroll.");
+  }
+
+  function newInspection(){
+    state.currentId = genId();
+
+    document.getElementById("f_datum").value = new Date().toISOString().slice(0,10);
+    document.getElementById("f_kontrollant").value = "";
+    document.getElementById("f_idnummer").value = "";
+    document.getElementById("f_plats").value = "";
+
+    document.getElementById("f_fordon").value = "";
+    document.getElementById("f_regnr").value = "";
+    document.getElementById("f_slap").value = "";
+    document.getElementById("f_slapregnr").value = "";
+
+    document.getElementById("f_forare").value = "";
+    document.getElementById("f_pnr").value = "";
+
+    document.getElementById("f_avsandare").value = "Ja";
+    document.getElementById("f_mottagare").value = "Ja";
+    document.getElementById("f_totalmangd").value = "";
+    document.getElementById("f_enhet").value = "kg";
+    document.getElementById("f_LQ").checked = false;
+    document.getElementById("f_EQ").checked = false;
+    document.getElementById("f_tomd").checked = false;
+
+    document.getElementById("f_vbm_overskriden").value = "Nej";
+    document.getElementById("f_riskvarde").value = "";
+    document.getElementById("f_samverkan").value = "Nej";
+
+    document.getElementById("t_styck").checked = true;
+
+    document.getElementById("d_godsdeklaration").value = "A";
+    document.getElementById("d_godsdeklaration_anm").value = "";
+    document.getElementById("d_lastplan").value = "A";
+    document.getElementById("d_lastplan_anm").value = "";
+    document.getElementById("d_stuvning").value = "A";
+    document.getElementById("d_stuvning_anm").value = "";
+
+    document.getElementById("f_anm_all").value = "";
+    document.getElementById("validationMsg").textContent = "";
+
+    setChecklistData([]);
+    clearSig("driver");
+    clearSig("inspector");
+
+    currentPhotos = [];
+    renderPhotos();
+
+    renderSavedList();
+    setStatus(`Ny kontroll skapad: ${state.currentId}`);
+    runAlerts(buildRecord(false));
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function loadInspection(id){
+    const rec = state.records.find(r=>r.id===id);
+    if(!rec) return;
+
+    state.currentId = rec.id;
+
+    document.getElementById("f_datum").value = rec.grund?.datum || "";
+    document.getElementById("f_kontrollant").value = rec.grund?.kontrollant || "";
+    document.getElementById("f_idnummer").value = rec.grund?.idnummer || "";
+    document.getElementById("f_plats").value = rec.grund?.plats || "";
+
+    document.getElementById("f_fordon").value = rec.fordon?.dragfordon || "";
+    document.getElementById("f_regnr").value = rec.fordon?.regnr || "";
+    document.getElementById("f_slap").value = rec.fordon?.slap || "";
+    document.getElementById("f_slapregnr").value = rec.fordon?.slapregnr || "";
+
+    document.getElementById("f_forare").value = rec.forare?.namn || "";
+    document.getElementById("f_pnr").value = rec.forare?.pnr || "";
+
+    document.getElementById("f_avsandare").value = rec.transport?.avsandare || "Ja";
+    document.getElementById("f_mottagare").value = rec.transport?.mottagare || "Ja";
+    document.getElementById("f_totalmangd").value = rec.transport?.totalMangd || "";
+    document.getElementById("f_enhet").value = rec.transport?.enhet || "kg";
+    document.getElementById("f_LQ").checked = !!rec.transport?.LQ;
+    document.getElementById("f_EQ").checked = !!rec.transport?.EQ;
+    document.getElementById("f_tomd").checked = !!rec.transport?.tomdEjRengjord;
+
+    document.getElementById("f_vbm_overskriden").value = rec.transport?.vbmOverskriden || "Nej";
+    document.getElementById("f_riskvarde").value = rec.transport?.riskvarde || "";
+    document.getElementById("f_samverkan").value = rec.transport?.samverkanSakerhetsradgivare || "Nej";
+
+    const t = rec.transport?.transportsatt || "Styckegods";
+    document.getElementById("t_styck").checked = (t==="Styckegods");
+    document.getElementById("t_bulk").checked = (t==="Bulk");
+    document.getElementById("t_tank").checked = (t==="Tank");
+
+    document.getElementById("d_godsdeklaration").value = rec.dokument?.godsdeklaration?.status || "A";
+    document.getElementById("d_godsdeklaration_anm").value = rec.dokument?.godsdeklaration?.anm || "";
+    document.getElementById("d_lastplan").value = rec.dokument?.lastplan?.status || "A";
+    document.getElementById("d_lastplan_anm").value = rec.dokument?.lastplan?.anm || "";
+    document.getElementById("d_stuvning").value = rec.dokument?.stuvningsintyg?.status || "A";
+    document.getElementById("d_stuvning_anm").value = rec.dokument?.stuvningsintyg?.anm || "";
+
+    document.getElementById("f_anm_all").value = rec.anmarkning || "";
+
+    setChecklistData(rec.kontrollpunkter || []);
+    loadSigToCanvas("driver", rec.signering?.forare || "");
+    loadSigToCanvas("inspector", rec.signering?.kontrollant || "");
+
+    currentPhotos = Array.isArray(rec.photos) ? rec.photos : [];
+    renderPhotos();
+
+    document.getElementById("validationMsg").textContent = "";
+    renderSavedList();
+    setStatus(`Laddad: ${state.currentId}`);
+    runAlerts(buildRecord(false));
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function upsertRecord(rec){
+    const idx = state.records.findIndex(r=>r.id===rec.id);
+    if(idx >= 0) state.records[idx] = rec;
+    else state.records.push(rec);
+    saveStore();
+  }
+
+  // =======================
+  // Actions
+  // =======================
+  function saveCurrent(){
+    if(!validate()){
+      alert("Kan inte spara – kontrollera felmeddelanden.");
+      return;
+    }
+    const rec = buildRecord(true);
+    const alerts = runAlerts(rec);
+    if(alerts.length > 0 && !confirm("Det finns varningar. Vill du ändå spara kontrollen?")) return;
+    upsertRecord(rec);
+    state.currentId = rec.id;
+    setStatus(`Sparad: ${rec.id}`);
+    alert("Kontroll sparad lokalt ✅");
+  }
+
+  function exportCurrent(){
+    if(!state.currentId){ alert("Ingen aktiv kontroll. Skapa eller ladda en kontroll först."); return; }
+    const rec = buildRecord(false);
+    downloadJson(`${rec.id}.json`, rec);
+  }
+
+  function exportAll(){
+    loadStore();
+    downloadJson(`FG_Kontroller_Backup.json`, state.records);
+  }
+
+  function importBackup(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try{
+        const data = JSON.parse(e.target.result);
+        if(!Array.isArray(data)) throw new Error("Fel format");
+        const byId = new Map();
+        state.records.forEach(r=>byId.set(r.id, r));
+        data.forEach(r=>{
+          if(!r || !r.id) return;
+          const existing = byId.get(r.id);
+          const a = existing?.meta?.updatedAt || existing?.meta?.createdAt || "";
+          const b = r.meta?.updatedAt || r.meta?.createdAt || "";
+          if(!existing || b.localeCompare(a) >= 0) byId.set(r.id, r);
+        });
+        state.records = Array.from(byId.values());
+        saveStore();
+        alert("Backup importerad ✅");
+        renderSavedList();
+      }catch(err){
+        alert("Kunde inte läsa backupfilen. Kontrollera att det är en JSON-backup från appen.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function deleteCurrent(){
+    if(!state.currentId){ alert("Ingen aktiv kontroll att radera."); return; }
+    const id = state.currentId;
+    state.records = state.records.filter(r=>r.id!==id);
+    state.currentId = null;
+    saveStore();
+    newInspection();
+    setStatus(`Raderad: ${id}`);
+  }
+
+  function wipeAll(){
+    if(!confirm("Radera ALLA lokala kontroller? Detta kan inte ångras.")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state.records = [];
+    state.currentId = null;
+    renderSavedList();
+    newInspection();
+  }
+
+  function downloadJson(filename, data){
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // =======================
+  // Print / PDF (Safari print-to-PDF)
+  // =======================
+  function printCurrent(){
+    if(!state.currentId){ alert("Ingen aktiv kontroll att skriva ut."); return; }
+    const rec = buildRecord(false);
+    const html = buildPrintHtmlForRecord(rec);
+    openPrintWindow(html, `Kontroll ${rec.id}`);
+  }
+
+  function printSummary(){
+    loadStore();
+    const html = buildPrintHtmlForSummary(state.records);
+    openPrintWindow(html, "Periodrapport – Farligt gods");
+  }
+
+  function openPrintWindow(innerHtml, title){
+    const w = window.open("", "_blank");
+    if(!w){
+      alert("Safari blockerade ett nytt fönster. Tillåt popup eller prova igen.");
+      return;
+    }
+    w.document.open();
+    w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>${getPrintCss()}</style></head><body>${innerHtml}<script>window.focus(); setTimeout(()=>window.print(), 300);<\\/script></body></html>`);
+    w.document.close();
+  }
+
+  function getPrintCss(){
+    return `
+      @page{margin:14mm;}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111;}
+      .print-root{margin:0;}
+      .print-title{font-size:20px;font-weight:900;margin:0 0 8px;}
+      .print-sub{color:#444;margin:0 0 14px;font-size:12px}
+      .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .print-box{border:1px solid #ddd;border-radius:10px;padding:10px;break-inside:avoid}
+      .print-box h4{margin:0 0 8px;font-size:13px}
+      .kv{display:grid;grid-template-columns:180px 1fr;gap:6px;font-size:12px;line-height:1.35}
+      .kv div{padding:2px 0}
+      .kv .k{color:#555}
+      table{width:100%;border-collapse:collapse;font-size:12px}
+      th,td{border:1px solid #ddd;padding:6px;vertical-align:top}
+      th{background:#f6f6f6;text-align:left}
+      .tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800}
+      .tag.ok{background:#ecfdf3;color:#0f5132;border:1px solid #ccebd6}
+      .tag.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+      .tag.bad{background:#fef2f2;color:#7f1d1d;border:1px solid #fecaca}
+      .sig-img{width:100%;max-height:260px;object-fit:contain;border:1px solid #ddd;border-radius:8px}
+      .muted{color:#666;font-size:12px}
+      h2{font-size:14px;margin:14px 0 8px}
+      ul{margin:6px 0 0 18px}
+    `;
+  }
+
+  function buildPrintHtmlForRecord(rec){
+    const alerts = runAlerts(rec);
+    const docTag = (s)=> s==='A' ? '<span class="tag ok">A</span>' : (s==='C' ? '<span class="tag warn">C</span>' : '<span class="tag bad">'+escapeHtml(s||'')+'</span>');
+
+    const rows = (rec.kontrollpunkter||[]).map(p=>{
+      const tag = p.result === 'OK' ? 'ok' : (p.result === 'Ej tillämpligt' ? 'warn' : 'bad');
+      const free = (p.free||'').trim();
+      const comment = (p.comment||'').trim();
+      return `<tr><td>${escapeHtml(p.code)}</td><td>${escapeHtml(p.title)}</td><td><span class="tag ${tag}">${escapeHtml(p.result)}</span></td><td>${escapeHtml(free)}</td><td>${escapeHtml(comment)}</td></tr>`;
+    }).join('');
+
+    const lqeq = [rec.transport?.LQ?'LQ':null, rec.transport?.EQ?'EQ':null, rec.transport?.tomdEjRengjord?'Tömd ej rengjord':null].filter(Boolean).join(', ');
+    const alertsHtml = alerts.length ? `<div class="print-box"><h4>Automatiska varningar</h4><ul>${alerts.map(a=>`<li>${escapeHtml(a)}</li>`).join('')}</ul></div>` : '';
+
+    const photosHtml = (rec.photos||[]).length ? (rec.photos||[]).map(p=>{
+      const cp = p.cpCode ? (rec.kontrollpunkter||[]).find(x=>x.code===p.cpCode) : null;
+      const cpLabel = cp ? `${cp.code} – ${cp.title}` : '';
+      const head = `${escapeHtml(p.tag||'Annat')}` + (cpLabel ? ` • Punkt ${escapeHtml(cpLabel)}` : '') + (p.note ? ` – ${escapeHtml(p.note)}` : '');
+      return `<div style="margin:10px 0"><div class="muted"><strong>${head}</strong></div><img class="sig-img" src="${p.dataUrl}"></div>`;
+    }).join('') : '<div class="muted">Inga foton.</div>';
+
+    return `
+    <div class="print-root">
+      <div class="print-title">Kontroll transport av farligt gods</div>
+      <div class="print-sub"><strong>ID:</strong> ${escapeHtml(rec.id)} • <strong>Datum:</strong> ${escapeHtml(rec.grund?.datum||'')} • <strong>Kontrollant:</strong> ${escapeHtml(rec.grund?.kontrollant||'')}</div>
+
+      <div class="print-grid">
+        <div class="print-box"><h4>Grunduppgifter</h4>
+          <div class="kv">
+            <div class="k">Plats</div><div>${escapeHtml(rec.grund?.plats||'')}</div>
+            <div class="k">ID nummer</div><div>${escapeHtml(rec.grund?.idnummer||'')}</div>
+          </div>
+        </div>
+
+        <div class="print-box"><h4>Fordon & förare</h4>
+          <div class="kv">
+            <div class="k">Dragfordon</div><div>${escapeHtml(rec.fordon?.dragfordon||'')}</div>
+            <div class="k">Regnr</div><div>${escapeHtml(rec.fordon?.regnr||'')}</div>
+            <div class="k">Släp</div><div>${escapeHtml(rec.fordon?.slap||'')}</div>
+            <div class="k">Släp regnr</div><div>${escapeHtml(rec.fordon?.slapregnr||'')}</div>
+            <div class="k">Förare</div><div>${escapeHtml(rec.forare?.namn||'')}</div>
+            <div class="k">Pnr</div><div>${escapeHtml(rec.forare?.pnr||'')}</div>
+          </div>
+        </div>
+
+        <div class="print-box"><h4>Transport & gods</h4>
+          <div class="kv">
+            <div class="k">Avsändare</div><div>${escapeHtml(rec.transport?.avsandare||'')}</div>
+            <div class="k">Mottagare</div><div>${escapeHtml(rec.transport?.mottagare||'')}</div>
+            <div class="k">Total mängd</div><div>${escapeHtml(rec.transport?.totalMangd||'')} ${escapeHtml(rec.transport?.enhet||'')}</div>
+            <div class="k">LQ/EQ/Tömd</div><div>${escapeHtml(lqeq)}</div>
+            <div class="k">VBM överskriden</div><div>${escapeHtml(rec.transport?.vbmOverskriden||'')}</div>
+            <div class="k">Riskvärde</div><div>${escapeHtml(rec.transport?.riskvarde||'')}</div>
+            <div class="k">Samverkan SR (A)</div><div>${escapeHtml(rec.transport?.samverkanSakerhetsradgivare||'')}</div>
+            <div class="k">Transportsätt</div><div>${escapeHtml(rec.transport?.transportsatt||'')}</div>
+          </div>
+        </div>
+
+        <div class="print-box"><h4>Dokument</h4>
+          <div class="kv">
+            <div class="k">Godsdeklaration</div><div>${docTag(rec.dokument?.godsdeklaration?.status)} ${escapeHtml(rec.dokument?.godsdeklaration?.anm||'')}</div>
+            <div class="k">Lastplan</div><div>${docTag(rec.dokument?.lastplan?.status)} ${escapeHtml(rec.dokument?.lastplan?.anm||'')}</div>
+            <div class="k">Stuvningsintyg</div><div>${docTag(rec.dokument?.stuvningsintyg?.status)} ${escapeHtml(rec.dokument?.stuvningsintyg?.anm||'')}</div>
+          </div>
+        </div>
+
+        ${alertsHtml}
+
+        <div class="print-box"><h4>Signering</h4>
+          <div class="kv">
+            <div class="k">Förare</div><div>${rec.signering?.forare ? `<img class="sig-img" src="${rec.signering.forare}">` : '<span class="muted">Saknas</span>'}</div>
+            <div class="k">Kontrollant</div><div>${rec.signering?.kontrollant ? `<img class="sig-img" src="${rec.signering.kontrollant}">` : '<span class="muted">Saknas</span>'}</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Kontrollpunkter 9–26</h2>
+      <table>
+        <thead><tr><th>Punkt</th><th>Kontroll</th><th>Resultat</th><th>Fritext</th><th>Avvikelse</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <h2>Fotodokumentation</h2>
+      <div class="print-box">${photosHtml}</div>
+
+      <h2>Samlad anmärkning</h2>
+      <div class="print-box"><div class="muted">${escapeHtml(rec.anmarkning||'')}</div></div>
+
+      <div class="muted" style="margin-top:10px">Skapad: ${escapeHtml(rec.meta?.createdAt||'')} • Uppdaterad: ${escapeHtml(rec.meta?.updatedAt||'')}</div>
+    </div>`;
+  }
+
+  function buildPrintHtmlForSummary(records){
+    const total = records.length;
+    let totalAvv = 0;
+    const byPoint = {};
+    const byVehicle = {};
+
+    records.forEach(r=>{
+      const reg = (r.fordon?.regnr||'Okänt').trim() || 'Okänt';
+      const avv = (r.kontrollpunkter||[]).filter(p=>p.result==='Avvikelse');
+      totalAvv += avv.length;
+      byVehicle[reg] = (byVehicle[reg]||0) + avv.length;
+      avv.forEach(p=>{ byPoint[p.title] = (byPoint[p.title]||0) + 1; });
+    });
+
+    const topPoints = Object.entries(byPoint).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const topVehicles = Object.entries(byVehicle).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const now = new Date().toISOString().slice(0,10);
+
+    return `
+    <div class="print-root">
+      <div class="print-title">Periodrapport – Transport av farligt gods</div>
+      <div class="print-sub">Utskriftsdatum: ${escapeHtml(now)} • Underlag: lokalt sparade kontroller</div>
+
+      <div class="print-grid">
+        <div class="print-box"><h4>Översikt</h4>
+          <div class="kv">
+            <div class="k">Antal kontroller</div><div>${total}</div>
+            <div class="k">Totalt antal avvikelser</div><div>${totalAvv}</div>
+            <div class="k">Genomsnitt avvikelser/kontroll</div><div>${total ? (totalAvv/total).toFixed(2) : '0.00'}</div>
+          </div>
+        </div>
+        <div class="print-box"><h4>Tolkning (snabb)</h4>
+          <div class="muted">Rapporten visar vilka kontrollpunkter och fordon som oftast ger avvikelser. Använd som underlag för åtgärder, utbildning och uppföljning.</div>
+        </div>
+      </div>
+
+      <h2>Vanligaste avvikelser (Top 10)</h2>
+      <table>
+        <thead><tr><th>Kontrollpunkt</th><th>Antal</th></tr></thead>
+        <tbody>
+          ${topPoints.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${v}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">Inga avvikelser registrerade.</td></tr>`}
+        </tbody>
+      </table>
+
+      <h2>Fordon med flest avvikelser (Top 10)</h2>
+      <table>
+        <thead><tr><th>Regnr</th><th>Antal avvikelser</th></tr></thead>
+        <tbody>
+          ${topVehicles.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${v}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">Ingen data.</td></tr>`}
+        </tbody>
+      </table>
+
+      <h2>Kontroller (lista)</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Datum</th><th>Regnr</th><th>Kontrollant</th><th>Avvikelser</th></tr></thead>
+        <tbody>
+          ${records.slice().sort((a,b)=>(b.grund?.datum||'').localeCompare(a.grund?.datum||'')).map(r=>{
+            const avv = (r.kontrollpunkter||[]).filter(p=>p.result==='Avvikelse').length;
+            return `<tr><td>${escapeHtml(r.id||'')}</td><td>${escapeHtml(r.grund?.datum||'')}</td><td>${escapeHtml(r.fordon?.regnr||'')}</td><td>${escapeHtml(r.grund?.kontrollant||'')}</td><td>${avv}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+
+      <div class="muted" style="margin-top:10px">OBS: Detta underlag kommer från lokal lagring i webbläsaren. Ta regelbundna backuper.</div>
+    </div>`;
+  }
+
+  // =======================
+  // Init
+  // =======================
+  (function init(){
+    renderChecklist();
+    setupSig("driver");
+    setupSig("inspector");
+
+    const pi = document.getElementById('photoInput');
+    if(pi){
+      pi.addEventListener('change', async (e)=>{
+        await handlePhotoFiles(e.target.files);
+        e.target.value = '';
+      });
+    }
+
+    [
+      "f_datum","f_kontrollant","f_idnummer","f_plats",
+      "f_fordon","f_regnr","f_slap","f_slapregnr",
+      "f_forare","f_pnr",
+      "f_avsandare","f_mottagare","f_totalmangd","f_enhet",
+      "f_LQ","f_EQ","f_tomd",
+      "f_vbm_overskriden","f_riskvarde","f_samverkan",
+      "d_godsdeklaration","d_lastplan","d_stuvning",
+      "d_godsdeklaration_anm","d_lastplan_anm","d_stuvning_anm",
+      "f_anm_all"
+    ].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener("input", ()=>runAlerts(buildRecord(false)));
+      el.addEventListener("change", ()=>runAlerts(buildRecord(false)));
+    });
+
+    document.querySelectorAll('input[name="trans"]').forEach(el=>{
+      el.addEventListener("change", ()=>runAlerts(buildRecord(false)));
+    });
+
+    loadStore();
+    renderSavedList();
+    newInspection();
+  })();
+</script>
+</body>
+</html>
