@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Mina Appar</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --stone:#F7F5F0;
+      --stone2:#EDE9E1;
+      --stone3:#D9D3C7;
+      --ink:#1A1714;
+      --ink2:#4A4540;
+      --ink3:#8C857C;
+      --gold:#B8860B;
+      --gold2:#E8C547;
+      --r:16px;
+    }
+    html{scroll-behavior:smooth}
+    body{
+      background:var(--stone);
+      color:var(--ink);
+      font-family:'DM Sans',system-ui,sans-serif;
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* ── BACKGROUND TEXTURE ── */
+    body::before{
+      content:'';
+      position:fixed;inset:0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%,rgba(184,134,11,0.08) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%,rgba(184,134,11,0.06) 0%,transparent 60%);
+      pointer-events:none;z-index:0;
+    }
+
+    /* ── HEADER ── */
+    header{
+      position:relative;z-index:1;
+      padding:64px 32px 48px;
+      max-width:900px;margin:0 auto;
+    }
+    .logo-row{
+      display:flex;align-items:center;gap:12px;
+      margin-bottom:40px;
+    }
+    .logo-mark{
+      width:36px;height:36px;
+      background:var(--ink);border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;
+    }
+    .logo-mark svg{width:20px;height:20px;fill:var(--gold2)}
+    .logo-name{
+      font-family:'DM Sans',sans-serif;
+      font-size:13px;font-weight:600;
+      letter-spacing:2px;text-transform:uppercase;
+      color:var(--ink3);
+    }
+    .hero-title{
+      font-family:'DM Serif Display',serif;
+      font-size:clamp(2.4rem,6vw,4rem);
+      line-height:1.1;
+      letter-spacing:-0.02em;
+      color:var(--ink);
+      margin-bottom:18px;
+    }
+    .hero-title em{
+      font-style:italic;
+      color:var(--gold);
+    }
+    .hero-sub{
+      font-size:1.05rem;
+      color:var(--ink3);
+      max-width:480px;
+      line-height:1.65;
+      font-weight:400;
+    }
+    .divider{
+      width:48px;height:2px;
+      background:var(--gold);
+      margin:28px 0;
+      border-radius:2px;
+    }
+
+    /* ── APP GRID ── */
+    .grid{
+      position:relative;z-index:1;
+      max-width:900px;margin:0 auto;
+      padding:0 32px 80px;
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+      gap:20px;
+    }
+
+    /* ── APP CARD ── */
+    .card{
+      background:#FFFFFF;
+      border:1px solid var(--stone3);
+      border-radius:var(--r);
+      padding:28px;
+      position:relative;overflow:hidden;
+      transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;
+      display:flex;flex-direction:column;gap:0;
+    }
+    .card::after{
+      content:'';
+      position:absolute;
+      top:0;left:0;right:0;height:3px;
+      background:var(--card-accent,var(--gold));
+      border-radius:var(--r) var(--r) 0 0;
+      opacity:0;
+      transition:opacity 0.2s;
+    }
+    .card:hover{
+      transform:translateY(-3px);
+      box-shadow:0 12px 40px rgba(26,23,20,0.10);
+      border-color:var(--stone2);
+    }
+    .card:hover::after{opacity:1;}
+
+    .card-top{
+      display:flex;align-items:flex-start;gap:16px;
+      margin-bottom:16px;
+    }
+    .card-icon{
+      width:52px;height:52px;
+      border-radius:12px;
+      background:var(--icon-bg,#F5F0E8);
+      display:flex;align-items:center;justify-content:center;
+      font-size:26px;flex-shrink:0;
+      transition:transform 0.2s;
+    }
+    .card:hover .card-icon{transform:scale(1.05)}
+    .card-meta{flex:1}
+    .card-label{
+      font-size:11px;font-weight:600;
+      letter-spacing:1.5px;text-transform:uppercase;
+      color:var(--card-accent,var(--gold));
+      margin-bottom:4px;
+    }
+    .card-name{
+      font-family:'DM Serif Display',serif;
+      font-size:1.35rem;
+      color:var(--ink);
+      line-height:1.2;
+      letter-spacing:-0.01em;
+    }
+    .card-desc{
+      font-size:0.875rem;
+      color:var(--ink3);
+      line-height:1.6;
+      flex:1;
+      margin-bottom:22px;
+    }
+    .card-tags{
+      display:flex;flex-wrap:wrap;gap:6px;
+      margin-bottom:22px;
+    }
+    .tag{
+      font-size:11px;font-weight:500;
+      padding:4px 10px;
+      border-radius:20px;
+      background:var(--stone);
+      color:var(--ink2);
+      border:1px solid var(--stone3);
+    }
+    .card-btns{
+      display:flex;gap:10px;
+      margin-top:auto;
+    }
+    .btn-app{
+      flex:1;
+      padding:11px 18px;
+      border-radius:10px;
+      font-family:'DM Sans',sans-serif;
+      font-size:13px;font-weight:600;
+      cursor:pointer;
+      text-decoration:none;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      transition:all 0.15s;
+      border:none;
+    }
+    .btn-primary{
+      background:var(--ink);
+      color:#fff;
+    }
+    .btn-primary:hover{background:var(--ink2);}
+    .btn-secondary{
+      background:var(--stone);
+      color:var(--ink2);
+      border:1px solid var(--stone3);
+    }
+    .btn-secondary:hover{background:var(--stone2);}
+
+    /* ── FOOTER ── */
+    footer{
+      position:relative;z-index:1;
+      text-align:center;
+      padding:24px 32px 40px;
+      font-size:12px;
+      color:var(--ink3);
+      letter-spacing:0.3px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .card{animation:fadeUp 0.5s ease both}
+    .card:nth-child(1){animation-delay:0.05s}
+    .card:nth-child(2){animation-delay:0.12s}
+    .card:nth-child(3){animation-delay:0.19s}
+    .card:nth-child(4){animation-delay:0.26s}
+    .card:nth-child(5){animation-delay:0.33s}
+    .card:nth-child(6){animation-delay:0.40s}
+    header{animation:fadeUp 0.4s ease both}
+
+    @media(max-width:600px){
+      header{padding:40px 20px 32px}
+      .grid{padding:0 16px 60px;grid-template-columns:1fr;gap:14px}
+      .hero-title{font-size:2rem}
+      .card{padding:22px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="logo-name">Mina appar</span>
+  </div>
+  <h1 class="hero-title">Smarta verktyg<br>för <em>vardagen</em></h1>
+  <div class="divider"></div>
+  <p class="hero-sub">Välj en app för att öppna den i Safari. Därifrån kan du lägga till den på hemskärmen via dela-ikonen.</p>
+</header>
+
+<div class="grid">
+
+  <!-- FORDONSBOK -->
+  <div class="card" style="--card-accent:#3B82F6;--icon-bg:#EFF6FF">
+    <div class="card-top">
+      <div class="card-icon">🚗</div>
+      <div class="card-meta">
+        <div class="card-label">Ekonomi</div>
+        <div class="card-name">Fordonsbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Bokför och följ upp alla kostnader för dina fordon — drivmedel, reparationer, service, besiktning, skatt och försäkring. Statistik, grafer och jämförelser.</p>
+    <div class="card-tags">
+      <span class="tag">Golf · Citroën · Husbil</span>
+      <span class="tag">Kostnad/mil</span>
+      <span class="tag">Grafer</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="fordonsapp.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="fordonsbok_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- MIN EKONOMI -->
+  <div class="card" style="--card-accent:#B8860B;--icon-bg:#FFF7E6">
+    <div class="card-top">
+      <div class="card-icon">💰</div>
+      <div class="card-meta">
+        <div class="card-label">Ekonomi</div>
+        <div class="card-name">Min Ekonomi</div>
+      </div>
+    </div>
+    <p class="card-desc">Följ din privatekonomi: inkomster, utgifter och översikt — fungerar offline och sparar data lokalt.</p>
+    <div class="card-tags">
+      <span class="tag">Kassabok</span>
+      <span class="tag">Budget</span>
+      <span class="tag">Översikt</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="Min_ekonomi.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="Manual_Min_Ekonomi.pdf" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- HUSBILSDAGBOK -->
+  <div class="card" style="--card-accent:#059669;--icon-bg:#ECFDF5">
+    <div class="card-top">
+      <div class="card-icon">🚐</div>
+      <div class="card-meta">
+        <div class="card-label">Resor</div>
+        <div class="card-name">Husbilsdagbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Digital resedagbok för husbilsresor med dagbok, kostnader, statistik och fordonsinfo — allt sparas lokalt.</p>
+    <div class="card-tags">
+      <span class="tag">Dagbok</span>
+      <span class="tag">Kostnader</span>
+      <span class="tag">Statistik</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="husbilsdagbok.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="husbilsdagbok-sammanfattning.pdf" download>📄 Sammanfattning</a>
+    </div>
+  </div>
+
+  <!-- TRANSSÄK -->
+  <div class="card" style="--card-accent:#0F4C81;--icon-bg:#EBF4FF">
+    <div class="card-top">
+      <div class="card-icon">🚛</div>
+      <div class="card-meta">
+        <div class="card-label">Transport</div>
+        <div class="card-name">TransSäk</div>
+      </div>
+    </div>
+    <p class="card-desc">Affärssystem för transportbranschen — hantera offerter, affärer och incidentrapportering. Dashboard med pipeline-översikt och rutthantering.</p>
+    <div class="card-tags">
+      <span class="tag">Offerthantering</span>
+      <span class="tag">Incidentrapport</span>
+      <span class="tag">Dashboard</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="TransSäk_App.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="TransSäk_App_Manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- HEMLOGGBOK -->
+  <div class="card" style="--card-accent:#059669;--icon-bg:#ECFDF5">
+    <div class="card-top">
+      <div class="card-icon">🏡</div>
+      <div class="card-meta">
+        <div class="card-label">Boende</div>
+        <div class="card-name">Hemloggbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Dokumentera alla arbeten och händelser i hemmet — rum för rum. Håll koll på hantverkare, kostnader, ROT-avdrag och vad som gjordes när.</p>
+    <div class="card-tags">
+      <span class="tag">Underhåll</span>
+      <span class="tag">ROT-avdrag</span>
+      <span class="tag">Rum &amp; utrymmen</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="hemloggbok.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="hemloggbok_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- FORDONSKONTROLL -->
+  <div class="card" style="--card-accent:#7C3AED;--icon-bg:#F5F3FF">
+    <div class="card-top">
+      <div class="card-icon">🔍</div>
+      <div class="card-meta">
+        <div class="card-label">Kontroll</div>
+        <div class="card-name">Fordonskontroll</div>
+      </div>
+    </div>
+    <p class="card-desc">Snabb kontroll och registrering av fordon — registreringsnummer, plats och kontaktperson. Strukturerad översikt för fordonsrelaterade kontroller.</p>
+    <div class="card-tags">
+      <span class="tag">Registreringsnummer</span>
+      <span class="tag">Platsspårning</span>
+      <span class="tag">Kontaktpersoner</span>
+    </div>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="fordonskontroll.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="fordonskontroll_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
