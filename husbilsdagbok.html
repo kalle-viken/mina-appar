@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Husbilsdagbok</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --forest: #2D5016; --moss: #4A7C2F; --sage: #8FB573;
+  --sand: #E8D5B0; --clay: #C47F3A; --sky: #6B9BAD;
+  --cream: #F7F3EC; --dark: #1E2B1A; --muted: #6B7566;
+  --white: #ffffff; --danger: #C0392B; --warn: #E67E22;
+  --bg: #F7F3EC; --surface: #ffffff; --surface2: #f0ece4;
+  --border: #e8e0d4; --border2: #e0d8cc; --text: #1E2B1A; --text2: #6B7566;
+  --bar-track: #eee; --nav-bg: #ffffff;
+  --modal-bg: #F7F3EC; --tag-bg: #E8D5B0;
+}
+body.dark {
+  --bg: #131a0e; --surface: #1e2a16; --surface2: #263318;
+  --border: #2e3d22; --border2: #364825; --text: #e8f0e0; --text2: #7a9068;
+  --bar-track: #2a3820; --nav-bg: #1a2410;
+  --modal-bg: #1a2410; --tag-bg: #2e3d22; --white: #1e2a16;
+  --cream: #1e2a16; --sand: #2e3d22;
+  --forest: #4A7C2F; --muted: #7a9068; --dark: #e8f0e0;
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; transition: background 0.25s, color 0.25s; }
+
+/* TOP BAR */
+.top-bar { background: var(--forest); color: white; padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.top-back { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 22px; cursor: pointer; padding: 0 6px 0 0; line-height: 1; }
+.top-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; flex: 1; }
+.top-sub { font-size: 12px; opacity: 0.75; }
+.top-action { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+
+/* NAV */
+.nav-tabs { display: flex; background: var(--nav-bg); border-bottom: 1px solid var(--border2); flex-shrink: 0; overflow-x: auto; transition: background 0.25s; }
+.nav-tab { padding: 11px 14px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav-tab.active { color: var(--forest); border-bottom-color: var(--moss); font-weight: 600; }
+
+/* SCROLL CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 14px; -webkit-overflow-scrolling: touch; background: var(--bg); transition: background 0.25s; }
+
+/* CARDS */
+.card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; transition: background 0.25s; }
+.card-title { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+
+/* SECTION TITLE */
+.section-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 600; color: var(--forest); margin-bottom: 14px; }
+
+/* FORMS */
+label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+label:first-child { margin-top: 0; }
+input[type=text], input[type=number], input[type=date], input[type=time], textarea, select {
+  width: 100%; background: var(--cream); border: 1px solid #d8d0c4; border-radius: 8px;
+  padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--dark);
+  outline: none; appearance: none; -webkit-appearance: none;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--moss); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7566' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+/* BUTTONS */
+.btn { display: block; width: 100%; border: none; border-radius: 10px; padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; text-align: center; }
+.btn-primary { background: var(--moss); color: white; }
+.btn-danger { background: #FDECEA; color: var(--danger); margin-top: 8px; }
+.btn-sm { display: inline-block; width: auto; padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+
+/* TRIP LIST */
+.trip-item { display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: background 0.25s; }
+.trip-emoji { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.trip-info { flex: 1; min-width: 0; }
+.trip-name { font-weight: 500; font-size: 15px; }
+.trip-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* DAY CARDS */
+.day-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; transition: background 0.25s; }
+.day-header { background: var(--forest); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.day-num { font-family: 'Playfair Display', serif; font-size: 20px; }
+.day-date-label { font-size: 12px; opacity: 0.8; }
+.day-body { padding: 14px 16px; }
+
+/* ROUTE */
+.route-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.route-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.dot-s { background: var(--moss); }
+.dot-e { background: var(--clay); }
+.route-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.route-val { font-size: 14px; font-weight: 500; }
+
+/* TAGS */
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--tag-bg); color: var(--forest); font-weight: 500; }
+.tag-el { background: #FFF3CD; color: #8B6914; }
+.tag-vatten { background: #D1ECF1; color: #1B5E6E; }
+
+/* STATS */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat-card { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); padding: 14px; text-align: center; transition: background 0.25s; }
+.stat-val { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--forest); }
+.stat-lbl { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* COST ROW */
+.cost-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.cost-row:last-child { border-bottom: none; }
+.cost-left { display: flex; align-items: center; gap: 10px; }
+.cost-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.cost-name { font-weight: 500; font-size: 14px; }
+.cost-note { font-size: 11px; color: var(--muted); }
+.cost-amt { font-weight: 500; color: var(--clay); }
+
+/* BAR */
+.bar-row { margin-bottom: 12px; }
+.bar-lbl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.bar-track { height: 7px; background: var(--bar-track); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+
+/* VEHICLE */
+.veh-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.veh-row:last-child { border-bottom: none; }
+.veh-k { color: var(--muted); }
+.veh-v { font-weight: 500; }
+
+/* ODOS */
+.odo-banner { background: var(--surface2); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; transition: background 0.25s; }
+.odo-item { text-align: center; }
+.odo-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.odo-val { font-size: 17px; font-weight: 500; color: var(--forest); }
+
+/* PHOTO GRID */
+.photo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 10px; }
+.photo-thumb { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.photo-add { aspect-ratio: 1; border-radius: 8px; border: 2px dashed #d0c8b8; display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--muted); cursor: pointer; }
+
+/* WEATHER SELECTOR */
+.weather-opts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.weather-opt { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #d0c8b8; cursor: pointer; font-size: 14px; }
+.weather-opt.sel { border-color: var(--moss); background: #EBF5E0; }
+
+/* FACILITY CHECKBOXES */
+.facility-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.fac-btn { padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--border); cursor: pointer; font-size: 13px; background: var(--surface); color: var(--text); }
+.fac-btn.sel { border-color: var(--moss); background: #EBF5E0; color: var(--forest); }
+
+/* MODALS / OVERLAYS */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+.overlay.show { display: flex; }
+.modal { background: var(--modal-bg); border-radius: 20px 20px 0 0; padding: 20px 16px 32px; width: 100%; max-width: 820px; max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; transition: background 0.25s; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--forest); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.modal-close { background: none; border: none; font-size: 24px; color: var(--muted); cursor: pointer; }
+.drag-handle { width: 36px; height: 4px; background: #ccc; border-radius: 2px; margin: 0 auto 16px; }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 15px; }
+
+/* HIDDEN */
+.hidden { display: none !important; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+.note-text { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
+.day-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.day-actions { display: flex; gap: 8px; margin-top: 10px; }
+.day-act-btn { flex: 1; padding: 7px; border-radius: 8px; border: 1px solid var(--border); background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; color: var(--text); }
+.day-act-btn.red { color: var(--danger); border-color: #FDECEA; background: #FDECEA; }
+
+.inline-row { display: flex; gap: 10px; }
+.inline-row > * { flex: 1; }
+
+/* Collapsible day body */
+.day-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s ease; }
+.day-card.expanded .day-body { max-height: 1200px; padding: 14px 16px; }
+.day-header { user-select: none; }
+.day-chevron { font-size: 14px; opacity: 0.7; transition: transform 0.25s; margin-left: 8px; }
+.day-card.expanded .day-chevron { transform: rotate(180deg); }
+
+/* Theme toggle */
+.theme-btn { background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; padding: 7px 10px; font-size: 16px; cursor: pointer; line-height: 1; flex-shrink: 0; }
+
+/* Animations */
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal { animation: slideUp 0.2s ease; }
+
+/* Dark mode form inputs */
+body.dark input[type=text], body.dark input[type=number], body.dark input[type=date],
+body.dark input[type=time], body.dark textarea, body.dark select {
+  background: #263318; border-color: #364825; color: #e8f0e0;
+}
+body.dark .weather-opt { border-color: #364825; color: #e8f0e0; }
+body.dark .weather-opt.sel { background: #2e4020; border-color: var(--moss); }
+body.dark .stat-val { color: var(--sage); }
+body.dark .section-title { color: var(--sage); }
+body.dark .modal-title { color: var(--sage); }
+body.dark .trip-name { color: var(--text); }
+body.dark .cost-amt { color: #D4956A; }
+body.dark .odo-val { color: var(--sage); }
+body.dark label { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar" id="topBar">
+  <button class="top-back hidden" id="topBack" onclick="goBack()">‹</button>
+  <div style="flex:1">
+    <div class="top-title" id="topTitle">Husbilsdagbok 🚐</div>
+    <div class="top-sub" id="topSub"></div>
+  </div>
+  <button class="top-action hidden" id="topAction"></button>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Byt tema">☀️</button>
+</div>
+
+<!-- NAV TABS (always visible) -->
+<div class="nav-tabs" id="navTabs">
+  <div class="nav-tab active" onclick="showTab('resor')" data-tab="resor">Resor</div>
+  <div class="nav-tab hidden" onclick="showTab('dagbok')" data-tab="dagbok" id="tabDagbok">Dagbok</div>
+  <div class="nav-tab hidden" onclick="showTab('kostnader')" data-tab="kostnader" id="tabKostnader">Kostnader</div>
+  <div class="nav-tab hidden" onclick="showTab('statistik')" data-tab="statistik" id="tabStatistik">Statistik</div>
+  <div class="nav-tab hidden" onclick="showTab('fordon')" data-tab="fordon" id="tabFordon">Fordonet</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="mainContent">
+  <!-- Rendered by JS -->
+</div>
+
+<!-- === MODALS === -->
+
+<!-- NEW TRIP MODAL -->
+<div class="overlay" id="modalTrip">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title">Ny resa <button class="modal-close" onclick="closeModal('modalTrip')">×</button></div>
+    <label>Resans namn</label>
+    <input type="text" id="tripName" placeholder="t.ex. Norge & Fjordarna 2025">
+    <label>Emoji / symbol</label>
+    <div class="weather-opts" id="tripEmojiPicker">
+      <span class="weather-opt sel" data-e="🏔️">🏔️</span>
+      <span class="weather-opt" data-e="🌅">🌅</span>
+      <span class="weather-opt" data-e="⛵">⛵</span>
+      <span class="weather-opt" data-e="🏖️">🏖️</span>
+      <span class="weather-opt" data-e="🌲">🌲</span>
+      <span class="weather-opt" data-e="🗺️">🗺️</span>
+      <span class="weather-opt" data-e="🚐">🚐</span>
+      <span class="weather-opt" data-e="❄️">❄️</span>
+    </div>
+    <label>Startdatum</label>
+    <input type="date" id="tripStart">
+    <label>Startmätarställning (km)</label>
+    <input type="number" id="tripOdo" placeholder="47230">
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveTrip()">Skapa resa</button>
+      <button class="btn btn-danger" onclick="closeModal('modalTrip')">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW / EDIT DAY MODAL -->
+<div class="overlay" id="modalDay">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title" id="modalDayTitle">Ny dag <button class="modal-close" onclick="closeModal('modalDay')">×</button></div>
+    <input type="hidden" id="editDayId">
+
+    <label>Datum</label>
+    <input type="date" id="dayDate">
+
+    <div class="inline-row">
+      <div><label>Startplats</label><input type="text" id="dayFromPlace" placeholder="Helsingborg"></div>
+      <div><label>Avresetid</label><input type="time" id="dayFromTime"></div>
+    </div>
+
+    <div class="inline-row">
+      <div><label>Stoppplats (övernattning)</label><input type="text" id="dayToPlace" placeholder="Camping Grebbestad"></div>
+      <div><label>Ankomsttid</label><input type="time" id="dayToTime"></div>
+    </div>
+
+    <label>Mätarställning kväll (km)</label>
+    <input type="number" id="dayOdo" placeholder="47460">
+
+    <label>Väder</label>
+    <div class="weather-opts" id="weatherPicker">
+      <span class="weather-opt" data-w="☀️">☀️</span>
+      <span class="weather-opt" data-w="⛅">⛅</span>
+      <span class="weather-opt" data-w="☁️">☁️</span>
+      <span class="weather-opt" data-w="🌧️">🌧️</span>
+      <span class="weather-opt" data-w="⛈️">⛈️</span>
+      <span class="weather-opt" data-w="❄️">❄️</span>
+      <span class="weather-opt" data-w="🌫️">🌫️</span>
+    </div>
+
+    <label>Typ av övernattning</label>
+    <select id="dayLodging">
+      <option value="ställplats">🅿️ Ställplats</option>
+      <option value="camping">🏕️ Camping</option>
+      <option value="natur">🌲 Fri natur / vildmark</option>
+      <option value="hotell">🏨 Hotell / B&B</option>
+      <option value="övrigt">📍 Övrigt</option>
+    </select>
+
+    <label>Faciliteter</label>
+    <div class="facility-grid" id="facilityPicker">
+      <span class="fac-btn" data-f="el">⚡ El</span>
+      <span class="fac-btn" data-f="vatten">💧 Vatten</span>
+      <span class="fac-btn" data-f="dusch">🚿 Dusch</span>
+      <span class="fac-btn" data-f="wc">🚽 WC</span>
+      <span class="fac-btn" data-f="tvätt">🧺 Tvätt</span>
+      <span class="fac-btn" data-f="wifi">📶 WiFi</span>
+      <span class="fac-btn" data-f="pool">🏊 Pool</span>
+      <span class="fac-btn" data-f="kök">🍳 Kök</span>
+    </div>
+
+    <label>Kostnad övernattning (kr)</label>
+    <input type="number" id="dayCost" placeholder="385">
+
+    <label>Dagboksanteckning</label>
+    <textarea id="dayNote" placeholder="Berätta om dagen – vad hände, vad besökte ni, hur var det?"></textarea>
+
+    <label>Bilder (välj upp till 3)</label>
+    <input type="file" id="dayPhotos" accept="image/*" multiple style="font-size:13px">
+
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveDay()">Spara dag</button>
+      <button class="btn btn-danger" id="deleteDayBtn" onclick="deleteDay()" class="hidden">Ta bort dag</button>
+      <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modalDay')">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW COST MODAL -->
+<div class="overlay" id="modalCost">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title">Ny kostnad <button class="modal-close" onclick="closeModal('modalCost')">×</button></div>
+    <input type="hidden" id="editCostId">
+
+    <label>Kategori</label>
+    <select id="costCat">
+      <option value="drivmedel">⛽ Drivmedel</option>
+      <option value="gasol">🔥 Gasol</option>
+      <option value="camping">🏕️ Camping / Ställplats</option>
+      <option value="restaurang">🍽️ Restaurang / Mat</option>
+      <option value="väg">🛣️ Vägtull / Färja</option>
+      <option value="tvätt">🧺 Tvätt</option>
+      <option value="inträde">🎟️ Inträde / Aktivitet</option>
+      <option value="shopping">🛍️ Shopping</option>
+      <option value="övrigt">📌 Övrigt</option>
+    </select>
+
+    <label>Belopp (kr)</label>
+    <input type="number" id="costAmt" placeholder="450">
+
+    <label>Datum</label>
+    <input type="date" id="costDate">
+
+    <label>Beskrivning (valfritt)</label>
+    <input type="text" id="costNote" placeholder="t.ex. Diesel i Oslo, 42 liter">
+
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveCost()">Spara kostnad</button>
+      <button class="btn btn-danger" id="deleteCostBtn" class="hidden" onclick="deleteCost()">Ta bort</button>
+      <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modalCost')">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER - localStorage
+// ============================================================
+const STORAGE_KEY = 'husbilsdagbok_v1';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { trips: [], vehicle: defaultVehicle() }; }
+  catch(e) { return { trips: [], vehicle: defaultVehicle() }; }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
+function defaultVehicle() {
+  return { height: '3,0', width: '3,4', length: '7,0', lengthBikes: '7,7', totalWeight: '3 450', frontAxle: '1 445', rearAxle: '2 005', fuel: 'Diesel', name: 'Min husbil' };
+}
+
+let db = loadData();
+let currentTripId = null;
+let currentTab = 'resor';
+let currentView = 'home';
+let editDayId = null;
+let editCostId = null;
+let selectedWeather = '';
+let selectedFacilities = [];
+let selectedTripEmoji = '🏔️';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const TRIP_TABS = ['dagbok','kostnader','statistik','fordon'];
+
+function showTripTabs(visible) {
+  TRIP_TABS.forEach(t => {
+    const el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.classList.toggle('hidden', !visible);
+  });
+}
+
+function goHome() {
+  currentTripId = null;
+  currentView = 'home';
+  currentTab = 'resor';
+  showTripTabs(false);
+  document.getElementById('topBack').classList.add('hidden');
+  document.getElementById('topAction').classList.add('hidden');
+  document.getElementById('topTitle').textContent = 'Husbilsdagbok 🚐';
+  document.getElementById('topSub').textContent = '';
+  setNavTab('resor');
+  renderHome();
+}
+
+function openTrip(tripId) {
+  currentTripId = tripId;
+  currentView = 'trip';
+  currentTab = 'dagbok';
+  const trip = getTrip();
+  showTripTabs(true);
+  document.getElementById('topBack').classList.remove('hidden');
+  document.getElementById('topTitle').textContent = trip.name;
+  document.getElementById('topSub').textContent = tripMeta(trip);
+  setNavTab('dagbok');
+  renderTab();
+  updateTopAction();
+}
+
+function goBack() { goHome(); }
+
+function showTab(tab) {
+  if (tab === 'resor') { goHome(); return; }
+  if (!currentTripId) return;
+  currentTab = tab;
+  setNavTab(tab);
+  renderTab();
+  updateTopAction();
+}
+
+function setNavTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+}
+
+function updateTopAction() {
+  const btn = document.getElementById('topAction');
+  if (currentView !== 'trip') { btn.classList.add('hidden'); return; }
+  if (currentTab === 'dagbok') {
+    btn.classList.remove('hidden');
+    btn.textContent = '+ Dag';
+    btn.onclick = openNewDayModal;
+  } else if (currentTab === 'kostnader') {
+    btn.classList.remove('hidden');
+    btn.textContent = '+ Kostnad';
+    btn.onclick = openNewCostModal;
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getTrip() { return db.trips.find(t => t.id === currentTripId); }
+function uid() { return Math.random().toString(36).slice(2,10); }
+
+function tripMeta(trip) {
+  const days = trip.days ? trip.days.length : 0;
+  let km = 0;
+  if (trip.days && trip.days.length > 0) {
+    const lastOdo = trip.days.reduce((acc,d) => d.odo ? Math.max(acc, d.odo) : acc, 0);
+    if (lastOdo && trip.startOdo) km = lastOdo - trip.startOdo;
+  }
+  return days + ' dagar' + (km > 0 ? ' · ' + km.toLocaleString('sv') + ' km' : '');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function catIcon(cat) {
+  const m = { drivmedel:'⛽', gasol:'🔥', camping:'🏕️', restaurang:'🍽️', väg:'🛣️', tvätt:'🧺', inträde:'🎟️', shopping:'🛍️', övrigt:'📌' };
+  return m[cat] || '📌';
+}
+function catBg(cat) {
+  const m = { drivmedel:'#FFF3CD', gasol:'#FFE0CC', camping:'#E8D5F0', restaurang:'#FDECEA', väg:'#D1ECF1', tvätt:'#E8F4E8', inträde:'#D1F0E0', shopping:'#FCE4EC', övrigt:'#F0ECE4' };
+  return m[cat] || '#F0ECE4';
+}
+function catLabel(cat) {
+  const m = { drivmedel:'Drivmedel', gasol:'Gasol', camping:'Camping / Ställplats', restaurang:'Restaurang / Mat', väg:'Vägtull / Färja', tvätt:'Tvätt', inträde:'Inträde / Aktivitet', shopping:'Shopping', övrigt:'Övrigt' };
+  return m[cat] || cat;
+}
+
+function readFileAsDataURL(file) {
+  return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+}
+
+// ============================================================
+// RENDER HOME
+// ============================================================
+function renderHome() {
+  updateTopAction();
+  const c = document.getElementById('mainContent');
+  const trips = db.trips;
+  
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="section-title" style="margin:0">Mina resor</div>
+    <button class="btn btn-sm btn-primary" onclick="openNewTripModal()">+ Ny resa</button>
+  </div>`;
+
+  if (trips.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">🗺️</div><div class="empty-text">Inga resor ännu.<br>Skapa din första resa!</div></div>`;
+  } else {
+    const colors = ['#D1F0E0','#FFF3CD','#D1ECF1','#FDECEA','#E8D5F0','#FCE4EC'];
+    trips.forEach((t,i) => {
+      const meta = tripMeta(t);
+      const startStr = t.startDate ? formatDate(t.startDate) : '';
+      html += `<div class="trip-item" onclick="openTrip('${t.id}')">
+        <div class="trip-emoji" style="background:${colors[i%colors.length]}">${t.emoji||'🚐'}</div>
+        <div class="trip-info">
+          <div class="trip-name">${t.name}</div>
+          <div class="trip-meta">${startStr}${meta ? ' · '+meta : ''}</div>
+        </div>
+        <div style="color:var(--muted);font-size:18px">›</div>
+      </div>`;
+    });
+  }
+
+  // Backup / Restore
+  html += `<div class="divider" style="margin:16px 0"></div>
+  <div class="card-title" style="color:var(--text2)">SÄKERHETSKOPIERING</div>
+  <div class="card" style="margin-bottom:10px">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+      Exportera all din data till en fil som du kan spara. Importera för att återställa efter att cachen rensats.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="exportBackup()">📤 Exportera backup</button>
+      <button class="btn btn-outline btn-sm" style="flex:1" onclick="document.getElementById('importFile').click()">📥 Importera backup</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+  </div>`;
+
+  // Vehicle quick info
+  const v = db.vehicle;
+  html += `<div class="divider" style="margin:16px 0"></div>
+  <div class="card-title" style="color:var(--text2)">FORDONET</div>
+  <div class="card" style="cursor:pointer" onclick="goVehicle()">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:32px">🚐</span>
+      <div>
+        <div style="font-weight:500">${v.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${v.height}m hög · ${v.width}m bred · ${v.length}m lång · ${v.totalWeight} kg</div>
+      </div>
+    </div>
+  </div>`;
+
+  c.innerHTML = html;
+}
+
+function goVehicle() {
+  // Open a simple vehicle edit page
+  currentView = 'vehicle';
+  document.getElementById('navTabs').classList.add('hidden');
+  document.getElementById('topBack').classList.remove('hidden');
+  document.getElementById('topAction').classList.add('hidden');
+  document.getElementById('topTitle').textContent = 'Fordonet';
+  document.getElementById('topSub').textContent = '';
+  renderVehiclePage();
+}
+
+// ============================================================
+// RENDER TAB
+// ============================================================
+function renderTab() {
+  updateTopAction();
+  if (currentTab === 'dagbok') renderDagbok();
+  else if (currentTab === 'kostnader') renderKostnader();
+  else if (currentTab === 'statistik') renderStatistik();
+  else if (currentTab === 'fordon') renderFordonTab();
+}
+
+// ============================================================
+// DAGBOK TAB
+// ============================================================
+function renderDagbok() {
+  const trip = getTrip();
+  const days = (trip.days || []).slice().sort((a,b) => (a.date||'') > (b.date||'') ? 1 : -1);
+  let html = '';
+
+  // Odometer banner
+  const lastOdo = days.reduce((acc,d) => d.odo ? Math.max(acc, d.odo) : acc, 0);
+  const totalKm = lastOdo && trip.startOdo ? lastOdo - trip.startOdo : 0;
+  html += `<div class="odo-banner">
+    <div class="odo-item"><div class="odo-lbl">Mätarstart</div><div class="odo-val">${(trip.startOdo||'–').toLocaleString('sv')} km</div></div>
+    <div style="color:var(--muted);font-size:20px">→</div>
+    <div class="odo-item"><div class="odo-lbl">Senaste kväll</div><div class="odo-val">${lastOdo ? lastOdo.toLocaleString('sv')+' km' : '–'}</div></div>
+    <div style="color:var(--muted);font-size:20px">=</div>
+    <div class="odo-item"><div class="odo-lbl">Totalt</div><div class="odo-val">${totalKm > 0 ? totalKm.toLocaleString('sv')+' km' : '–'}</div></div>
+  </div>`;
+
+  if (days.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">📖</div><div class="empty-text">Inga dagar ännu.<br>Lägg till din första dag!</div></div>`;
+  }
+
+  days.forEach((day, idx) => {
+    const prevOdo = idx === 0 ? (trip.startOdo || 0) : (days[idx-1].odo || 0);
+    const km = day.odo && prevOdo ? day.odo - prevOdo : null;
+    const facTags = (day.facilities || []).map(f => {
+      const cls = f === 'el' ? 'tag-el' : f === 'vatten' ? 'tag-vatten' : '';
+      const icons = {el:'⚡',vatten:'💧',dusch:'🚿',wc:'🚽',tvätt:'🧺',wifi:'📶',pool:'🏊',kök:'🍳'};
+      return `<span class="tag ${cls}">${icons[f]||''} ${f.charAt(0).toUpperCase()+f.slice(1)}</span>`;
+    }).join('');
+
+    const lodgingIcon = {ställplats:'🅿️',camping:'🏕️',natur:'🌲',hotell:'🏨',övrigt:'📍'}[day.lodging] || '📍';
+
+    let photos = '';
+    if (day.photos && day.photos.length > 0) {
+      photos = '<div class="photo-grid">';
+      day.photos.forEach((p,pi) => {
+        photos += `<div class="photo-thumb"><img src="${p}" loading="lazy"><button class="photo-del" onclick="removePhoto('${day.id}',${pi},event)">×</button></div>`;
+      });
+      if (day.photos.length < 3) photos += `<div class="photo-add" onclick="addPhotoToDay('${day.id}')">+</div>`;
+      photos += '</div>';
+    } else {
+      photos = `<div class="photo-grid"><div class="photo-add" onclick="addPhotoToDay('${day.id}')">+</div></div>`;
+    }
+
+    html += `<div class="day-card" id="daycard-${day.id}">
+      <div class="day-header" onclick="toggleDay('${day.id}')">
+        <div>
+          <div class="day-num">Dag ${idx+1}</div>
+          <div class="day-date-label">${formatDate(day.date)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">${day.weather||''}</span>
+          <span class="day-chevron">▼</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <div class="route-row">
+          <div class="route-dot dot-s"></div>
+          <div><div class="route-lbl">Start${day.fromTime?' · '+day.fromTime:''}</div><div class="route-val">${day.fromPlace||'–'}</div></div>
+        </div>
+        <div style="width:1px;height:14px;background:var(--border);margin-left:4px;margin-bottom:8px"></div>
+        <div class="route-row">
+          <div class="route-dot dot-e"></div>
+          <div><div class="route-lbl">Stopp${day.toTime?' · '+day.toTime:''}</div><div class="route-val">${day.toPlace||'–'}</div></div>
+        </div>
+        ${day.note ? `<div class="note-text">${day.note}</div>` : ''}
+        <div class="tags">
+          ${day.lodging ? `<span class="tag">${lodgingIcon} ${day.lodging.charAt(0).toUpperCase()+day.lodging.slice(1)}</span>` : ''}
+          ${facTags}
+        </div>
+        <div class="day-footer">
+          <span>${day.odo ? '🔢 '+Number(day.odo).toLocaleString('sv')+' km'+(km?` (+${km.toLocaleString('sv')} km)`:'') : ''}</span>
+          <span style="font-weight:500;color:var(--clay)">${day.cost ? Number(day.cost).toLocaleString('sv')+' kr' : ''}</span>
+        </div>
+        ${photos}
+        <div class="day-actions">
+          <button class="day-act-btn" onclick="editDay('${day.id}')">✏️ Redigera</button>
+          <button class="day-act-btn red" onclick="confirmDeleteDay('${day.id}')">🗑️ Ta bort</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ============================================================
+// KOSTNADER TAB
+// ============================================================
+function renderKostnader() {
+  const trip = getTrip();
+  const costs = trip.costs || [];
+  const total = costs.reduce((s,c) => s + Number(c.amount||0), 0);
+  
+  // Group by category
+  const byCat = {};
+  costs.forEach(c => { byCat[c.category] = (byCat[c.category]||0) + Number(c.amount||0); });
+
+  let html = `<div class="stat-grid">
+    <div class="stat-card"><div class="stat-val">${total.toLocaleString('sv')}</div><div class="stat-lbl">kr totalt</div></div>
+    <div class="stat-card"><div class="stat-val">${trip.days && trip.days.length > 0 ? Math.round(total/trip.days.length).toLocaleString('sv') : '–'}</div><div class="stat-lbl">kr / dag</div></div>
+  </div>`;
+
+  if (costs.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Inga kostnader registrerade ännu.</div></div>`;
+  } else {
+    // Category summary
+    html += `<div class="card"><div class="card-title">Fördelning per kategori</div>`;
+    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
+      const pct = total > 0 ? Math.round(amt/total*100) : 0;
+      html += `<div class="cost-row">
+        <div class="cost-left">
+          <div class="cost-icon" style="background:${catBg(cat)}">${catIcon(cat)}</div>
+          <div><div class="cost-name">${catLabel(cat)}</div><div class="cost-note">${pct}% av totalt</div></div>
+        </div>
+        <div class="cost-amt">${amt.toLocaleString('sv')} kr</div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    // Individual costs
+    html += `<div class="card-title">Alla poster</div>`;
+    const sorted = costs.slice().sort((a,b) => (a.date||'') > (b.date||'') ? -1 : 1);
+    sorted.forEach(c => {
+      html += `<div class="cost-row" onclick="editCost('${c.id}')" style="cursor:pointer">
+        <div class="cost-left">
+          <div class="cost-icon" style="background:${catBg(c.category)}">${catIcon(c.category)}</div>
+          <div><div class="cost-name">${c.note||catLabel(c.category)}</div><div class="cost-note">${formatDate(c.date)}</div></div>
+        </div>
+        <div class="cost-amt">${Number(c.amount).toLocaleString('sv')} kr</div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ============================================================
+// STATISTIK TAB
+// ============================================================
+function renderStatistik() {
+  const trip = getTrip();
+  const days = (trip.days || []).slice().sort((a,b) => (a.date||'') > (b.date||'') ? 1 : -1);
+  const costs = trip.costs || [];
+
+  const lastOdo = days.reduce((acc,d) => d.odo ? Math.max(acc, d.odo) : acc, 0);
+  const totalKm = lastOdo && trip.startOdo ? lastOdo - trip.startOdo : 0;
+  const avgKm = days.length > 0 && totalKm > 0 ? Math.round(totalKm/days.length) : 0;
+
+  const total = costs.reduce((s,c) => s + Number(c.amount||0), 0);
+  const fuelCost = costs.filter(c=>c.category==='drivmedel').reduce((s,c)=>s+Number(c.amount||0),0);
+  const fuelPer100 = totalKm > 0 && fuelCost > 0 ? null : null; // Would need liters
+
+  // Lodging
+  const lodgingCount = {};
+  days.forEach(d => { if(d.lodging) lodgingCount[d.lodging] = (lodgingCount[d.lodging]||0)+1; });
+
+  // Costs by category
+  const byCat = {};
+  costs.forEach(c => { byCat[c.category] = (byCat[c.category]||0) + Number(c.amount||0); });
+  const catColors = { drivmedel:'var(--clay)', gasol:'#E07840', camping:'var(--moss)', restaurang:'var(--sky)', väg:'#A0B4C0', tvätt:'#70A870', inträde:'var(--sage)', shopping:'#C4A0B4', övrigt:'#B0A896' };
+
+  let html = `<div class="stat-grid">
+    <div class="stat-card"><div class="stat-val">${totalKm > 0 ? totalKm.toLocaleString('sv') : '–'}</div><div class="stat-lbl">km totalt</div></div>
+    <div class="stat-card"><div class="stat-val">${avgKm > 0 ? avgKm.toLocaleString('sv') : '–'}</div><div class="stat-lbl">km / dag</div></div>
+    <div class="stat-card"><div class="stat-val">${total > 0 ? total.toLocaleString('sv') : '–'}</div><div class="stat-lbl">kr totalt</div></div>
+    <div class="stat-card"><div class="stat-val">${days.length}</div><div class="stat-lbl">resdagar</div></div>
+  </div>`;
+
+  if (Object.keys(byCat).length > 0) {
+    html += `<div class="card"><div class="card-title">Kostnadsfördelning</div>`;
+    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
+      const pct = total > 0 ? Math.round(amt/total*100) : 0;
+      html += `<div class="bar-row">
+        <div class="bar-lbl"><span>${catIcon(cat)} ${catLabel(cat)}</span><span>${pct}% · ${amt.toLocaleString('sv')} kr</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catColors[cat]||'var(--muted)'}"></div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (Object.keys(lodgingCount).length > 0) {
+    const icons = {ställplats:'🅿️',camping:'🏕️',natur:'🌲',hotell:'🏨',övrigt:'📍'};
+    html += `<div class="card"><div class="card-title">Övernattningstyp</div><div style="display:flex;gap:10px;flex-wrap:wrap">`;
+    Object.entries(lodgingCount).forEach(([k,v]) => {
+      html += `<div class="stat-card" style="min-width:80px">
+        <div style="font-size:22px">${icons[k]||'📍'}</div>
+        <div class="stat-val" style="font-size:20px">${v}</div>
+        <div class="stat-lbl">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Km per day chart
+  if (days.length > 1) {
+    html += `<div class="card"><div class="card-title">Körda km per dag</div>`;
+    const kmPerDay = days.map((d,i) => {
+      const prev = i===0 ? (trip.startOdo||0) : (days[i-1].odo||0);
+      return d.odo && prev ? d.odo - prev : 0;
+    });
+    const maxKm = Math.max(...kmPerDay, 1);
+    kmPerDay.forEach((km,i) => {
+      const pct = Math.round(km/maxKm*100);
+      html += `<div class="bar-row">
+        <div class="bar-lbl"><span>Dag ${i+1}</span><span>${km.toLocaleString('sv')} km</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--sky)"></div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (days.length === 0 && costs.length === 0) {
+    html = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Lägg till dagar och kostnader<br>för att se statistik.</div></div>`;
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ============================================================
+// FORDON TAB (inside trip)
+// ============================================================
+function renderFordonTab() {
+  renderVehiclePage();
+}
+
+function renderVehiclePage() {
+  const v = db.vehicle;
+  const html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="section-title" style="margin:0">Fordonet</div>
+      <button class="btn btn-sm btn-outline" onclick="openEditVehicle()">✏️ Redigera</button>
+    </div>
+    <div style="text-align:center;font-size:60px;margin:10px 0">🚐</div>
+    <div class="card"><div class="card-title">Identitet</div>
+      <div class="veh-row"><span class="veh-k">Namn</span><span class="veh-v">${v.name}</span></div>
+      <div class="veh-row"><span class="veh-k">Drivmedel</span><span class="veh-v">${v.fuel}</span></div>
+    </div>
+    <div class="card"><div class="card-title">Mått</div>
+      <div class="veh-row"><span class="veh-k">Höjd</span><span class="veh-v">${v.height} m</span></div>
+      <div class="veh-row"><span class="veh-k">Bredd</span><span class="veh-v">${v.width} m</span></div>
+      <div class="veh-row"><span class="veh-k">Längd (utan cyklar)</span><span class="veh-v">${v.length} m</span></div>
+      <div class="veh-row"><span class="veh-k">Längd (med cyklar)</span><span class="veh-v">${v.lengthBikes} m</span></div>
+    </div>
+    <div class="card"><div class="card-title">Vikter (uppmätt)</div>
+      <div class="veh-row"><span class="veh-k">Totalvikt</span><span class="veh-v">${v.totalWeight} kg</span></div>
+      <div class="veh-row"><span class="veh-k">Framaxel</span><span class="veh-v">${v.frontAxle} kg</span></div>
+      <div class="veh-row"><span class="veh-k">Bakaxel</span><span class="veh-v">${v.rearAxle} kg</span></div>
+    </div>
+    <div class="card" style="background:#FFF8E1;border-color:#FFE082">
+      <div class="card-title" style="color:#8B6914">⚠️ VIKTIGT ATT KOMMA IHÅG</div>
+      <div class="veh-row"><span class="veh-k">Max bro / tunnel</span><span class="veh-v" style="color:var(--warn)">${v.height} m höjd</span></div>
+      <div class="veh-row"><span class="veh-k">Max bredd väg</span><span class="veh-v" style="color:var(--warn)">${v.width} m bred</span></div>
+    </div>`;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ============================================================
+// VEHICLE EDIT MODAL (inline)
+// ============================================================
+function openEditVehicle() {
+  const v = db.vehicle;
+  const html = `
+    <div class="section-title">Redigera fordon</div>
+    <div class="card">
+      <label>Fordonets namn</label>
+      <input type="text" id="vName" value="${v.name}">
+      <label>Drivmedel</label>
+      <select id="vFuel">
+        <option ${v.fuel==='Diesel'?'selected':''}>Diesel</option>
+        <option ${v.fuel==='Bensin'?'selected':''}>Bensin</option>
+        <option ${v.fuel==='El'?'selected':''}>El</option>
+        <option ${v.fuel==='Hybrid'?'selected':''}>Hybrid</option>
+      </select>
+      <label>Höjd (m)</label><input type="text" id="vH" value="${v.height}">
+      <label>Bredd (m)</label><input type="text" id="vW" value="${v.width}">
+      <label>Längd utan cyklar (m)</label><input type="text" id="vL" value="${v.length}">
+      <label>Längd med cyklar (m)</label><input type="text" id="vLB" value="${v.lengthBikes}">
+      <label>Totalvikt (kg)</label><input type="text" id="vTW" value="${v.totalWeight}">
+      <label>Framaxel (kg)</label><input type="text" id="vFA" value="${v.frontAxle}">
+      <label>Bakaxel (kg)</label><input type="text" id="vRA" value="${v.rearAxle}">
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" onclick="saveVehicle()">Spara fordon</button>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="${currentView==='vehicle'?'goHome()':'renderFordonTab()'}">Avbryt</button>
+      </div>
+    </div>`;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function saveVehicle() {
+  db.vehicle = {
+    name: document.getElementById('vName').value.trim() || 'Min husbil',
+    fuel: document.getElementById('vFuel').value,
+    height: document.getElementById('vH').value.trim(),
+    width: document.getElementById('vW').value.trim(),
+    length: document.getElementById('vL').value.trim(),
+    lengthBikes: document.getElementById('vLB').value.trim(),
+    totalWeight: document.getElementById('vTW').value.trim(),
+    frontAxle: document.getElementById('vFA').value.trim(),
+    rearAxle: document.getElementById('vRA').value.trim(),
+  };
+  saveData();
+  if (currentView === 'vehicle') { goHome(); }
+  else { renderFordonTab(); }
+}
+
+// ============================================================
+// TRIP CRUD
+// ============================================================
+function openNewTripModal() {
+  document.getElementById('tripName').value = '';
+  document.getElementById('tripStart').value = new Date().toISOString().slice(0,10);
+  document.getElementById('tripOdo').value = '';
+  selectedTripEmoji = '🏔️';
+  document.querySelectorAll('#tripEmojiPicker .weather-opt').forEach(el => {
+    el.classList.toggle('sel', el.dataset.e === selectedTripEmoji);
+  });
+  openModal('modalTrip');
+}
+
+document.querySelectorAll('#tripEmojiPicker .weather-opt').forEach(el => {
+  el.onclick = () => {
+    selectedTripEmoji = el.dataset.e;
+    document.querySelectorAll('#tripEmojiPicker .weather-opt').forEach(x => x.classList.remove('sel'));
+    el.classList.add('sel');
+  };
+});
+
+function saveTrip() {
+  const name = document.getElementById('tripName').value.trim();
+  if (!name) { alert('Ange ett namn på resan.'); return; }
+  const trip = {
+    id: uid(), name, emoji: selectedTripEmoji,
+    startDate: document.getElementById('tripStart').value,
+    startOdo: Number(document.getElementById('tripOdo').value) || null,
+    days: [], costs: []
+  };
+  db.trips.unshift(trip);
+  saveData();
+  closeModal('modalTrip');
+  openTrip(trip.id);
+}
+
+// ============================================================
+// DAY CRUD
+// ============================================================
+function openNewDayModal() {
+  editDayId = null;
+  document.getElementById('editDayId').value = '';
+  document.getElementById('modalDayTitle').innerHTML = 'Ny dag <button class="modal-close" onclick="closeModal(\'modalDay\')">×</button>';
+  document.getElementById('deleteDayBtn').classList.add('hidden');
+  const trip = getTrip();
+  const days = trip.days || [];
+  
+  // Default date: day after last entry or today
+  let defaultDate = new Date().toISOString().slice(0,10);
+  if (days.length > 0) {
+    const lastDate = days.reduce((a,b) => (a.date||'') > (b.date||'') ? a : b).date;
+    if (lastDate) {
+      const d = new Date(lastDate+'T12:00:00');
+      d.setDate(d.getDate()+1);
+      defaultDate = d.toISOString().slice(0,10);
+    }
+  }
+  
+  document.getElementById('dayDate').value = defaultDate;
+  document.getElementById('dayFromPlace').value = '';
+  document.getElementById('dayFromTime').value = '';
+  document.getElementById('dayToPlace').value = '';
+  document.getElementById('dayToTime').value = '';
+  document.getElementById('dayOdo').value = '';
+  document.getElementById('dayCost').value = '';
+  document.getElementById('dayNote').value = '';
+  document.getElementById('dayPhotos').value = '';
+  document.getElementById('dayLodging').value = 'ställplats';
+  selectedWeather = '';
+  selectedFacilities = [];
+  updateWeatherPicker();
+  updateFacilityPicker();
+  openModal('modalDay');
+}
+
+function editDay(dayId) {
+  const trip = getTrip();
+  const day = (trip.days||[]).find(d => d.id === dayId);
+  if (!day) return;
+  editDayId = dayId;
+  document.getElementById('editDayId').value = dayId;
+  document.getElementById('modalDayTitle').innerHTML = 'Redigera dag <button class="modal-close" onclick="closeModal(\'modalDay\')">×</button>';
+  document.getElementById('deleteDayBtn').classList.remove('hidden');
+  document.getElementById('dayDate').value = day.date || '';
+  document.getElementById('dayFromPlace').value = day.fromPlace || '';
+  document.getElementById('dayFromTime').value = day.fromTime || '';
+  document.getElementById('dayToPlace').value = day.toPlace || '';
+  document.getElementById('dayToTime').value = day.toTime || '';
+  document.getElementById('dayOdo').value = day.odo || '';
+  document.getElementById('dayCost').value = day.cost || '';
+  document.getElementById('dayNote').value = day.note || '';
+  document.getElementById('dayLodging').value = day.lodging || 'ställplats';
+  document.getElementById('dayPhotos').value = '';
+  selectedWeather = day.weather || '';
+  selectedFacilities = day.facilities ? [...day.facilities] : [];
+  updateWeatherPicker();
+  updateFacilityPicker();
+  openModal('modalDay');
+}
+
+function updateWeatherPicker() {
+  document.querySelectorAll('#weatherPicker .weather-opt').forEach(el => {
+    el.classList.toggle('sel', el.dataset.w === selectedWeather);
+  });
+}
+
+function updateFacilityPicker() {
+  document.querySelectorAll('#facilityPicker .fac-btn').forEach(el => {
+    el.classList.toggle('sel', selectedFacilities.includes(el.dataset.f));
+  });
+}
+
+document.querySelectorAll('#weatherPicker .weather-opt').forEach(el => {
+  el.onclick = () => {
+    selectedWeather = selectedWeather === el.dataset.w ? '' : el.dataset.w;
+    updateWeatherPicker();
+  };
+});
+
+document.querySelectorAll('#facilityPicker .fac-btn').forEach(el => {
+  el.onclick = () => {
+    const f = el.dataset.f;
+    if (selectedFacilities.includes(f)) selectedFacilities = selectedFacilities.filter(x=>x!==f);
+    else selectedFacilities.push(f);
+    updateFacilityPicker();
+  };
+});
+
+async function saveDay() {
+  const trip = getTrip();
+  if (!trip.days) trip.days = [];
+  
+  // Handle new photos
+  const fileInput = document.getElementById('dayPhotos');
+  let newPhotos = [];
+  if (fileInput.files.length > 0) {
+    const files = Array.from(fileInput.files).slice(0,3);
+    newPhotos = await Promise.all(files.map(readFileAsDataURL));
+  }
+
+  const dayData = {
+    date: document.getElementById('dayDate').value,
+    fromPlace: document.getElementById('dayFromPlace').value.trim(),
+    fromTime: document.getElementById('dayFromTime').value,
+    toPlace: document.getElementById('dayToPlace').value.trim(),
+    toTime: document.getElementById('dayToTime').value,
+    odo: Number(document.getElementById('dayOdo').value) || null,
+    cost: Number(document.getElementById('dayCost').value) || null,
+    note: document.getElementById('dayNote').value.trim(),
+    lodging: document.getElementById('dayLodging').value,
+    weather: selectedWeather,
+    facilities: [...selectedFacilities],
+  };
+
+  if (editDayId) {
+    const idx = trip.days.findIndex(d => d.id === editDayId);
+    if (idx >= 0) {
+      const existing = trip.days[idx];
+      dayData.id = editDayId;
+      dayData.photos = existing.photos ? [...existing.photos, ...newPhotos].slice(0,3) : newPhotos.slice(0,3);
+      trip.days[idx] = dayData;
+    }
+  } else {
+    dayData.id = uid();
+    dayData.photos = newPhotos.slice(0,3);
+    trip.days.push(dayData);
+    // Auto-add lodging cost
+    if (dayData.cost && dayData.cost > 0) {
+      if (!trip.costs) trip.costs = [];
+      trip.costs.push({ id: uid(), category: 'camping', amount: dayData.cost, date: dayData.date, note: dayData.toPlace || 'Övernattning' });
+    }
+  }
+
+  saveData();
+  closeModal('modalDay');
+  renderDagbok();
+}
+
+function confirmDeleteDay(dayId) {
+  if (confirm('Ta bort denna dag?')) {
+    const trip = getTrip();
+    trip.days = (trip.days||[]).filter(d=>d.id!==dayId);
+    saveData(); renderDagbok();
+  }
+}
+
+function deleteDay() {
+  const dayId = document.getElementById('editDayId').value;
+  if (confirm('Ta bort denna dag?')) {
+    const trip = getTrip();
+    trip.days = (trip.days||[]).filter(d=>d.id!==dayId);
+    saveData(); closeModal('modalDay'); renderDagbok();
+  }
+}
+
+async function addPhotoToDay(dayId) {
+  const trip = getTrip();
+  const day = (trip.days||[]).find(d=>d.id===dayId);
+  if (!day) return;
+  if ((day.photos||[]).length >= 3) { alert('Max 3 bilder per dag.'); return; }
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = async () => {
+    if (input.files.length > 0) {
+      const data = await readFileAsDataURL(input.files[0]);
+      if (!day.photos) day.photos = [];
+      day.photos.push(data);
+      saveData(); renderDagbok();
+    }
+  };
+  input.click();
+}
+
+function removePhoto(dayId, photoIdx, event) {
+  event.stopPropagation();
+  const trip = getTrip();
+  const day = (trip.days||[]).find(d=>d.id===dayId);
+  if (day && day.photos) {
+    day.photos.splice(photoIdx, 1);
+    saveData(); renderDagbok();
+  }
+}
+
+// ============================================================
+// COST CRUD
+// ============================================================
+function openNewCostModal() {
+  editCostId = null;
+  document.getElementById('editCostId').value = '';
+  document.getElementById('deleteCostBtn').classList.add('hidden');
+  document.getElementById('costCat').value = 'drivmedel';
+  document.getElementById('costAmt').value = '';
+  document.getElementById('costDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('costNote').value = '';
+  openModal('modalCost');
+}
+
+function editCost(costId) {
+  const trip = getTrip();
+  const cost = (trip.costs||[]).find(c=>c.id===costId);
+  if (!cost) return;
+  editCostId = costId;
+  document.getElementById('editCostId').value = costId;
+  document.getElementById('deleteCostBtn').classList.remove('hidden');
+  document.getElementById('costCat').value = cost.category;
+  document.getElementById('costAmt').value = cost.amount;
+  document.getElementById('costDate').value = cost.date;
+  document.getElementById('costNote').value = cost.note || '';
+  openModal('modalCost');
+}
+
+function saveCost() {
+  const trip = getTrip();
+  if (!trip.costs) trip.costs = [];
+  const amt = Number(document.getElementById('costAmt').value);
+  if (!amt || amt <= 0) { alert('Ange ett belopp.'); return; }
+  const costData = {
+    category: document.getElementById('costCat').value,
+    amount: amt,
+    date: document.getElementById('costDate').value,
+    note: document.getElementById('costNote').value.trim(),
+  };
+  if (editCostId) {
+    const idx = trip.costs.findIndex(c=>c.id===editCostId);
+    if (idx>=0) { costData.id = editCostId; trip.costs[idx] = costData; }
+  } else {
+    costData.id = uid();
+    trip.costs.push(costData);
+  }
+  saveData(); closeModal('modalCost'); renderKostnader();
+}
+
+function deleteCost() {
+  const costId = document.getElementById('editCostId').value;
+  if (confirm('Ta bort denna kostnad?')) {
+    const trip = getTrip();
+    trip.costs = (trip.costs||[]).filter(c=>c.id!==costId);
+    saveData(); closeModal('modalCost'); renderKostnader();
+  }
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// Close modal on overlay click
+document.querySelectorAll('.overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+
+// ============================================================
+// BACKUP & RESTORE
+// ============================================================
+function exportBackup() {
+  try {
+    const json = JSON.stringify(db, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = 'husbilsdagbok-backup-' + date + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Backup exporterad!');
+  } catch(e) {
+    alert('Kunde inte exportera: ' + e.message);
+  }
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.trips) { alert('Ogiltig backupfil – saknar resedata.'); return; }
+      if (!confirm('Detta ersätter all nuvarande data med backupen. Fortsätta?')) return;
+      db = parsed;
+      if (!db.vehicle) db.vehicle = defaultVehicle();
+      saveData();
+      goHome();
+      showToast('✅ Backup återställd!');
+    } catch(err) {
+      alert('Kunde inte läsa filen: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#2D5016;color:white;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+// ============================================================
+// COLLAPSIBLE DAYS
+// ============================================================
+function toggleDay(dayId) {
+  const card = document.getElementById('daycard-' + dayId);
+  if (!card) return;
+  card.classList.toggle('expanded');
+}
+
+// ============================================================
+// DARK / LIGHT THEME
+// ============================================================
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+  try { localStorage.setItem('hbd_theme', dark ? 'dark' : 'light'); } catch(e){}
+}
+function toggleTheme() {
+  applyTheme(!document.body.classList.contains('dark'));
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function() {
+  try {
+    const saved = localStorage.getItem('hbd_theme');
+    if (saved === 'dark') applyTheme(true);
+    else applyTheme(false);
+  } catch(e) { applyTheme(false); }
+})();
+goHome();
+</script>
+</body>
+</html>
