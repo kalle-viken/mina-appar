@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Träningsdagbok</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    :root{
+      --teal:#0F6E56;
+      --teal2:#1D9E75;
+      --teal-light:#E1F5EE;
+      --stone:#F7F5F0;
+      --stone2:#EDE9E1;
+      --stone3:#D9D3C7;
+      --ink:#1A1714;
+      --ink2:#4A4540;
+      --ink3:#8C857C;
+      --white:#FFFFFF;
+      --red:#A32D2D;
+      --red-light:#FCEBEB;
+      --amber:#BA7517;
+      --amber-light:#FAEEDA;
+      --green-light:#EAF3DE;
+      --green:#3B6D11;
+      --r:14px;
+      --r-sm:10px;
+      --shadow:0 2px 16px rgba(26,23,20,0.08);
+      --shadow-lg:0 8px 32px rgba(26,23,20,0.12);
+    }
+
+    html,body{height:100%;overflow:hidden}
+    body{
+      background:var(--stone);
+      color:var(--ink);
+      font-family:'DM Sans',system-ui,sans-serif;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* ── HEADER ── */
+    .app-header{
+      background:var(--white);
+      border-bottom:1px solid var(--stone3);
+      padding:16px 28px 0;
+      flex-shrink:0;
+      padding-top:max(16px, env(safe-area-inset-top));
+    }
+    .header-top{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .app-title{
+      font-family:'DM Serif Display',serif;
+      font-size:28px;font-weight:400;
+      color:var(--ink);
+      letter-spacing:-0.02em;
+    }
+    .app-title em{font-style:italic;color:var(--teal)}
+    .session-count{
+      font-size:13px;color:var(--ink3);
+      background:var(--stone);
+      padding:5px 12px;border-radius:20px;
+      border:1px solid var(--stone3);
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+      margin-bottom:16px;
+    }
+    .stat{
+      background:var(--stone);
+      border-radius:var(--r-sm);
+      padding:10px 14px;
+      border:1px solid var(--stone3);
+    }
+    .stat-label{font-size:10px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+    .stat-val{font-size:20px;font-weight:600;color:var(--ink);line-height:1}
+    .stat-val small{font-size:12px;font-weight:400;color:var(--ink3)}
+
+    /* ── TABS ── */
+    .tab-bar{
+      display:flex;gap:2px;
+    }
+    .tab{
+      flex:1;padding:10px 8px;border:none;background:transparent;
+      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+      color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;
+      transition:all .15s;white-space:nowrap;
+    }
+    .tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+    /* ── MAIN LAYOUT ── */
+    .app-body{
+      flex:1;
+      display:flex;
+      overflow:hidden;
+    }
+
+    /* ── SCROLLABLE PANE ── */
+    .pane{
+      flex:1;
+      overflow-y:auto;
+      padding:20px 28px 40px;
+      display:none;
+      -webkit-overflow-scrolling:touch;
+    }
+    .pane.active{display:block}
+
+    /* ── TWO-COLUMN LOG LAYOUT (iPad) ── */
+    .log-layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    /* ── CARDS ── */
+    .card{
+      background:var(--white);
+      border:1px solid var(--stone3);
+      border-radius:var(--r);
+      padding:20px;
+      margin-bottom:16px;
+      box-shadow:var(--shadow);
+    }
+    .card:last-child{margin-bottom:0}
+    .card-title{
+      font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--ink3);margin-bottom:14px;
+    }
+
+    /* ── FORM ── */
+    .form-row{margin-bottom:14px}
+    .form-row:last-child{margin-bottom:0}
+    .form-row label{
+      display:block;font-size:11px;font-weight:600;
+      letter-spacing:.06em;text-transform:uppercase;
+      color:var(--ink3);margin-bottom:6px;
+    }
+    .form-row input,.form-row select,.form-row textarea{
+      width:100%;border-radius:var(--r-sm);
+      border:1px solid var(--stone3);
+      padding:11px 14px;
+      font-family:'DM Sans',sans-serif;font-size:15px;
+      background:var(--stone);color:var(--ink);
+      -webkit-appearance:none;appearance:none;
+    }
+    .form-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C857C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .form-row textarea{resize:none;height:90px;font-size:15px}
+    .form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:2px solid var(--teal);outline-offset:-1px}
+    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* ── PAIN SELECTOR ── */
+    .pain-grid{display:flex;gap:6px;flex-wrap:wrap}
+    .pain-btn{
+      width:40px;height:40px;border-radius:50%;
+      border:1px solid var(--stone3);
+      background:var(--stone);font-size:13px;font-weight:500;
+      cursor:pointer;color:var(--ink);
+      transition:all .12s;flex-shrink:0;
+    }
+    .pain-btn:active{transform:scale(0.92)}
+    .pain-btn.sel{color:#fff;border-color:transparent}
+    .pain-btn[data-p="0"].sel,.pain-btn[data-p="1"].sel,.pain-btn[data-p="2"].sel,.pain-btn[data-p="3"].sel{background:var(--teal2)}
+    .pain-btn[data-p="4"].sel,.pain-btn[data-p="5"].sel,.pain-btn[data-p="6"].sel{background:var(--amber)}
+    .pain-btn[data-p="7"].sel,.pain-btn[data-p="8"].sel,.pain-btn[data-p="9"].sel,.pain-btn[data-p="10"].sel{background:var(--red)}
+
+    /* ── EXERCISES ── */
+    .ex-input-row{display:flex;gap:8px}
+    .ex-input-row input{flex:1}
+    .add-ex-btn{
+      padding:11px 16px;border-radius:var(--r-sm);
+      border:1px solid var(--stone3);background:var(--stone);
+      font-size:14px;font-weight:500;cursor:pointer;
+      color:var(--teal);white-space:nowrap;
+    }
+    .ex-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .ex-chip{
+      display:flex;align-items:center;gap:5px;
+      background:var(--teal-light);color:var(--teal);
+      font-size:13px;padding:5px 12px;border-radius:20px;font-weight:500;
+    }
+    .ex-chip button{background:none;border:none;cursor:pointer;color:var(--teal);font-size:16px;padding:0;line-height:1}
+
+    /* ── SAVE BUTTON ── */
+    .save-btn{
+      width:100%;padding:14px;border-radius:var(--r);
+      border:none;background:var(--teal);color:#fff;
+      font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;
+      cursor:pointer;margin-top:4px;
+      transition:background .15s;
+      -webkit-appearance:none;
+    }
+    .save-btn:active{background:var(--teal2)}
+
+    /* ── HISTORY ── */
+    .history-layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      align-items:start;
+    }
+    .month-group{margin-bottom:20px}
+    .month-group:last-child{margin-bottom:0}
+    .month-label{
+      font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--ink3);margin-bottom:10px;
+    }
+    .entry{
+      border-bottom:1px solid var(--stone2);
+      padding:12px 0;
+    }
+    .entry:last-child{border-bottom:none;padding-bottom:0}
+    .entry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .entry-date{font-size:11px;color:var(--ink3);margin-bottom:3px}
+    .entry-name{font-size:15px;font-weight:600;color:var(--ink)}
+    .entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+    .tag-dur{background:var(--stone2);color:var(--ink2)}
+    .tag-type{background:var(--teal-light);color:var(--teal)}
+    .tag-pain-low{background:var(--green-light);color:var(--green)}
+    .tag-pain-mid{background:var(--amber-light);color:var(--amber)}
+    .tag-pain-hi{background:var(--red-light);color:var(--red)}
+    .entry-note{font-size:13px;color:var(--ink3);margin-top:8px;line-height:1.55}
+    .del-btn{background:none;border:none;cursor:pointer;color:var(--stone3);font-size:20px;padding:2px;line-height:1;flex-shrink:0}
+    .del-btn:active{color:var(--red)}
+
+    /* ── GRAPHS ── */
+    .graph-layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      align-items:start;
+    }
+    .graph-full{grid-column:1/-1}
+    .gtype-bar{
+      display:flex;gap:6px;margin-bottom:16px;
+      background:var(--stone2);border-radius:var(--r-sm);padding:4px;
+    }
+    .gtype-btn{
+      flex:1;padding:9px 8px;border:none;
+      border-radius:8px;background:transparent;
+      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+      color:var(--ink3);cursor:pointer;transition:all .15s;
+    }
+    .gtype-btn.active{background:var(--white);color:var(--teal);box-shadow:var(--shadow)}
+    .chart-wrap{position:relative;height:240px}
+    .graph-insight{
+      font-size:13px;color:var(--ink3);line-height:1.6;
+      margin-top:12px;padding:12px 14px;
+      background:var(--stone);border-radius:var(--r-sm);
+      border:1px solid var(--stone3);
+    }
+
+    /* ── IO ── */
+    .io-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .io-btn{
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      padding:22px 16px;border:1px solid var(--stone3);
+      border-radius:var(--r);background:var(--stone);
+      font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+      color:var(--ink);cursor:pointer;transition:all .15s;
+    }
+    .io-btn:active{background:var(--teal-light);color:var(--teal)}
+    .io-icon{font-size:28px}
+    .io-sub{font-size:11px;color:var(--ink3)}
+    .import-drop{
+      border:1px dashed var(--stone3);border-radius:var(--r);
+      padding:24px;text-align:center;font-size:14px;color:var(--ink3);
+    }
+    .import-drop label{color:var(--teal);font-weight:600;cursor:pointer}
+    .danger-zone{
+      border:1px solid #F09595;border-radius:var(--r);
+      padding:16px 20px;margin-top:16px;
+    }
+    .danger-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+    .clear-btn{
+      padding:10px 20px;border-radius:var(--r-sm);
+      border:1px solid #F09595;background:var(--red-light);
+      color:var(--red);font-family:'DM Sans',sans-serif;
+      font-size:14px;font-weight:500;cursor:pointer;
+    }
+
+    /* ── EMPTY ── */
+    .empty{text-align:center;padding:60px 20px;color:var(--ink3)}
+    .empty-icon{font-size:40px;margin-bottom:14px}
+    .empty p{font-size:15px;line-height:1.6}
+
+    /* ── TOAST ── */
+    .toast{
+      position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+      background:var(--ink);color:#fff;
+      padding:12px 24px;border-radius:var(--r);
+      font-size:14px;font-weight:500;
+      opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;
+      white-space:nowrap;box-shadow:var(--shadow-lg);
+    }
+    .toast.show{opacity:1}
+
+    #file-import{display:none}
+
+    /* ── MOBILE OVERRIDES ── */
+    @media(max-width:700px){
+      .app-header{padding:max(14px,env(safe-area-inset-top)) 16px 0}
+      .app-title{font-size:22px}
+      .pane{padding:16px 16px 40px}
+      .log-layout,.history-layout,.graph-layout,.io-grid-layout{grid-template-columns:1fr}
+      .io-grid{grid-template-columns:1fr 1fr}
+      .stats-row{gap:8px}
+      .stat-val{font-size:18px}
+      .tab{font-size:12px;padding:9px 4px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <h1 class="app-title">Tränings<em>dagbok</em></h1>
+    <span class="session-count" id="session-count">0 sessioner</span>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">Totalt</div><div class="stat-val" id="s-total">0</div></div>
+    <div class="stat"><div class="stat-label">Denna vecka</div><div class="stat-val" id="s-week">0</div></div>
+    <div class="stat"><div class="stat-label">Sn. smärta</div><div class="stat-val" id="s-pain">— <small>/10</small></div></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('log')">Logga session</button>
+    <button class="tab" onclick="showTab('history')">Historik</button>
+    <button class="tab" onclick="showTab('graphs')">Grafer</button>
+    <button class="tab" onclick="showTab('io')">Export / Import</button>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- LOG -->
+  <div class="pane active" id="pane-log">
+    <div class="log-layout">
+      <!-- VÄNSTER KOLUMN -->
+      <div>
+        <div class="card">
+          <div class="card-title">Sessionsinformation</div>
+          <div class="form-grid-2">
+            <div class="form-row"><label>Datum</label><input type="date" id="f-date"></div>
+            <div class="form-row"><label>Tid (min)</label><input type="number" id="f-dur" placeholder="45" min="1" max="600"></div>
+          </div>
+          <div class="form-row"><label>Typ av session</label>
+            <select id="f-type">
+              <option value="">Välj typ…</option>
+              <option>Styrketräning</option>
+              <option>Kondition</option>
+              <option>Rehab / fysioterapi</option>
+              <option>Rörlighet / stretching</option>
+              <option>Yoga / pilates</option>
+              <option>Simning</option>
+              <option>Cykling</option>
+              <option>Löpning</option>
+              <option>Promenad</option>
+              <option>Övrigt</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Smärtnivå (0 = ingen smärta)</label>
+            <div class="pain-grid" id="pain-btns"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HÖGER KOLUMN -->
+      <div>
+        <div class="card">
+          <div class="card-title">Övningar & anteckningar</div>
+          <div class="form-row">
+            <label>Övningar</label>
+            <div class="ex-input-row">
+              <input type="text" id="f-ex" placeholder="t.ex. knäböj, benspark…" onkeydown="if(event.key==='Enter'){addEx();event.preventDefault()}">
+              <button class="add-ex-btn" onclick="addEx()">+ Lägg till</button>
+            </div>
+            <div class="ex-chips" id="ex-chips"></div>
+          </div>
+          <div class="form-row">
+            <label>Anteckningar</label>
+            <textarea id="f-notes" placeholder="Hur kändes det? Framsteg, smärta, reaktioner…"></textarea>
+          </div>
+          <button class="save-btn" onclick="saveEntry()">Spara session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="pane" id="pane-history">
+    <div id="history-content"></div>
+  </div>
+
+  <!-- GRAPHS -->
+  <div class="pane" id="pane-graphs">
+    <div class="gtype-bar">
+      <button class="gtype-btn active" onclick="setGraph('weeks')">Sessioner / vecka</button>
+      <button class="gtype-btn" onclick="setGraph('pain')">Smärta över tid</button>
+      <button class="gtype-btn" onclick="setGraph('types')">Sessionstyper</button>
+    </div>
+    <div class="graph-layout">
+      <div class="card graph-full">
+        <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+        <div class="graph-insight" id="graph-insight"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IO -->
+  <div class="pane" id="pane-io">
+    <div class="card">
+      <div class="card-title">Exportera data</div>
+      <div class="io-grid">
+        <button class="io-btn" onclick="exportJSON()">
+          <span class="io-icon">📄</span>
+          <span>Exportera JSON</span>
+          <span class="io-sub">Fullständig backup</span>
+        </button>
+        <button class="io-btn" onclick="exportCSV()">
+          <span class="io-icon">📊</span>
+          <span>Exportera CSV</span>
+          <span class="io-sub">Öppna i Excel / Numbers</span>
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Importera data</div>
+      <div class="import-drop">
+        <input type="file" id="file-import" accept=".json" onchange="importJSON(event)">
+        <div style="margin-bottom:8px">Importera från en tidigare JSON-backup</div>
+        <label for="file-import">Välj fil från din enhet</label>
+        <div style="margin-top:8px;font-size:12px">Nya sessioner läggs till utan att befintliga skrivs över.</div>
+      </div>
+    </div>
+    <div class="danger-zone">
+      <div class="danger-title">Farlig zon</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:12px">Tar bort all loggad data permanent.</p>
+      <button class="clear-btn" onclick="clearAll()">Rensa all data</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'rehab-diary-v2';
+let entries = [];
+let exercises = [];
+let selectedPain = null;
+let currentGraph = 'weeks';
+let chartInstance = null;
+
+// Pain buttons
+const painEl = document.getElementById('pain-btns');
+for(let i=0;i<=10;i++){
+  const b = document.createElement('button');
+  b.className = 'pain-btn'; b.textContent = i; b.dataset.p = i;
+  b.onclick = () => selectPain(i);
+  painEl.appendChild(b);
+}
+
+function selectPain(n){
+  selectedPain = n;
+  document.querySelectorAll('.pain-btn').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.p) === n));
+}
+
+function addEx(){
+  const inp = document.getElementById('f-ex');
+  const v = inp.value.trim(); if(!v) return;
+  exercises.push(v); renderChips(); inp.value = ''; inp.focus();
+}
+function removeEx(i){ exercises.splice(i,1); renderChips(); }
+function renderChips(){
+  document.getElementById('ex-chips').innerHTML = exercises.map((e,i) =>
+    `<span class="ex-chip">${e}<button onclick="removeEx(${i})">×</button></span>`).join('');
+}
+
+async function load(){
+  try{ const r = await window.storage.get(STORAGE_KEY); if(r?.value) entries = JSON.parse(r.value); }
+  catch(e){ entries = []; }
+  refresh();
+}
+async function persist(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(entries)); }catch(e){}
+}
+
+async function saveEntry(){
+  const date = document.getElementById('f-date').value;
+  const dur  = document.getElementById('f-dur').value;
+  const type = document.getElementById('f-type').value;
+  const notes= document.getElementById('f-notes').value.trim();
+  if(!date){ toast('Välj ett datum'); return; }
+  if(!type){ toast('Välj typ av session'); return; }
+  entries.unshift({ id:Date.now(), date, duration:dur?parseInt(dur):null, type, pain:selectedPain, exercises:[...exercises], notes });
+  await persist(); toast('Session sparad! 💪'); resetForm(); refresh();
+}
+
+function resetForm(){
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-dur').value = '';
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-notes').value = '';
+  exercises = []; selectedPain = null;
+  document.querySelectorAll('.pain-btn').forEach(b => b.classList.remove('sel'));
+  renderChips();
+}
+
+async function deleteEntry(id){
+  entries = entries.filter(e => e.id !== id);
+  await persist(); refresh(); toast('Borttagen');
+}
+
+function refresh(){
+  updateStats(); renderHistory();
+  const n = entries.length;
+  document.getElementById('session-count').textContent = `${n} session${n===1?'':'er'}`;
+  if(document.getElementById('pane-graphs').classList.contains('active')) renderGraph(currentGraph);
+}
+
+function updateStats(){
+  document.getElementById('s-total').textContent = entries.length;
+  const ago = new Date(); ago.setDate(ago.getDate()-7);
+  document.getElementById('s-week').textContent = entries.filter(e => new Date(e.date) >= ago).length;
+  const wp = entries.filter(e => e.pain != null);
+  document.getElementById('s-pain').innerHTML = wp.length
+    ? `${(wp.reduce((s,e)=>s+e.pain,0)/wp.length).toFixed(1)} <small>/10</small>`
+    : `— <small>/10</small>`;
+}
+
+function painClass(p){ return p<=3?'tag-pain-low':p<=6?'tag-pain-mid':'tag-pain-hi'; }
+
+function renderHistory(){
+  const el = document.getElementById('history-content');
+  if(!entries.length){
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Inga sessioner loggade ännu.<br>Börja med att lägga till din första session.</p></div>`;
+    return;
+  }
+  const grouped = {};
+  entries.forEach(e => { const mo=e.date.slice(0,7); if(!grouped[mo]) grouped[mo]=[]; grouped[mo].push(e); });
+  const months = ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
+  const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+
+  // For iPad: split groups into two columns
+  const keys = Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+  const left = keys.filter((_,i)=>i%2===0);
+  const right = keys.filter((_,i)=>i%2===1);
+
+  function renderGroup(mo){
+    const [y,m] = mo.split('-');
+    let h = `<div class="month-group"><div class="month-label">${months[parseInt(m)-1]} ${y}</div><div class="card">`;
+    grouped[mo].forEach(e => {
+      const d = new Date(e.date);
+      h += `<div class="entry">
+        <div class="entry-top">
+          <div>
+            <div class="entry-date">${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}</div>
+            <div class="entry-name">${e.type}</div>
+          </div>
+          <button class="del-btn" onclick="deleteEntry(${e.id})">×</button>
+        </div>
+        <div class="entry-tags">
+          ${e.duration ? `<span class="tag tag-dur">${e.duration} min</span>` : ''}
+          ${e.pain!=null ? `<span class="tag ${painClass(e.pain)}">Smärta ${e.pain}/10</span>` : ''}
+          ${(e.exercises||[]).map(x=>`<span class="tag tag-type">${x}</span>`).join('')}
+        </div>
+        ${e.notes ? `<div class="entry-note">${e.notes}</div>` : ''}
+      </div>`;
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  el.innerHTML = `<div class="history-layout">
+    <div>${left.map(renderGroup).join('')}</div>
+    <div>${right.map(renderGroup).join('')}</div>
+  </div>`;
+}
+
+function setGraph(t){
+  currentGraph = t;
+  document.querySelectorAll('.gtype-btn').forEach((b,i) => b.classList.toggle('active', ['weeks','pain','types'][i]===t));
+  renderGraph(t);
+}
+
+function renderGraph(t){
+  if(chartInstance){ chartInstance.destroy(); chartInstance=null; }
+  const ctx = document.getElementById('main-chart');
+  const textColor = 'rgba(140,133,124,0.9)';
+  const gridColor = 'rgba(0,0,0,0.06)';
+  const insight = document.getElementById('graph-insight');
+
+  if(t === 'weeks'){
+    const weeks = [];
+    for(let i=11;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i*7);
+      const start=new Date(d); start.setDate(d.getDate()-d.getDay());
+      const end=new Date(start); end.setDate(start.getDate()+6);
+      const count=entries.filter(e=>{const ed=new Date(e.date);return ed>=start&&ed<=end;}).length;
+      weeks.push({label:`v.${weekNum(start)}`, count});
+    }
+    const total=weeks.reduce((s,w)=>s+w.count,0);
+    const best=Math.max(...weeks.map(w=>w.count),0);
+    insight.textContent=`Senaste 12 veckorna: ${total} sessioner, snitt ${(total/12).toFixed(1)}/vecka. Bästa vecka: ${best} session${best===1?'':'er'}.`;
+    chartInstance=new Chart(ctx,{type:'bar',data:{labels:weeks.map(w=>w.label),datasets:[{data:weeks.map(w=>w.count),backgroundColor:'rgba(15,110,86,0.75)',borderRadius:6,hoverBackgroundColor:'rgba(29,158,117,0.9)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:textColor,font:{size:11}},grid:{display:false}},y:{ticks:{color:textColor,font:{size:11},stepSize:1},grid:{color:gridColor},beginAtZero:true}}}});
+  } else if(t === 'pain'){
+    const wp = entries.filter(e=>e.pain!=null).slice(0,40).reverse();
+    if(wp.length < 2){ insight.textContent='Logga minst 2 sessioner med smärtnivå för att se trenden.'; return; }
+    const labels = wp.map(e=>{const d=new Date(e.date);return`${d.getDate()}/${d.getMonth()+1}`;});
+    const vals = wp.map(e=>e.pain);
+    const avg = (vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
+    const trend = vals[vals.length-1]-vals[0];
+    insight.textContent=`Genomsnittlig smärtnivå: ${avg}/10. Trend: ${Math.abs(trend)<0.5?'stabil':trend<0?'minskande 📉 (positivt!)':'ökande 📈'}.`;
+    chartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'rgba(186,117,23,0.9)',backgroundColor:'rgba(250,238,218,0.3)',tension:0.35,fill:true,pointBackgroundColor:'rgba(186,117,23,1)',pointRadius:4,pointHoverRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:textColor,font:{size:11}},grid:{display:false}},y:{min:0,max:10,ticks:{color:textColor,font:{size:11},stepSize:2},grid:{color:gridColor}}}}});
+  } else {
+    const counts={};
+    entries.forEach(e=>{counts[e.type]=(counts[e.type]||0)+1;});
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    if(!sorted.length){ insight.textContent='Inga sessioner ännu.'; return; }
+    const colors=['rgba(15,110,86,0.8)','rgba(29,158,117,0.7)','rgba(186,117,23,0.75)','rgba(163,45,45,0.7)','rgba(83,74,183,0.7)','rgba(212,83,126,0.7)','rgba(136,135,128,0.65)','rgba(55,138,221,0.7)'];
+    const top=sorted[0];
+    insight.textContent=`${sorted.length} sessionstyper. Vanligast: "${top[0]}" (${top[1]} gånger, ${Math.round(top[1]/entries.length*100)}%).`;
+    chartInstance=new Chart(ctx,{type:'doughnut',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:colors,borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:textColor,font:{size:12},boxWidth:12,padding:14}}}}});
+  }
+}
+
+function weekNum(d){ const j=new Date(d.getFullYear(),0,1); return Math.ceil((((d-j)/86400000)+j.getDay()+1)/7); }
+
+function exportJSON(){
+  if(!entries.length){ toast('Inga sessioner att exportera'); return; }
+  const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries},null,2)],{type:'application/json'});
+  dl(blob, `rehabdagbok_${today()}.json`); toast('JSON exporterad!');
+}
+function exportCSV(){
+  if(!entries.length){ toast('Inga sessioner att exportera'); return; }
+  const rows=[['Datum','Typ','Tid (min)','Smärtnivå','Övningar','Anteckningar']];
+  entries.forEach(e=>rows.push([e.date,e.type,e.duration??'',e.pain??'',(e.exercises||[]).join('; '),e.notes||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  dl(blob, `rehabdagbok_${today()}.csv`); toast('CSV exporterad!');
+}
+function dl(blob, name){ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click(); }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+function importJSON(evt){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const imported=data.entries||data;
+      if(!Array.isArray(imported)) throw new Error();
+      const ids=new Set(entries.map(e=>e.id));
+      let added=0;
+      imported.forEach(e=>{ if(!ids.has(e.id)){ entries.push(e); added++; }});
+      entries.sort((a,b)=>b.date.localeCompare(a.date));
+      await persist(); refresh(); toast(`Importerade ${added} nya sessioner`);
+    }catch(e){ toast('Ogiltig fil'); }
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+async function clearAll(){
+  if(!confirm('Är du säker? All data tas bort permanent.')) return;
+  entries=[]; await persist(); refresh(); toast('All data rensad');
+}
+
+function showTab(t){
+  ['log','history','graphs','io'].forEach(id=>{
+    document.getElementById('pane-'+id).classList.toggle('active', id===t);
+  });
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['log','history','graphs','io'][i]===t));
+  if(t==='graphs') renderGraph(currentGraph);
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+load();
+</script>
+</body>
+</html>
