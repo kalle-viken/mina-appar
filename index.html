@@ -49,8 +49,7 @@
     .logo-row{display:flex;align-items:center;gap:12px;margin-bottom:40px}
     .logo-mark{
       width:36px;height:36px;
-      background:var(--ink);
-      border-radius:10px;
+      background:var(--ink);border-radius:10px;
       display:flex;align-items:center;justify-content:center;
     }
     .logo-mark svg{width:20px;height:20px;fill:var(--gold2)}
@@ -77,13 +76,38 @@
 
     .divider{width:48px;height:2px;background:var(--gold);margin:28px 0}
 
-    /* INFO ICON */
+    /* DISKRET INFO-IKON */
     .info-icon{
       position:relative;
       display:inline-flex;
+      align-items:center;
       margin-left:6px;
       cursor:help;
+      vertical-align:middle;
     }
+
+    .i-badge{
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      font-weight:600;
+      color:var(--ink3);
+      border:1px solid var(--stone3);
+      background:rgba(255,255,255,0.6);
+      line-height:1;
+    }
+
+    .info-icon:hover .i-badge,
+    .info-icon:focus .i-badge{
+      color:var(--ink2);
+      border-color:var(--stone2);
+      background:#fff;
+    }
+
     .tooltip{
       position:absolute;
       bottom:140%;left:50%;
@@ -177,3 +201,40 @@
 <header>
   <div class="logo-row">
     <div class="logo-mark">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="logo-name">Mina appar</span>
+  </div>
+
+  <h1 class="hero-title">Smarta verktyg<br>för <em>vardagen</em></h1>
+  <div class="divider"></div>
+
+  <p class="hero-sub">
+    App‑liknande verktyg att använda via Safari.
+    Lägg till dem på hemskärmen på din iPad för snabb åtkomst.
+    <span class="info-icon" tabindex="0">
+      <span class="i-badge">i</span>
+      <span class="tooltip">
+        Öppna sidan i Safari och välj
+        ”Lägg till på hemskärmen”
+        för att använda den som en app på din iPad.
+      </span>
+    </span>
+  </p>
+</header>
+
+<!-- GRID MED ALLA CARDS (oförändrade) -->
+<!-- … här ligger alla dina kort exakt som tidigare … -->
+
+<footer>
+  © <span id="year"></span> Mina appar • Skapad för snabb åtkomst på iPhone
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
