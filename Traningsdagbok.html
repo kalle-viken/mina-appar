@@ -13,6 +13,7 @@
     :root{
       --teal:#0F6E56;--teal2:#1D9E75;--teal-light:#E1F5EE;
       --purple:#6B3FA0;--purple2:#8B5CC0;--purple-light:#F0EAFA;
+      --gold:#B8860B;--gold-light:#FFF7E0;
       --stone:#F7F5F0;--stone2:#EDE9E1;--stone3:#D9D3C7;
       --ink:#1A1714;--ink2:#4A4540;--ink3:#8C857C;
       --white:#FFFFFF;
@@ -26,133 +27,197 @@
     html,body{height:100%;overflow:hidden}
     body{background:var(--stone);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column}
 
-    .app-header{background:var(--white);border-bottom:1px solid var(--stone3);padding:16px 28px 0;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top))}
-    .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .app-title{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;letter-spacing:-0.02em}
+    /* HEADER */
+    .app-header{background:var(--white);border-bottom:1px solid var(--stone3);padding:14px 28px 0;flex-shrink:0;padding-top:max(14px,env(safe-area-inset-top))}
+    .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .app-title{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-0.02em}
     .app-title em{font-style:italic;color:var(--teal)}
-    .session-count{font-size:13px;color:var(--ink3);background:var(--stone);padding:5px 12px;border-radius:20px;border:1px solid var(--stone3)}
 
-    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-    .stat{background:var(--stone);border-radius:var(--r-sm);padding:10px 14px;border:1px solid var(--stone3)}
-    .stat-label{font-size:10px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
-    .stat-val{font-size:19px;font-weight:600;color:var(--ink);line-height:1}
-    .stat-val small{font-size:12px;font-weight:400;color:var(--ink3)}
+    /* STATS */
+    .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+    .stat{background:var(--stone);border-radius:var(--r-sm);padding:8px 12px;border:1px solid var(--stone3);position:relative;overflow:hidden}
+    .stat-label{font-size:9px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+    .stat-val{font-size:17px;font-weight:600;color:var(--ink);line-height:1}
+    .stat-val small{font-size:11px;font-weight:400;color:var(--ink3)}
+    .stat-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--teal);border-radius:0 2px 2px 0;transition:width .4s ease}
+    .stat.streak .stat-val{color:var(--gold)}
+    .stat.goal-stat .stat-val{color:var(--teal)}
 
+    /* TABS */
     .tab-bar{display:flex;gap:2px}
-    .tab{flex:1;padding:10px 6px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+    .tab{flex:1;padding:9px 4px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
     .tab.active{color:var(--teal);border-bottom-color:var(--teal)}
     .tab.body-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+    .tab.goal-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 
+    /* LAYOUT */
     .app-body{flex:1;display:flex;overflow:hidden}
-    .pane{flex:1;overflow-y:auto;padding:20px 28px 60px;display:none;-webkit-overflow-scrolling:touch}
+    .pane{flex:1;overflow-y:auto;padding:18px 28px 60px;display:none;-webkit-overflow-scrolling:touch}
     .pane.active{display:block}
 
-    .card{background:var(--white);border:1px solid var(--stone3);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+    /* CARDS */
+    .card{background:var(--white);border:1px solid var(--stone3);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
     .card:last-child{margin-bottom:0}
-    .card-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
-    .card-subtitle{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin:16px 0 10px}
+    .card-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+    .card-title.purple{color:var(--purple)}
+    .card-title.gold{color:var(--gold)}
 
-    .form-row{margin-bottom:14px}
+    /* FORMS */
+    .form-row{margin-bottom:12px}
     .form-row:last-child{margin-bottom:0}
-    .form-row label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
-    .form-row input,.form-row select,.form-row textarea{width:100%;border-radius:var(--r-sm);border:1px solid var(--stone3);padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--stone);color:var(--ink);-webkit-appearance:none;appearance:none}
-    .form-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C857C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
-    .form-row textarea{resize:none;height:90px;font-size:15px}
+    .form-row label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+    .form-row input,.form-row select,.form-row textarea{width:100%;border-radius:var(--r-sm);border:1px solid var(--stone3);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--stone);color:var(--ink);-webkit-appearance:none;appearance:none}
+    .form-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C857C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+    .form-row textarea{resize:none;height:80px;font-size:14px}
     .form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:2px solid var(--teal);outline-offset:-1px}
-    .form-row input.purple-focus:focus{outline-color:var(--purple)}
-    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+    .pf input:focus,.pf select:focus,.pf textarea:focus{outline-color:var(--purple)}
+    .gf input:focus{outline-color:var(--gold)}
+    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
 
-    .pain-grid{display:flex;gap:6px;flex-wrap:wrap}
-    .pain-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--stone3);background:var(--stone);font-size:13px;font-weight:500;cursor:pointer;color:var(--ink);transition:all .12s;flex-shrink:0}
-    .pain-btn:active{transform:scale(0.92)}
+    /* PAIN */
+    .pain-grid{display:flex;gap:5px;flex-wrap:wrap}
+    .pain-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--stone3);background:var(--stone);font-size:12px;font-weight:500;cursor:pointer;color:var(--ink);transition:all .12s;flex-shrink:0}
     .pain-btn.sel{color:#fff;border-color:transparent}
     .pain-btn[data-p="0"].sel,.pain-btn[data-p="1"].sel,.pain-btn[data-p="2"].sel,.pain-btn[data-p="3"].sel{background:var(--teal2)}
     .pain-btn[data-p="4"].sel,.pain-btn[data-p="5"].sel,.pain-btn[data-p="6"].sel{background:var(--amber)}
     .pain-btn[data-p="7"].sel,.pain-btn[data-p="8"].sel,.pain-btn[data-p="9"].sel,.pain-btn[data-p="10"].sel{background:var(--red)}
 
-    .ex-input-row{display:flex;gap:8px}
-    .ex-input-row input{flex:1}
-    .add-ex-btn{padding:11px 16px;border-radius:var(--r-sm);border:1px solid var(--stone3);background:var(--stone);font-size:14px;font-weight:500;cursor:pointer;color:var(--teal);white-space:nowrap}
-    .ex-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-    .ex-chip{display:flex;align-items:center;gap:5px;background:var(--teal-light);color:var(--teal);font-size:13px;padding:5px 12px;border-radius:20px;font-weight:500}
-    .ex-chip button{background:none;border:none;cursor:pointer;color:var(--teal);font-size:16px;padding:0;line-height:1}
+    /* EXERCISES WITH NOTES */
+    .ex-input-area{border:1px solid var(--stone3);border-radius:var(--r-sm);overflow:hidden;margin-top:4px}
+    .ex-input-row{display:flex;border-bottom:1px solid var(--stone3)}
+    .ex-input-row:last-child{border-bottom:none}
+    .ex-name-input{flex:1;border:none;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--stone);color:var(--ink)}
+    .ex-name-input:focus{outline:none;background:#fff}
+    .ex-detail-input{width:130px;border:none;border-left:1px solid var(--stone3);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--stone);color:var(--ink2)}
+    .ex-detail-input:focus{outline:none;background:#fff}
+    .ex-add-row{display:flex;align-items:center;gap:0;background:var(--stone)}
+    .ex-new-name{flex:1;border:none;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:14px;background:transparent;color:var(--ink)}
+    .ex-new-name::placeholder{color:var(--ink3)}
+    .ex-new-name:focus{outline:none}
+    .ex-new-detail{width:130px;border:none;border-left:1px solid var(--stone3);padding:9px 10px;font-family:'DM Sans',sans-serif;font-size:13px;background:transparent;color:var(--ink2)}
+    .ex-new-detail::placeholder{color:var(--ink3)}
+    .ex-new-detail:focus{outline:none}
+    .ex-add-btn{padding:9px 14px;border:none;border-left:1px solid var(--stone3);background:transparent;font-size:18px;cursor:pointer;color:var(--teal);line-height:1}
+    .ex-header{display:flex;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);padding:5px 12px 5px;background:var(--stone2);border-bottom:1px solid var(--stone3)}
+    .ex-header span:first-child{flex:1}
+    .ex-header span:last-child{width:130px;border-left:1px solid var(--stone3);padding-left:10px}
+    .ex-del-btn{background:none;border:none;cursor:pointer;color:var(--stone3);font-size:16px;padding:9px 8px;border-left:1px solid var(--stone3);line-height:1}
+    .ex-del-btn:active{color:var(--red)}
 
-    .save-btn{width:100%;padding:14px;border-radius:var(--r);border:none;background:var(--teal);color:#fff;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s;-webkit-appearance:none}
+    /* SAVE BUTTON */
+    .save-btn{width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--teal);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s;-webkit-appearance:none}
     .save-btn:active{background:var(--teal2)}
     .save-btn.purple{background:var(--purple)}
     .save-btn.purple:active{background:var(--purple2)}
+    .save-btn.gold{background:var(--gold)}
 
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+    /* TWO / THREE COL */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+
+    /* GOAL PANE */
+    .goal-progress{margin:12px 0}
+    .goal-bar-wrap{background:var(--stone2);border-radius:20px;height:10px;overflow:hidden;margin-bottom:6px}
+    .goal-bar{height:100%;border-radius:20px;background:var(--teal);transition:width .5s ease}
+    .goal-bar.full{background:var(--teal2)}
+    .goal-label{font-size:12px;color:var(--ink3)}
+    .streak-display{text-align:center;padding:20px 10px}
+    .streak-num{font-family:'DM Serif Display',serif;font-size:56px;font-weight:400;color:var(--gold);line-height:1}
+    .streak-sub{font-size:13px;color:var(--ink3);margin-top:6px}
+    .streak-fire{font-size:36px;margin-bottom:8px}
+    .bmi-display{display:flex;align-items:center;gap:16px;padding:12px 0}
+    .bmi-num{font-size:36px;font-weight:600;color:var(--purple)}
+    .bmi-label{font-size:13px;color:var(--ink3);margin-top:2px}
+    .bmi-cat{font-size:12px;font-weight:600;margin-top:4px;padding:3px 10px;border-radius:20px;display:inline-block}
+    .weight-goal-bar-wrap{background:var(--stone2);border-radius:20px;height:8px;overflow:hidden;margin:8px 0}
+    .weight-goal-bar{height:100%;border-radius:20px;background:var(--purple);transition:width .5s ease}
+    .week-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin:10px 0}
+    .week-cell{aspect-ratio:1;border-radius:4px;background:var(--stone2);position:relative;cursor:default}
+    .week-cell.hit{background:var(--teal)}
+    .week-cell.partial{background:var(--teal-light);border:1px solid var(--teal)}
+    .week-cell.current{border:2px solid var(--gold)}
 
     /* HISTORY */
-    .month-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px}
-    .month-group{margin-bottom:20px}
+    .month-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+    .month-group{margin-bottom:18px}
     .month-group:last-child{margin-bottom:0}
-    .entry{border-bottom:1px solid var(--stone2);padding:12px 0}
+    .entry{border-bottom:1px solid var(--stone2);padding:10px 0}
     .entry:last-child{border-bottom:none;padding-bottom:0}
     .entry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-    .entry-date{font-size:11px;color:var(--ink3);margin-bottom:3px}
-    .entry-name{font-size:15px;font-weight:600}
-    .entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-    .tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+    .entry-date{font-size:11px;color:var(--ink3);margin-bottom:2px}
+    .entry-name{font-size:14px;font-weight:600}
+    .entry-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+    .tag{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
     .tag-dur{background:var(--stone2);color:var(--ink2)}
     .tag-type{background:var(--teal-light);color:var(--teal)}
     .tag-pain-low{background:var(--green-light);color:var(--green)}
     .tag-pain-mid{background:var(--amber-light);color:var(--amber)}
     .tag-pain-hi{background:var(--red-light);color:var(--red)}
-    .entry-note{font-size:13px;color:var(--ink3);margin-top:8px;line-height:1.55}
-    .del-btn{background:none;border:none;cursor:pointer;color:var(--stone3);font-size:20px;padding:2px;line-height:1;flex-shrink:0}
+    .tag-ex{background:var(--stone2);color:var(--ink2)}
+    .entry-note{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5}
+    .entry-exercises{margin-top:8px}
+    .ex-row{display:flex;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px solid var(--stone2);font-size:13px}
+    .ex-row:last-child{border-bottom:none}
+    .ex-row-name{font-weight:500;color:var(--ink)}
+    .ex-row-detail{color:var(--ink3);font-size:12px}
+    .del-btn{background:none;border:none;cursor:pointer;color:var(--stone3);font-size:18px;padding:2px;line-height:1;flex-shrink:0}
     .del-btn:active{color:var(--red)}
 
-    /* MEASURE HISTORY */
-    .measure-entry{border-bottom:1px solid var(--stone2);padding:12px 0}
+    /* MEASURES */
+    .measure-entry{border-bottom:1px solid var(--stone2);padding:10px 0}
     .measure-entry:last-child{border-bottom:none;padding-bottom:0}
-    .measure-date{font-size:11px;color:var(--ink3);margin-bottom:6px}
-    .measure-vals{display:flex;gap:6px;flex-wrap:wrap}
-    .mbadge{font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--purple-light);color:var(--purple)}
+    .measure-date{font-size:11px;color:var(--ink3);margin-bottom:5px}
+    .measure-vals{display:flex;gap:5px;flex-wrap:wrap}
+    .mbadge{font-size:12px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--purple-light);color:var(--purple)}
     .mbadge.weight{background:#EDE9F7;font-weight:600;font-size:13px}
-    .measure-note{font-size:13px;color:var(--ink3);margin-top:6px}
+    .measure-note{font-size:12px;color:var(--ink3);margin-top:5px}
 
     /* GRAPHS */
-    .graph-section{margin-bottom:24px}
-    .graph-section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px}
-    .gtype-bar{display:flex;gap:6px;margin-bottom:14px;background:var(--stone2);border-radius:var(--r-sm);padding:4px}
-    .gtype-btn{flex:1;padding:9px 8px;border:none;border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;transition:all .15s}
+    .graph-section{margin-bottom:20px}
+    .graph-section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+    .gtype-bar{display:flex;gap:4px;margin-bottom:12px;background:var(--stone2);border-radius:var(--r-sm);padding:3px}
+    .gtype-btn{flex:1;padding:8px 6px;border:none;border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;transition:all .15s}
     .gtype-btn.active{background:var(--white);color:var(--teal);box-shadow:var(--shadow)}
-    .gtype-btn.active.purple{color:var(--purple)}
-    .chart-wrap{position:relative;height:240px}
-    .graph-insight{font-size:13px;color:var(--ink3);line-height:1.6;margin-top:12px;padding:12px 14px;background:var(--stone);border-radius:var(--r-sm);border:1px solid var(--stone3)}
+    .gtype-btn.active.p{color:var(--purple)}
+    .chart-wrap{position:relative;height:220px}
+    .graph-insight{font-size:12px;color:var(--ink3);line-height:1.6;margin-top:10px;padding:10px 12px;background:var(--stone);border-radius:var(--r-sm);border:1px solid var(--stone3)}
+    .compare-toggle{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12px;color:var(--ink3)}
+    .compare-toggle input[type=checkbox]{accent-color:var(--teal);width:16px;height:16px}
 
     /* IO */
-    .io-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-    .io-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 16px;border:1px solid var(--stone3);border-radius:var(--r);background:var(--stone);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:all .15s}
+    .io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+    .io-btn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:20px 14px;border:1px solid var(--stone3);border-radius:var(--r);background:var(--stone);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;transition:all .15s}
     .io-btn:active{background:var(--teal-light);color:var(--teal)}
-    .io-icon{font-size:28px}
+    .io-icon{font-size:26px}
     .io-sub{font-size:11px;color:var(--ink3)}
-    .import-drop{border:1px dashed var(--stone3);border-radius:var(--r);padding:24px;text-align:center;font-size:14px;color:var(--ink3)}
+    .import-drop{border:1px dashed var(--stone3);border-radius:var(--r);padding:22px;text-align:center;font-size:13px;color:var(--ink3)}
     .import-drop label{color:var(--teal);font-weight:600;cursor:pointer}
-    .danger-zone{border:1px solid #F09595;border-radius:var(--r);padding:16px 20px;margin-top:16px}
-    .danger-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
-    .clear-btn{padding:10px 20px;border-radius:var(--r-sm);border:1px solid #F09595;background:var(--red-light);color:var(--red);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+    .danger-zone{border:1px solid #F09595;border-radius:var(--r);padding:14px 18px;margin-top:14px}
+    .danger-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:7px}
+    .clear-btn{padding:9px 18px;border-radius:var(--r-sm);border:1px solid #F09595;background:var(--red-light);color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
 
+    /* EMPTY */
     .empty{text-align:center;padding:40px 20px;color:var(--ink3)}
-    .empty-icon{font-size:36px;margin-bottom:12px}
+    .empty-icon{font-size:34px;margin-bottom:10px}
     .empty p{font-size:14px;line-height:1.6}
 
-    .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 24px;border-radius:var(--r);font-size:14px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:var(--shadow-lg)}
+    /* TOAST */
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:var(--r);font-size:14px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:var(--shadow-lg)}
     .toast.show{opacity:1}
     #file-import{display:none}
 
     @media(max-width:700px){
       .app-header{padding:max(14px,env(safe-area-inset-top)) 16px 0}
-      .app-title{font-size:22px}
-      .pane{padding:16px 16px 60px}
-      .two-col{grid-template-columns:1fr}
-      .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+      .app-title{font-size:20px}
+      .pane{padding:14px 16px 60px}
+      .two-col,.three-col{grid-template-columns:1fr}
+      .stats-row{grid-template-columns:repeat(3,1fr);gap:6px}
       .form-grid-4{grid-template-columns:1fr 1fr}
-      .tab{font-size:11px;padding:9px 3px}
+      .tab{font-size:10px;padding:8px 2px}
       .io-grid{grid-template-columns:1fr 1fr}
+      .week-grid{grid-template-columns:repeat(8,1fr)}
     }
   </style>
 </head>
@@ -161,20 +226,37 @@
 <div class="app-header">
   <div class="header-top">
     <h1 class="app-title">Tränings<em>dagbok</em></h1>
-    <span class="session-count" id="session-count">0 sessioner</span>
   </div>
   <div class="stats-row">
-    <div class="stat"><div class="stat-label">Sessioner totalt</div><div class="stat-val" id="s-total">0</div></div>
-    <div class="stat"><div class="stat-label">Denna vecka</div><div class="stat-val" id="s-week">0</div></div>
-    <div class="stat"><div class="stat-label">Sn. smärta</div><div class="stat-val" id="s-pain">— <small>/10</small></div></div>
-    <div class="stat"><div class="stat-label">Senaste vikt</div><div class="stat-val" id="s-weight">— <small>kg</small></div></div>
+    <div class="stat goal-stat">
+      <div class="stat-label">Veckans mål</div>
+      <div class="stat-val" id="s-goal">—</div>
+      <div class="stat-bar" id="s-goal-bar" style="width:0%"></div>
+    </div>
+    <div class="stat streak">
+      <div class="stat-label">Streak 🔥</div>
+      <div class="stat-val" id="s-streak">0 <small>v</small></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Totalt</div>
+      <div class="stat-val" id="s-total">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Sn. smärta</div>
+      <div class="stat-val" id="s-pain">— <small>/10</small></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Vikt / BMI</div>
+      <div class="stat-val" id="s-bmi">— <small>kg</small></div>
+    </div>
   </div>
   <div class="tab-bar">
-    <button class="tab active" onclick="showTab('log')">Logga session</button>
-    <button class="tab body-tab" onclick="showTab('body')">Kropp &amp; mått</button>
-    <button class="tab" onclick="showTab('history')">Historik</button>
-    <button class="tab" onclick="showTab('graphs')">Grafer</button>
-    <button class="tab" onclick="showTab('io')">Export / Import</button>
+    <button class="tab active" type="button" onclick="showTab('log')">Logga session</button>
+    <button class="tab body-tab" type="button" onclick="showTab('body')">Kropp &amp; mått</button>
+    <button class="tab goal-tab" type="button" onclick="showTab('goals')">Mål</button>
+    <button class="tab" type="button" onclick="showTab('history')">Historik</button>
+    <button class="tab" type="button" onclick="showTab('graphs')">Grafer</button>
+    <button class="tab" type="button" onclick="showTab('io')">Export / Import</button>
   </div>
 </div>
 
@@ -208,17 +290,20 @@
       </div>
       <div>
         <div class="card">
-          <div class="card-title">Övningar &amp; anteckningar</div>
+          <div class="card-title">Övningar</div>
           <div class="form-row">
-            <label>Övningar</label>
-            <div class="ex-input-row">
-              <input type="text" id="f-ex" placeholder="t.ex. knäböj, benspark…" onkeydown="if(event.key==='Enter'){addEx();event.preventDefault()}">
-              <button class="add-ex-btn" onclick="addEx()">+ Lägg till</button>
+            <div class="ex-input-area" id="ex-area">
+              <div class="ex-header"><span>Övning</span><span>Set / reps / kommentar</span></div>
+              <div id="ex-list-rows"></div>
+              <div class="ex-add-row">
+                <input class="ex-new-name" id="ex-new-name" placeholder="Lägg till övning…" onkeydown="if(event.key==='Enter'){addEx();event.preventDefault()}">
+                <input class="ex-new-detail" id="ex-new-detail" placeholder="3×10, 20 kg…" onkeydown="if(event.key==='Enter'){addEx();event.preventDefault()}">
+                <button class="ex-add-btn" type="button" onclick="addEx()" aria-label="Lägg till övning">＋</button>
+              </div>
             </div>
-            <div class="ex-chips" id="ex-chips"></div>
           </div>
           <div class="form-row"><label>Anteckningar</label><textarea id="f-notes" placeholder="Hur kändes det? Framsteg, reaktioner…"></textarea></div>
-          <button class="save-btn" onclick="saveEntry()">Spara session</button>
+          <button class="save-btn" type="button" onclick="saveEntry()">Spara session</button>
         </div>
       </div>
     </div>
@@ -228,28 +313,89 @@
   <div class="pane" id="pane-body">
     <div class="two-col">
       <div>
-        <div class="card">
-          <div class="card-title">Logga mätning</div>
-          <div class="form-row"><label>Datum</label><input type="date" id="b-date" class="purple-focus"></div>
-          <div class="form-row">
-            <label>Vikt (kg)</label>
-            <input type="number" id="b-weight" placeholder="70.5" step="0.1" min="20" max="300" class="purple-focus">
-          </div>
-          <div class="card-subtitle">Kroppsmått (cm) — valfritt</div>
+        <div class="card pf">
+          <div class="card-title purple">Logga mätning</div>
+          <div class="form-row"><label>Datum</label><input type="date" id="b-date"></div>
+          <div class="form-row"><label>Vikt (kg)</label><input type="number" id="b-weight" placeholder="70.5" step="0.1" min="20" max="300"></div>
+          <div class="card-title purple" style="margin-top:14px">Kroppsmått (cm) — valfritt</div>
           <div class="form-grid-4">
-            <div class="form-row"><label>Mage</label><input type="number" id="b-mage" placeholder="85" step="0.1" class="purple-focus"></div>
-            <div class="form-row"><label>Bröst</label><input type="number" id="b-brost" placeholder="95" step="0.1" class="purple-focus"></div>
-            <div class="form-row"><label>Lår</label><input type="number" id="b-lar" placeholder="55" step="0.1" class="purple-focus"></div>
-            <div class="form-row"><label>Överarm</label><input type="number" id="b-overarm" placeholder="32" step="0.1" class="purple-focus"></div>
+            <div class="form-row"><label>Mage</label><input type="number" id="b-mage" placeholder="85" step="0.1"></div>
+            <div class="form-row"><label>Bröst</label><input type="number" id="b-brost" placeholder="95" step="0.1"></div>
+            <div class="form-row"><label>Lår</label><input type="number" id="b-lar" placeholder="55" step="0.1"></div>
+            <div class="form-row"><label>Överarm</label><input type="number" id="b-overarm" placeholder="32" step="0.1"></div>
           </div>
-          <div class="form-row" style="margin-top:14px"><label>Anteckningar</label><textarea id="b-notes" placeholder="Hur kändes kroppen? Kommentarer…" style="height:70px;"></textarea></div>
-          <button class="save-btn purple" onclick="saveMeasure()">Spara mätning</button>
+          <div class="form-row" style="margin-top:12px"><label>Anteckningar</label><textarea id="b-notes" placeholder="Kommentarer…" style="height:65px"></textarea></div>
+          <button class="save-btn purple" type="button" onclick="saveMeasure()">Spara mätning</button>
         </div>
       </div>
       <div>
         <div class="card">
           <div class="card-title">Senaste mätningar</div>
           <div id="measure-history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÅL -->
+  <div class="pane" id="pane-goals">
+    <div class="two-col">
+      <div>
+        <div class="card gf">
+          <div class="card-title gold">Träningsmål</div>
+          <div class="form-row">
+            <label>Mål: antal pass per vecka</label>
+            <input type="number" id="g-weekly" placeholder="3" min="1" max="14">
+          </div>
+          <div class="card-title gold" style="margin-top:14px">Viktmål</div>
+          <div class="form-grid-2">
+            <div class="form-row"><label>Målvikt (kg)</label><input type="number" id="g-weight-goal" placeholder="65.0" step="0.1"></div>
+            <div class="form-row"><label>Din höjd (cm)</label><input type="number" id="g-height" placeholder="175" min="100" max="250"></div>
+          </div>
+          <button class="save-btn gold" type="button" onclick="saveGoals()" style="margin-top:12px">Spara mål</button>
+        </div>
+
+        <div class="card" id="bmi-card" style="display:none">
+          <div class="card-title purple">BMI</div>
+          <div class="bmi-display">
+            <div>
+              <div class="bmi-num" id="bmi-val">—</div>
+              <div class="bmi-label">Body Mass Index</div>
+              <div class="bmi-cat" id="bmi-cat"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:4px">Baserat på senaste inloggade vikt och din höjd.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title gold">🔥 Streak — veckor i rad med målet nått</div>
+          <div class="streak-display">
+            <div class="streak-fire">🔥</div>
+            <div class="streak-num" id="streak-big">0</div>
+            <div class="streak-sub" id="streak-sub">veckor i rad</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Denna vecka</div>
+          <div id="this-week-progress"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Senaste 12 veckorna</div>
+          <div class="week-grid" id="week-grid"></div>
+          <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--ink3)">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--teal);display:inline-block"></span>Mål nått</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--teal-light);border:1px solid var(--teal);display:inline-block"></span>Delvis</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:var(--stone2);display:inline-block"></span>Inget pass</span>
+          </div>
+        </div>
+
+        <div class="card" id="weight-goal-card" style="display:none">
+          <div class="card-title purple">Viktmål</div>
+          <div id="weight-goal-progress"></div>
         </div>
       </div>
     </div>
@@ -265,9 +411,10 @@
     <div class="graph-section">
       <div class="graph-section-label">Träningsdata</div>
       <div class="gtype-bar" id="train-gtype-bar">
-        <button class="gtype-btn active" onclick="setGraph('weeks')">Sessioner / vecka</button>
-        <button class="gtype-btn" onclick="setGraph('pain')">Smärta över tid</button>
-        <button class="gtype-btn" onclick="setGraph('types')">Sessionstyper</button>
+        <button class="gtype-btn active" type="button" onclick="setGraph('weeks')">Sessioner / vecka</button>
+        <button class="gtype-btn" type="button" onclick="setGraph('compare')">Månadsjämförelse</button>
+        <button class="gtype-btn" type="button" onclick="setGraph('pain')">Smärta + 4v snitt</button>
+        <button class="gtype-btn" type="button" onclick="setGraph('types')">Sessionstyper</button>
       </div>
       <div class="card">
         <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
@@ -277,8 +424,8 @@
     <div class="graph-section">
       <div class="graph-section-label" style="color:var(--purple)">Kropp &amp; mått</div>
       <div class="gtype-bar" id="body-gtype-bar">
-        <button class="gtype-btn active purple" onclick="setBodyGraph('weight')">Vikt</button>
-        <button class="gtype-btn purple" onclick="setBodyGraph('measures')">Kroppsmått</button>
+        <button class="gtype-btn active p" type="button" onclick="setBodyGraph('weight')">Vikt</button>
+        <button class="gtype-btn p" type="button" onclick="setBodyGraph('measures')">Kroppsmått</button>
       </div>
       <div class="card">
         <div class="chart-wrap"><canvas id="body-chart"></canvas></div>
@@ -287,13 +434,13 @@
     </div>
   </div>
 
-  <!-- EXPORT / IMPORT -->
+  <!-- IO -->
   <div class="pane" id="pane-io">
     <div class="card">
       <div class="card-title">Exportera all data</div>
       <div class="io-grid">
-        <button class="io-btn" onclick="exportJSON()"><span class="io-icon">📄</span><span>Exportera JSON</span><span class="io-sub">Fullständig backup</span></button>
-        <button class="io-btn" onclick="exportCSV()"><span class="io-icon">📊</span><span>Exportera CSV</span><span class="io-sub">Excel / Numbers</span></button>
+        <button class="io-btn" type="button" onclick="exportJSON()"><span class="io-icon">📄</span><span>Exportera JSON</span><span class="io-sub">Fullständig backup</span></button>
+        <button class="io-btn" type="button" onclick="exportCSV()"><span class="io-icon">📊</span><span>Exportera CSV</span><span class="io-sub">Excel / Numbers</span></button>
       </div>
     </div>
     <div class="card">
@@ -302,13 +449,13 @@
         <input type="file" id="file-import" accept=".json" onchange="importJSON(event)">
         <div style="margin-bottom:8px">Importera från en tidigare JSON-backup</div>
         <label for="file-import">Välj fil från din enhet</label>
-        <div style="margin-top:8px;font-size:12px">Träning och kroppsmått importeras. Dubletter filtreras automatiskt.</div>
+        <div style="margin-top:6px;font-size:11px">Träning, mätningar och mål importeras. Dubletter filtreras.</div>
       </div>
     </div>
     <div class="danger-zone">
       <div class="danger-title">Farlig zon</div>
-      <p style="font-size:13px;color:var(--ink3);margin-bottom:12px">Tar bort all tränings- och mätningsdata permanent.</p>
-      <button class="clear-btn" onclick="clearAll()">Rensa all data</button>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:10px">Tar bort all data permanent.</p>
+      <button class="clear-btn" type="button" onclick="clearAll()">Rensa all data</button>
     </div>
   </div>
 </div>
@@ -316,49 +463,111 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const SK_E = 'rehab-diary-v2';
-const SK_M = 'rehab-measures-v1';
-let entries  = [];
-let measures = [];
-let exercises = [];
-let selectedPain = null;
-let currentGraph = 'weeks';
-let currentBodyGraph = 'weight';
-let chartInst = null;
-let bodyChartInst = null;
+/* ===========================
+   Browser-safe improvements:
+   - localStorage wrapper
+   - safe HTML escaping
+   - local date parsing
+   - ISO week number
+   - UUID ids
+=========================== */
+
+const SK_E='rehab-diary-v2', SK_M='rehab-measures-v1', SK_G='rehab-goals-v1';
+
+// Storage wrapper: använder window.storage om det finns, annars localStorage
+const storage = (window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function')
+  ? window.storage
+  : {
+      async get(key){ return { value: localStorage.getItem(key) }; },
+      async set(key, value){ localStorage.setItem(key, value); }
+    };
+
+let entries=[], measures=[], goals={weekly:0,weightGoal:null,height:null};
+let exercises=[], selectedPain=null;
+let currentGraph='weeks', currentBodyGraph='weight';
+let chartInst=null, bodyChartInst=null;
+
+// Safe escaping for any user/imported content rendered via innerHTML
+function escapeHTML(s=''){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+// Backwards compat: your code used esc()
+function esc(s){ return escapeHTML(s); }
+
+// Parse "YYYY-MM-DD" as local date (avoids UTC off-by-one)
+function parseLocalDate(iso){
+  if(!iso) return new Date(NaN);
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function newId(){
+  return (crypto?.randomUUID?.() ?? (Date.now() + '-' + Math.random().toString(16).slice(2)));
+}
 
 // Pain buttons
-const painEl = document.getElementById('pain-btns');
+const painEl=document.getElementById('pain-btns');
 for(let i=0;i<=10;i++){
   const b=document.createElement('button');
-  b.className='pain-btn';b.textContent=i;b.dataset.p=i;
-  b.onclick=()=>selectPain(i);painEl.appendChild(b);
+  b.type='button';
+  b.className='pain-btn';
+  b.textContent=i;
+  b.dataset.p=i;
+  b.setAttribute('aria-label',`Smärtnivå ${i} av 10`);
+  b.onclick=()=>selectPain(i);
+  painEl.appendChild(b);
 }
 function selectPain(n){
   selectedPain=n;
-  document.querySelectorAll('.pain-btn').forEach(b=>b.classList.toggle('sel',parseInt(b.dataset.p)===n));
-}
-function addEx(){
-  const inp=document.getElementById('f-ex');
-  const v=inp.value.trim();if(!v)return;
-  exercises.push(v);renderChips();inp.value='';inp.focus();
-}
-function removeEx(i){exercises.splice(i,1);renderChips();}
-function renderChips(){
-  document.getElementById('ex-chips').innerHTML=exercises.map((e,i)=>
-    `<span class="ex-chip">${e}<button onclick="removeEx(${i})">×</button></span>`).join('');
+  document.querySelectorAll('.pain-btn').forEach(b=>b.classList.toggle('sel',parseInt(b.dataset.p,10)===n));
 }
 
+// Exercise list with detail
+function addEx(){
+  const nm=document.getElementById('ex-new-name').value.trim();
+  const dt=document.getElementById('ex-new-detail').value.trim();
+  if(!nm)return;
+  exercises.push({name:nm,detail:dt});
+  document.getElementById('ex-new-name').value='';
+  document.getElementById('ex-new-detail').value='';
+  document.getElementById('ex-new-name').focus();
+  renderExList();
+}
+function removeEx(i){exercises.splice(i,1);renderExList();}
+function renderExList(){
+  document.getElementById('ex-list-rows').innerHTML=exercises.map((e,i)=>
+    `<div class="ex-input-row">
+      <input class="ex-name-input" value="${esc(e.name)}" onchange="exercises[${i}].name=this.value">
+      <input class="ex-detail-input" value="${esc(e.detail)}" placeholder="set/reps…" onchange="exercises[${i}].detail=this.value">
+      <button class="ex-del-btn" type="button" aria-label="Ta bort övning" onclick="removeEx(${i})">×</button>
+    </div>`).join('');
+}
+
+// Load / persist
 async function load(){
-  try{const r=await window.storage.get(SK_E);if(r?.value)entries=JSON.parse(r.value);}catch(e){entries=[];}
-  try{const r=await window.storage.get(SK_M);if(r?.value)measures=JSON.parse(r.value);}catch(e){measures=[];}
-  refresh();
+  try{const r=await storage.get(SK_E);if(r?.value)entries=JSON.parse(r.value);}catch(e){entries=[];}
+  try{const r=await storage.get(SK_M);if(r?.value)measures=JSON.parse(r.value);}catch(e){measures=[];}
+  try{const r=await storage.get(SK_G);if(r?.value)goals=Object.assign(goals,JSON.parse(r.value));}catch(e){}
+  loadGoalForm();refresh();
 }
 async function persist(){
-  try{await window.storage.set(SK_E,JSON.stringify(entries));}catch(e){}
-  try{await window.storage.set(SK_M,JSON.stringify(measures));}catch(e){}
+  try{await storage.set(SK_E,JSON.stringify(entries));}catch(e){}
+  try{await storage.set(SK_M,JSON.stringify(measures));}catch(e){}
+  try{await storage.set(SK_G,JSON.stringify(goals));}catch(e){}
 }
 
+function loadGoalForm(){
+  if(goals.weekly) document.getElementById('g-weekly').value=goals.weekly;
+  if(goals.weightGoal) document.getElementById('g-weight-goal').value=goals.weightGoal;
+  if(goals.height) document.getElementById('g-height').value=goals.height;
+}
+
+// Save session
 async function saveEntry(){
   const date=document.getElementById('f-date').value;
   const dur=document.getElementById('f-dur').value;
@@ -366,7 +575,15 @@ async function saveEntry(){
   const notes=document.getElementById('f-notes').value.trim();
   if(!date){toast('Välj ett datum');return;}
   if(!type){toast('Välj typ av session');return;}
-  entries.unshift({id:Date.now(),date,duration:dur?parseInt(dur):null,type,pain:selectedPain,exercises:[...exercises],notes});
+  entries.unshift({
+    id:newId(),
+    date,
+    duration:dur?parseInt(dur,10):null,
+    type,
+    pain:selectedPain,
+    exercises:[...exercises],
+    notes
+  });
   await persist();toast('Session sparad! 💪');resetSessionForm();refresh();
 }
 function resetSessionForm(){
@@ -376,12 +593,13 @@ function resetSessionForm(){
   document.getElementById('f-notes').value='';
   exercises=[];selectedPain=null;
   document.querySelectorAll('.pain-btn').forEach(b=>b.classList.remove('sel'));
-  renderChips();
+  renderExList();
 }
 async function deleteEntry(id){
   entries=entries.filter(e=>e.id!==id);await persist();refresh();toast('Borttagen');
 }
 
+// Save measure
 async function saveMeasure(){
   const date=document.getElementById('b-date').value;
   const weight=document.getElementById('b-weight').value;
@@ -393,7 +611,8 @@ async function saveMeasure(){
   if(!date){toast('Välj ett datum');return;}
   if(!weight&&!mage&&!brost&&!lar&&!overarm){toast('Ange minst ett värde');return;}
   measures.unshift({
-    id:Date.now(),date,
+    id:newId(),
+    date,
     weight:weight?parseFloat(weight):null,
     mage:mage?parseFloat(mage):null,
     brost:brost?parseFloat(brost):null,
@@ -412,25 +631,170 @@ async function deleteMeasure(id){
   measures=measures.filter(m=>m.id!==id);await persist();refresh();toast('Borttagen');
 }
 
+// Save goals
+async function saveGoals(){
+  const w=parseInt(document.getElementById('g-weekly').value,10)||0;
+  const wg=parseFloat(document.getElementById('g-weight-goal').value)||null;
+  const h=parseFloat(document.getElementById('g-height').value)||null;
+  goals={weekly:w,weightGoal:wg,height:h};
+  await persist();toast('Mål sparade! 🎯');refresh();
+}
+
+// ── REFRESH ──
 function refresh(){
-  updateStats();renderHistory();renderMeasureHistory();
-  const n=entries.length;
-  document.getElementById('session-count').textContent=`${n} session${n===1?'':'er'}`;
+  updateStats();renderHistory();renderMeasureHistory();renderGoals();
   if(document.getElementById('pane-graphs').classList.contains('active')){
     renderGraph(currentGraph);renderBodyGraph(currentBodyGraph);
   }
 }
 
+function getWeekBounds(weeksAgo=0){
+  const now=new Date();
+  const day=now.getDay();
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-((day+6)%7)-weeksAgo*7);
+  monday.setHours(0,0,0,0);
+  const sunday=new Date(monday);
+  sunday.setDate(monday.getDate()+6);
+  sunday.setHours(23,59,59,999);
+  return{start:monday,end:sunday};
+}
+function countEntriesInRange(start,end){
+  return entries.filter(e=>{
+    const d=parseLocalDate(e.date);
+    return d>=start && d<=end;
+  }).length;
+}
+
+// NOTE: Din original-streak räknade bara avslutade veckor (började på w=1).
+// Jag behåller beteendet för att inte ändra UX oväntat.
+function calcStreak(){
+  if(!goals.weekly)return 0;
+  let streak=0;
+  let w=1;
+  while(w<=52){
+    const{start,end}=getWeekBounds(w);
+    const count=countEntriesInRange(start,end);
+    if(count>=goals.weekly)streak++;
+    else break;
+    w++;
+  }
+  return streak;
+}
+
+function calcBMI(){
+  const wm=measures.find(m=>m.weight!=null);
+  if(!wm||!goals.height)return null;
+  const h=goals.height/100;
+  return (wm.weight/(h*h)).toFixed(1);
+}
+function bmiCategory(bmi){
+  if(bmi<18.5)return{label:'Undervikt',color:'#3B82F6'};
+  if(bmi<25)return{label:'Normalvikt',color:'var(--green)'};
+  if(bmi<30)return{label:'Övervikt',color:'var(--amber)'};
+  return{label:'Fetma',color:'var(--red)'};
+}
+
 function updateStats(){
+  // Goal bar this week
+  const{start,end}=getWeekBounds(0);
+  const thisWeek=countEntriesInRange(start,end);
+  const goal=goals.weekly||0;
+  const pct=goal?Math.min(100,Math.round(thisWeek/goal*100)):0;
+  document.getElementById('s-goal').textContent=goal?`${thisWeek}/${goal} pass`:'Ej satt';
+  document.getElementById('s-goal-bar').style.width=pct+'%';
+
+  // Streak
+  const streak=calcStreak();
+  document.getElementById('s-streak').innerHTML=`${streak} <small>v</small>`;
+
+  // Total
   document.getElementById('s-total').textContent=entries.length;
-  const ago=new Date();ago.setDate(ago.getDate()-7);
-  document.getElementById('s-week').textContent=entries.filter(e=>new Date(e.date)>=ago).length;
+
+  // Pain avg
   const wp=entries.filter(e=>e.pain!=null);
   document.getElementById('s-pain').innerHTML=wp.length
     ?`${(wp.reduce((s,e)=>s+e.pain,0)/wp.length).toFixed(1)} <small>/10</small>`:`— <small>/10</small>`;
-  const wm=measures.filter(m=>m.weight!=null);
-  document.getElementById('s-weight').innerHTML=wm.length
-    ?`${wm[0].weight.toFixed(1)} <small>kg</small>`:`— <small>kg</small>`;
+
+  // BMI / weight
+  const bmi=calcBMI();
+  const lastW=measures.find(m=>m.weight!=null);
+  if(bmi){
+    document.getElementById('s-bmi').innerHTML=`${bmi} <small>BMI</small>`;
+  } else if(lastW){
+    document.getElementById('s-bmi').innerHTML=`${lastW.weight.toFixed(1)} <small>kg</small>`;
+  } else {
+    document.getElementById('s-bmi').innerHTML=`— <small>kg</small>`;
+  }
+}
+
+function renderGoals(){
+  const streak=calcStreak();
+  document.getElementById('streak-big').textContent=streak;
+  document.getElementById('streak-sub').textContent=streak===1?'vecka i rad med målet nått':'veckor i rad med målet nått';
+
+  // This week
+  const{start,end}=getWeekBounds(0);
+  const thisWeek=countEntriesInRange(start,end);
+  const goal=goals.weekly||0;
+  const pct=goal?Math.min(100,Math.round(thisWeek/goal*100)):0;
+  const wk=document.getElementById('this-week-progress');
+  if(goal){
+    wk.innerHTML=`<div style="font-size:13px;color:var(--ink3);margin-bottom:8px">${thisWeek} av ${goal} pass genomförda denna vecka</div>
+    <div class="goal-bar-wrap"><div class="goal-bar${pct>=100?' full':''}" style="width:${pct}%"></div></div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:4px">${pct}% av veckans mål</div>`;
+  } else {
+    wk.innerHTML=`<div style="font-size:13px;color:var(--ink3)">Sätt ett veckomål under Mål-fliken.</div>`;
+  }
+
+  // Week grid (12 weeks)
+  const wg=document.getElementById('week-grid');
+  let cells='';
+  for(let i=11;i>=0;i--){
+    const{start:s,end:e}=getWeekBounds(i);
+    const count=countEntriesInRange(s,e);
+    const cls=i===0
+      ?'week-cell current'+(count>0&&goal&&count>=goal?' hit':count>0?' partial':'')
+      :goal&&count>=goal?'week-cell hit':count>0?'week-cell partial':'week-cell';
+    cells+=`<div class="${cls}" title="v.${isoWeekNumber(s)}: ${count} pass"></div>`;
+  }
+  wg.innerHTML=cells;
+
+  // BMI
+  const bmi=calcBMI();
+  const bmiCard=document.getElementById('bmi-card');
+  if(bmi&&goals.height){
+    bmiCard.style.display='block';
+    document.getElementById('bmi-val').textContent=bmi;
+    const cat=bmiCategory(parseFloat(bmi));
+    const catEl=document.getElementById('bmi-cat');
+    catEl.textContent=cat.label;
+    catEl.style.background=cat.color+'22';
+    catEl.style.color=cat.color;
+  } else {
+    bmiCard.style.display='none';
+  }
+
+  // Weight goal
+  const wgCard=document.getElementById('weight-goal-card');
+  const lastW=measures.find(m=>m.weight!=null);
+  if(goals.weightGoal&&lastW){
+    wgCard.style.display='block';
+    const startW=measures.length?measures[measures.length-1].weight:lastW.weight;
+    const current=lastW.weight;
+    const target=goals.weightGoal;
+    const totalDiff=startW-target;
+    const done=startW-current;
+    const pctW=totalDiff!==0?Math.max(0,Math.min(100,Math.round(done/totalDiff*100))):100;
+    const remaining=Math.abs(current-target).toFixed(1);
+    const dir=target<current?'minska':'öka';
+    document.getElementById('weight-goal-progress').innerHTML=
+      `<div style="font-size:13px;color:var(--ink3);margin-bottom:8px">Nuvarande: <b>${current} kg</b> · Mål: <b>${target} kg</b></div>
+      <div class="weight-goal-bar-wrap"><div class="weight-goal-bar" style="width:${pctW}%"></div></div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:4px">${pctW}% av vägen — ${remaining} kg kvar att ${dir}</div>`;
+  } else {
+    wgCard.style.display='none';
+  }
 }
 
 function painClass(p){return p<=3?'tag-pain-low':p<=6?'tag-pain-mid':'tag-pain-hi';}
@@ -442,30 +806,52 @@ function renderHistory(){
     return;
   }
   const grouped={};
-  entries.forEach(e=>{const mo=e.date.slice(0,7);if(!grouped[mo])grouped[mo]=[];grouped[mo].push(e);});
+  entries.forEach(e=>{
+    const mo=(e.date||'').slice(0,7);
+    if(!grouped[mo])grouped[mo]=[];
+    grouped[mo].push(e);
+  });
   const months=['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
   const days=['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
   const keys=Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
+
   function renderGroup(mo){
     const [y,m]=mo.split('-');
-    let h=`<div class="month-group"><div class="month-label">${months[parseInt(m)-1]} ${y}</div><div class="card">`;
+    let h=`<div class="month-group"><div class="month-label">${months[parseInt(m,10)-1]||''} ${escapeHTML(y||'')}</div><div class="card">`;
     grouped[mo].forEach(e=>{
-      const d=new Date(e.date);
+      const d=parseLocalDate(e.date);
+      const safeType=escapeHTML(e.type||'');
+      const safeNotes=e.notes ? escapeHTML(e.notes) : '';
+
+      const exHTML=(e.exercises||[]).length
+        ?`<div class="entry-exercises">${(e.exercises||[]).map(x=>{
+            const name=typeof x==='string'?x:(x?.name||'');
+            const detail=typeof x==='string'?'':(x?.detail||'');
+            const safeName=escapeHTML(name);
+            const safeDetail=escapeHTML(detail);
+            return `<div class="ex-row"><span class="ex-row-name">${safeName}</span>${detail?`<span class="ex-row-detail">${safeDetail}</span>`:''}</div>`;
+          }).join('')}</div>`
+        : '';
+
       h+=`<div class="entry">
         <div class="entry-top">
-          <div><div class="entry-date">${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}</div><div class="entry-name">${e.type}</div></div>
-          <button class="del-btn" onclick="deleteEntry(${e.id})">×</button>
+          <div>
+            <div class="entry-date">${days[d.getDay()]||''} ${d.getDate()}/${d.getMonth()+1}</div>
+            <div class="entry-name">${safeType}</div>
+          </div>
+          <button class="del-btn" type="button" aria-label="Ta bort session" onclick="deleteEntry('${escapeHTML(e.id)}')">×</button>
         </div>
         <div class="entry-tags">
           ${e.duration?`<span class="tag tag-dur">${e.duration} min</span>`:''}
           ${e.pain!=null?`<span class="tag ${painClass(e.pain)}">Smärta ${e.pain}/10</span>`:''}
-          ${(e.exercises||[]).map(x=>`<span class="tag tag-type">${x}</span>`).join('')}
         </div>
-        ${e.notes?`<div class="entry-note">${e.notes}</div>`:''}
+        ${exHTML}
+        ${safeNotes?`<div class="entry-note">${safeNotes}</div>`:''}
       </div>`;
     });
-    return h+'</div></div>';
+    return h+`</div></div>`;
   }
+
   const left=keys.filter((_,i)=>i%2===0);
   const right=keys.filter((_,i)=>i%2===1);
   el.innerHTML=`<div>${left.map(renderGroup).join('')}</div><div>${right.map(renderGroup).join('')}</div>`;
@@ -479,31 +865,32 @@ function renderMeasureHistory(){
   }
   const days=['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
   el.innerHTML=measures.slice(0,12).map(m=>{
-    const d=new Date(m.date);
+    const d=parseLocalDate(m.date);
     const badges=[];
-    if(m.weight!=null) badges.push(`<span class="mbadge weight">⚖️ ${m.weight} kg</span>`);
-    if(m.mage!=null)   badges.push(`<span class="mbadge">Mage ${m.mage} cm</span>`);
-    if(m.brost!=null)  badges.push(`<span class="mbadge">Bröst ${m.brost} cm</span>`);
-    if(m.lar!=null)    badges.push(`<span class="mbadge">Lår ${m.lar} cm</span>`);
+    if(m.weight!=null)badges.push(`<span class="mbadge weight">⚖️ ${m.weight} kg</span>`);
+    if(m.mage!=null)badges.push(`<span class="mbadge">Mage ${m.mage} cm</span>`);
+    if(m.brost!=null)badges.push(`<span class="mbadge">Bröst ${m.brost} cm</span>`);
+    if(m.lar!=null)badges.push(`<span class="mbadge">Lår ${m.lar} cm</span>`);
     if(m.overarm!=null)badges.push(`<span class="mbadge">Överarm ${m.overarm} cm</span>`);
+    const safeNotes=m.notes ? escapeHTML(m.notes) : '';
     return `<div class="measure-entry">
       <div class="entry-top">
         <div style="flex:1">
-          <div class="measure-date">${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</div>
+          <div class="measure-date">${days[d.getDay()]||''} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</div>
           <div class="measure-vals">${badges.join('')}</div>
-          ${m.notes?`<div class="measure-note">${m.notes}</div>`:''}
+          ${safeNotes?`<div class="measure-note">${safeNotes}</div>`:''}
         </div>
-        <button class="del-btn" onclick="deleteMeasure(${m.id})">×</button>
+        <button class="del-btn" type="button" aria-label="Ta bort mätning" onclick="deleteMeasure('${escapeHTML(m.id)}')">×</button>
       </div>
     </div>`;
   }).join('');
-  if(measures.length>12) el.innerHTML+=`<div style="font-size:12px;color:var(--ink3);text-align:center;padding-top:10px">Visar 12 av ${measures.length} mätningar</div>`;
+  if(measures.length>12) el.innerHTML+=`<div style="font-size:11px;color:var(--ink3);text-align:center;padding-top:8px">Visar 12 av ${measures.length}</div>`;
 }
 
-// TRÄNINGSGRAFER
+// ── TRÄNINGSGRAFER ──
 function setGraph(t){
   currentGraph=t;
-  document.querySelectorAll('#train-gtype-bar .gtype-btn').forEach((b,i)=>b.classList.toggle('active',['weeks','pain','types'][i]===t));
+  document.querySelectorAll('#train-gtype-bar .gtype-btn').forEach((b,i)=>b.classList.toggle('active',['weeks','compare','pain','types'][i]===t));
   renderGraph(t);
 }
 function renderGraph(t){
@@ -511,28 +898,110 @@ function renderGraph(t){
   const ctx=document.getElementById('main-chart');
   const tc='rgba(140,133,124,0.9)',gc='rgba(0,0,0,0.06)';
   const ins=document.getElementById('graph-insight');
+
   if(t==='weeks'){
     const weeks=[];
     for(let i=11;i>=0;i--){
-      const d=new Date();d.setDate(d.getDate()-i*7);
-      const s=new Date(d);s.setDate(d.getDate()-d.getDay());
-      const e=new Date(s);e.setDate(s.getDate()+6);
-      const c=entries.filter(x=>{const ed=new Date(x.date);return ed>=s&&ed<=e;}).length;
-      weeks.push({label:`v.${weekNum(s)}`,c});
+      const{start,end}=getWeekBounds(i);
+      weeks.push({label:`v.${isoWeekNumber(start)}`,count:countEntriesInRange(start,end),goal:goals.weekly||0});
     }
-    const total=weeks.reduce((s,w)=>s+w.c,0);
-    const best=Math.max(...weeks.map(w=>w.c),0);
+    const total=weeks.reduce((s,w)=>s+w.count,0);
+    const best=Math.max(...weeks.map(w=>w.count),0);
     ins.textContent=`Senaste 12 veckorna: ${total} sessioner, snitt ${(total/12).toFixed(1)}/vecka. Bästa vecka: ${best} session${best===1?'':'er'}.`;
-    chartInst=new Chart(ctx,{type:'bar',data:{labels:weeks.map(w=>w.label),datasets:[{data:weeks.map(w=>w.c),backgroundColor:'rgba(15,110,86,0.75)',borderRadius:6,hoverBackgroundColor:'rgba(29,158,117,0.9)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc,font:{size:11},stepSize:1},grid:{color:gc},beginAtZero:true}}}});
+    const ds=[{data:weeks.map(w=>w.count),backgroundColor:weeks.map(w=>goals.weekly&&w.count>=goals.weekly?'rgba(29,158,117,0.85)':'rgba(15,110,86,0.65)'),borderRadius:6}];
+    if(goals.weekly){
+      ds.push({type:'line',data:weeks.map(()=>goals.weekly),borderColor:'rgba(184,134,11,0.7)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false,label:'Mål'});
+    }
+    chartInst=new Chart(ctx,{
+      type:'bar',
+      data:{labels:weeks.map(w=>w.label),datasets:ds},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:goals.weekly>0,labels:{color:tc,font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},
+          y:{ticks:{color:tc,font:{size:11},stepSize:1},grid:{color:gc},beginAtZero:true}
+        }
+      }
+    });
+
+  } else if(t==='compare'){
+    const now=new Date();
+    const thisM=now.getMonth(), thisY=now.getFullYear();
+    const lastM=thisM===0?11:thisM-1, lastY=thisM===0?thisY-1:thisY;
+    const months=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+    function countByMonth(y,m){
+      const byDay={};
+      entries.filter(e=>{
+        const d=parseLocalDate(e.date);
+        return d.getFullYear()===y && d.getMonth()===m;
+      }).forEach(e=>{
+        const day=parseLocalDate(e.date).getDate();
+        byDay[day]=(byDay[day]||0)+1;
+      });
+      return byDay;
+    }
+
+    const thisData=countByMonth(thisY,thisM);
+    const lastData=countByMonth(lastY,lastM);
+    const daysInThis=new Date(thisY,thisM+1,0).getDate();
+    const labels=Array.from({length:daysInThis},(_,i)=>i+1);
+
+    const thisTotal=Object.values(thisData).reduce((s,v)=>s+v,0);
+    const lastTotal=Object.values(lastData).reduce((s,v)=>s+v,0);
+    ins.textContent=`${months[thisM]}: ${thisTotal} sessioner · ${months[lastM]}: ${lastTotal} sessioner. Skillnad: ${thisTotal-lastTotal>=0?'+':''}${thisTotal-lastTotal} pass.`;
+
+    chartInst=new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets:[
+        {label:months[lastM],data:labels.map(d=>lastData[d]||0),backgroundColor:'rgba(140,133,124,0.4)',borderRadius:4},
+        {label:months[thisM],data:labels.map(d=>thisData[d]||0),backgroundColor:'rgba(15,110,86,0.75)',borderRadius:4}
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{color:tc,font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:10}},grid:{display:false}},
+          y:{ticks:{color:tc,font:{size:11},stepSize:1},grid:{color:gc},beginAtZero:true}
+        }
+      }
+    });
+
   } else if(t==='pain'){
     const wp=entries.filter(e=>e.pain!=null).slice(0,40).reverse();
-    if(wp.length<2){ins.textContent='Logga minst 2 sessioner med smärtnivå för att se trenden.';return;}
-    const labels=wp.map(e=>{const d=new Date(e.date);return`${d.getDate()}/${d.getMonth()+1}`;});
+    if(wp.length<2){ins.textContent='Logga minst 2 sessioner med smärtnivå.';return;}
+    const labels=wp.map(e=>{
+      const d=parseLocalDate(e.date);
+      return `${d.getDate()}/${d.getMonth()+1}`;
+    });
     const vals=wp.map(e=>e.pain);
+
+    const rolling=vals.map((_,i)=>{
+      const slice=vals.slice(Math.max(0,i-3),i+1);
+      return +(slice.reduce((s,v)=>s+v,0)/slice.length).toFixed(2);
+    });
+
     const avg=(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
     const trend=vals[vals.length-1]-vals[0];
-    ins.textContent=`Genomsnittlig smärtnivå: ${avg}/10. Trend: ${Math.abs(trend)<0.5?'stabil':trend<0?'minskande 📉 (positivt!)':'ökande 📈'}.`;
-    chartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'rgba(186,117,23,0.9)',backgroundColor:'rgba(250,238,218,0.3)',tension:0.35,fill:true,pointBackgroundColor:'rgba(186,117,23,1)',pointRadius:4,pointHoverRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},y:{min:0,max:10,ticks:{color:tc,font:{size:11},stepSize:2},grid:{color:gc}}}}});
+    ins.textContent=`Genomsnittlig smärtnivå: ${avg}/10. Trend: ${Math.abs(trend)<0.5?'stabil':trend<0?'minskande 📉 (positivt!)':'ökande 📈'}. Den orangea linjen visar rullande 4-sessioners snitt.`;
+
+    chartInst=new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'Smärta',data:vals,borderColor:'rgba(186,117,23,0.5)',backgroundColor:'rgba(250,238,218,0.2)',tension:0,fill:true,pointBackgroundColor:'rgba(186,117,23,1)',pointRadius:3,pointHoverRadius:5},
+        {label:'4-sess snitt',data:rolling,borderColor:'rgba(186,117,23,1)',borderWidth:2,tension:0.4,fill:false,pointRadius:0}
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{color:tc,font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},
+          y:{min:0,max:10,ticks:{color:tc,font:{size:11},stepSize:2},grid:{color:gc}}
+        }
+      }
+    });
+
   } else {
     const counts={};
     entries.forEach(e=>{counts[e.type]=(counts[e.type]||0)+1;});
@@ -540,11 +1009,15 @@ function renderGraph(t){
     if(!sorted.length){ins.textContent='Inga sessioner ännu.';return;}
     const colors=['rgba(15,110,86,0.8)','rgba(29,158,117,0.7)','rgba(186,117,23,0.75)','rgba(163,45,45,0.7)','rgba(107,63,160,0.7)','rgba(212,83,126,0.7)','rgba(136,135,128,0.65)','rgba(55,138,221,0.7)'];
     ins.textContent=`${sorted.length} sessionstyper. Vanligast: "${sorted[0][0]}" (${sorted[0][1]} gånger, ${Math.round(sorted[0][1]/entries.length*100)}%).`;
-    chartInst=new Chart(ctx,{type:'doughnut',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:colors,borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:tc,font:{size:12},boxWidth:12,padding:14}}}}});
+    chartInst=new Chart(ctx,{
+      type:'doughnut',
+      data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:colors,borderWidth:0,hoverOffset:8}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:tc,font:{size:11},boxWidth:12,padding:12}}}}
+    });
   }
 }
 
-// KROPPSGRAFER
+// ── KROPPSGRAFER ──
 function setBodyGraph(t){
   currentBodyGraph=t;
   document.querySelectorAll('#body-gtype-bar .gtype-btn').forEach((b,i)=>b.classList.toggle('active',['weight','measures'][i]===t));
@@ -559,60 +1032,117 @@ function renderBodyGraph(t){
   if(t==='weight'){
     const wm=measures.filter(m=>m.weight!=null).slice(0,50).reverse();
     if(wm.length<2){ins.textContent='Logga minst 2 vikter för att se viktkurvan.';return;}
-    const labels=wm.map(m=>{const d=new Date(m.date);return`${d.getDate()}/${d.getMonth()+1}`;});
+    const labels=wm.map(m=>{
+      const d=parseLocalDate(m.date);
+      return `${d.getDate()}/${d.getMonth()+1}`;
+    });
     const vals=wm.map(m=>m.weight);
     const diff=(vals[vals.length-1]-vals[0]).toFixed(1);
     const diffStr=parseFloat(diff)>0?`+${diff} kg`:diff+' kg';
-    ins.textContent=`${wm.length} vägningar. Min: ${Math.min(...vals)} kg — Max: ${Math.max(...vals)} kg. Förändring sedan start: ${diffStr}.`;
-    bodyChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Vikt (kg)',data:vals,borderColor:'rgba(107,63,160,0.9)',backgroundColor:'rgba(240,234,250,0.35)',tension:0.3,fill:true,pointBackgroundColor:'rgba(107,63,160,1)',pointRadius:4,pointHoverRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}}}});
+    let goalLine=null;
+    if(goals.weightGoal) goalLine={type:'line',label:'Mål',data:vals.map(()=>goals.weightGoal),borderColor:'rgba(184,134,11,0.7)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false};
+
+    const ds=[{label:'Vikt (kg)',data:vals,borderColor:'rgba(107,63,160,0.9)',backgroundColor:'rgba(240,234,250,0.35)',tension:0.3,fill:true,pointBackgroundColor:'rgba(107,63,160,1)',pointRadius:4,pointHoverRadius:7}];
+    if(goalLine)ds.push(goalLine);
+
+    ins.textContent=`${wm.length} vägningar. Min: ${Math.min(...vals)} kg — Max: ${Math.max(...vals)} kg. Förändring sedan start: ${diffStr}.${goals.weightGoal?' Målvikt: '+goals.weightGoal+' kg.':''}`;
+
+    bodyChartInst=new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:ds},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:!!goals.weightGoal,labels:{color:tc,font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},
+          y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}
+        }
+      }
+    });
   } else {
     const palette=[
-      {key:'mage',   label:'Mage',    color:'rgba(186,117,23,0.85)'},
-      {key:'brost',  label:'Bröst',   color:'rgba(212,83,126,0.85)'},
-      {key:'lar',    label:'Lår',     color:'rgba(15,110,86,0.85)'},
-      {key:'overarm',label:'Överarm', color:'rgba(55,138,221,0.85)'},
+      {key:'mage',label:'Mage',color:'rgba(186,117,23,0.85)'},
+      {key:'brost',label:'Bröst',color:'rgba(212,83,126,0.85)'},
+      {key:'lar',label:'Lår',color:'rgba(15,110,86,0.85)'},
+      {key:'overarm',label:'Överarm',color:'rgba(55,138,221,0.85)'},
     ];
     const sorted=[...measures].reverse();
     const datasets=[];
     palette.forEach(p=>{
       const data=sorted.filter(m=>m[p.key]!=null);
       if(!data.length)return;
-      datasets.push({label:p.label,data:data.map(m=>({x:m.date,y:m[p.key]})),borderColor:p.color,backgroundColor:'transparent',tension:0.3,pointBackgroundColor:p.color,pointRadius:4,pointHoverRadius:6,parsing:{xAxisKey:'x',yAxisKey:'y'}});
+      datasets.push({
+        label:p.label,
+        data:data.map(m=>({x:m.date,y:m[p.key]})),
+        borderColor:p.color,
+        backgroundColor:'transparent',
+        tension:0.3,
+        pointBackgroundColor:p.color,
+        pointRadius:4,
+        pointHoverRadius:6,
+        parsing:{xAxisKey:'x',yAxisKey:'y'}
+      });
     });
     if(!datasets.length){ins.textContent='Logga minst ett kroppsmått för att se grafen.';return;}
-    const latest=measures[0];
+    const latest=measures[0]||{};
     const parts=palette.filter(p=>latest[p.key]!=null).map(p=>`${p.label}: ${latest[p.key]} cm`);
     ins.textContent=`Senaste mätning — ${parts.join(' · ')||'–'}.`;
-    bodyChartInst=new Chart(ctx,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:tc,font:{size:12},boxWidth:12,padding:12}}},scales:{x:{type:'category',ticks:{color:tc,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}}}});
+
+    bodyChartInst=new Chart(ctx,{
+      type:'line',
+      data:{datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'top',labels:{color:tc,font:{size:11},boxWidth:12,padding:10}}},
+        scales:{
+          x:{type:'category',ticks:{color:tc,font:{size:11}},grid:{display:false}},
+          y:{ticks:{color:tc,font:{size:11}},grid:{color:gc}}
+        }
+      }
+    });
   }
 }
 
+// ── TABS ──
 function showTab(t){
-  ['log','body','history','graphs','io'].forEach(id=>{
+  ['log','body','goals','history','graphs','io'].forEach(id=>{
     document.getElementById('pane-'+id).classList.toggle('active',id===t);
   });
   document.querySelectorAll('.tab').forEach((el,i)=>{
-    const tabs=['log','body','history','graphs','io'];
-    el.classList.toggle('active',tabs[i]===t);
+    el.classList.toggle('active',['log','body','goals','history','graphs','io'][i]===t);
   });
   if(t==='graphs'){renderGraph(currentGraph);renderBodyGraph(currentBodyGraph);}
+  if(t==='goals')renderGoals();
 }
 
+// ── EXPORT / IMPORT ──
 function exportJSON(){
   if(!entries.length&&!measures.length){toast('Ingen data att exportera');return;}
-  const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),entries,measures},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),entries,measures,goals},null,2)],{type:'application/json'});
   dl(blob,`rehabdagbok_${today()}.json`);toast('JSON exporterad!');
 }
 function exportCSV(){
   let csv='\uFEFF=== TRÄNINGSSESSIONER ===\n';
   csv+=['Datum','Typ','Tid (min)','Smärtnivå','Övningar','Anteckningar'].map(c=>`"${c}"`).join(',')+'\n';
-  entries.forEach(e=>{csv+=[e.date,e.type,e.duration??'',e.pain??'',(e.exercises||[]).join('; '),e.notes||''].map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')+'\n';});
+  entries.forEach(e=>{
+    const exStr=(e.exercises||[]).map(x=>typeof x==='string'?x:`${x.name}${x.detail?' ('+x.detail+')':''}`).join('; ');
+    csv+=[e.date,e.type,e.duration??'',e.pain??'',exStr,e.notes||''].map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')+'\n';
+  });
   csv+='\n=== KROPPSMÄTNINGAR ===\n';
   csv+=['Datum','Vikt (kg)','Mage (cm)','Bröst (cm)','Lår (cm)','Överarm (cm)','Anteckningar'].map(c=>`"${c}"`).join(',')+'\n';
-  measures.forEach(m=>{csv+=[m.date,m.weight??'',m.mage??'',m.brost??'',m.lar??'',m.overarm??'',m.notes||''].map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')+'\n';});
+  measures.forEach(m=>{
+    csv+=[m.date,m.weight??'',m.mage??'',m.brost??'',m.lar??'',m.overarm??'',m.notes||'']
+      .map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')+'\n';
+  });
   dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),`rehabdagbok_${today()}.csv`);toast('CSV exporterad!');
 }
-function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function dl(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
 
 function importJSON(evt){
   const file=evt.target.files[0];if(!file)return;
@@ -621,29 +1151,68 @@ function importJSON(evt){
     try{
       const data=JSON.parse(ev.target.result);
       const ie=data.entries||[];const im=data.measures||[];
-      const eIds=new Set(entries.map(e=>e.id));const mIds=new Set(measures.map(m=>m.id));
+
+      // Dedup primärt på id (som tidigare), men hantera även saknade id:
+      const eIds=new Set(entries.map(e=>String(e.id)));
+      const mIds=new Set(measures.map(m=>String(m.id)));
+
       let ea=0,ma=0;
-      ie.forEach(e=>{if(!eIds.has(e.id)){entries.push(e);ea++;}});
-      im.forEach(m=>{if(!mIds.has(m.id)){measures.push(m);ma++;}});
-      entries.sort((a,b)=>b.date.localeCompare(a.date));
-      measures.sort((a,b)=>b.date.localeCompare(a.date));
-      await persist();refresh();toast(`Importerade ${ea} sessioner, ${ma} mätningar`);
-    }catch(e){toast('Ogiltig fil');}
+
+      ie.forEach(e=>{
+        if(!e.id) e.id=newId();
+        if(!eIds.has(String(e.id))){
+          entries.push(e); ea++;
+          eIds.add(String(e.id));
+        }
+      });
+
+      im.forEach(m=>{
+        if(!m.id) m.id=newId();
+        if(!mIds.has(String(m.id))){
+          measures.push(m); ma++;
+          mIds.add(String(m.id));
+        }
+      });
+
+      if(data.goals)goals=Object.assign(goals,data.goals);
+
+      entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      measures.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+      await persist();loadGoalForm();refresh();
+      toast(`Importerade ${ea} sessioner, ${ma} mätningar`);
+    }catch(e){
+      toast('Ogiltig fil');
+    }
     evt.target.value='';
   };
   reader.readAsText(file);
 }
 async function clearAll(){
   if(!confirm('Är du säker? All data tas bort permanent.'))return;
-  entries=[];measures=[];await persist();refresh();toast('All data rensad');
+  entries=[];measures=[];goals={weekly:0,weightGoal:null,height:null};
+  await persist();loadGoalForm();refresh();toast('All data rensad');
 }
 
-function weekNum(d){const j=new Date(d.getFullYear(),0,1);return Math.ceil((((d-j)/86400000)+j.getDay()+1)/7);}
+// ISO week number (stable across year boundaries)
+function isoWeekNumber(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
 function today(){return new Date().toISOString().slice(0,10);}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2400);
+}
 
 document.getElementById('f-date').value=today();
 document.getElementById('b-date').value=today();
+renderExList();
 load();
 </script>
 </body>
