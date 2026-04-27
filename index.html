@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Mina Appar</title>
-
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
@@ -21,7 +20,6 @@
       --gold2:#E8C547;
       --r:16px;
     }
-
     html{scroll-behavior:smooth}
     body{
       background:var(--stone);
@@ -30,7 +28,6 @@
       min-height:100vh;
       overflow-x:hidden;
     }
-
     body::before{
       content:'';
       position:fixed;inset:0;
@@ -45,7 +42,6 @@
       padding:64px 32px 48px;
       max-width:900px;margin:0 auto;
     }
-
     .logo-row{display:flex;align-items:center;gap:12px;margin-bottom:40px}
     .logo-mark{
       width:36px;height:36px;
@@ -58,80 +54,49 @@
       letter-spacing:2px;text-transform:uppercase;
       color:var(--ink3);
     }
-
     .hero-title{
       font-family:'DM Serif Display',serif;
       font-size:clamp(2.4rem,6vw,4rem);
-      line-height:1.1;
-      margin-bottom:18px;
+      line-height:1.1;margin-bottom:18px;
     }
     .hero-title em{color:var(--gold)}
-
     .hero-sub{
-      font-size:1.05rem;
-      color:var(--ink3);
-      max-width:520px;
-      line-height:1.6;
+      font-size:1.05rem;color:var(--ink3);
+      max-width:520px;line-height:1.6;
     }
-
     .divider{width:48px;height:2px;background:var(--gold);margin:28px 0}
 
-    /* DISKRET INFO-IKON */
-    .info-icon{
-      position:relative;
-      display:inline-flex;
-      align-items:center;
-      margin-left:6px;
-      cursor:help;
-      vertical-align:middle;
-    }
-
+    /* Diskret info-ikon */
+    .info-icon{position:relative;display:inline-flex;margin-left:6px;cursor:help}
     .i-badge{
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-size:12px;
-      font-weight:600;
+      width:18px;height:18px;border-radius:50%;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:600;
       color:var(--ink3);
       border:1px solid var(--stone3);
       background:rgba(255,255,255,0.6);
-      line-height:1;
     }
-
-    .info-icon:hover .i-badge,
-    .info-icon:focus .i-badge{
-      color:var(--ink2);
-      border-color:var(--stone2);
-      background:#fff;
-    }
-
+    .info-icon:hover .i-badge{color:var(--ink2);background:#fff}
     .tooltip{
-      position:absolute;
-      bottom:140%;left:50%;
+      position:absolute;bottom:140%;left:50%;
       transform:translateX(-50%);
       width:220px;
       background:#2C2C2A;color:#fff;
-      padding:8px 10px;
-      border-radius:8px;
+      padding:8px 10px;border-radius:8px;
       font-size:12px;line-height:1.5;
       opacity:0;pointer-events:none;
       transition:opacity .2s,transform .2s;
       z-index:10;
     }
     .tooltip::after{
-      content:'';
-      position:absolute;top:100%;left:50%;
+      content:'';position:absolute;top:100%;left:50%;
       transform:translateX(-50%);
       border-width:6px;border-style:solid;
       border-color:#2C2C2A transparent transparent transparent;
     }
     .info-icon:hover .tooltip,
     .info-icon:focus .tooltip{
-      opacity:1;
-      transform:translateX(-50%) translateY(-4px);
+      opacity:1;transform:translateX(-50%) translateY(-4px);
     }
 
     .grid{
@@ -144,10 +109,8 @@
     }
 
     .card{
-      background:#fff;
-      border:1px solid var(--stone3);
-      border-radius:var(--r);
-      padding:28px;
+      background:#fff;border:1px solid var(--stone3);
+      border-radius:var(--r);padding:28px;
       display:flex;flex-direction:column;
     }
     .card-top{display:flex;gap:16px;margin-bottom:16px}
@@ -158,8 +121,7 @@
       font-size:26px;
     }
     .card-label{
-      font-size:11px;
-      letter-spacing:1.5px;
+      font-size:11px;letter-spacing:1.5px;
       text-transform:uppercase;
       color:var(--card-accent,var(--gold));
     }
@@ -173,25 +135,20 @@
     }
     .card-tags{display:flex;gap:6px;flex-wrap:wrap}
     .tag{
-      font-size:11px;padding:4px 10px;
-      border-radius:20px;
-      background:var(--stone);
-      border:1px solid var(--stone3);
+      font-size:11px;padding:4px 10px;border-radius:20px;
+      background:var(--stone);border:1px solid var(--stone3);
     }
     .card-btns{display:flex;gap:10px;margin-top:auto}
     .btn-app{
       flex:1;padding:11px 18px;border-radius:10px;
-      font-size:13px;font-weight:600;
-      text-decoration:none;text-align:center;
+      font-size:13px;font-weight:600;text-decoration:none;text-align:center;
     }
     .btn-primary{background:var(--ink);color:#fff}
     .btn-secondary{background:var(--stone);border:1px solid var(--stone3);color:var(--ink2)}
 
     footer{
-      text-align:center;
-      padding:32px;
-      font-size:12px;
-      color:var(--ink3);
+      text-align:center;padding:32px;
+      font-size:12px;color:var(--ink3);
     }
   </style>
 </head>
@@ -201,9 +158,7 @@
 <header>
   <div class="logo-row">
     <div class="logo-mark">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
     <span class="logo-name">Mina appar</span>
   </div>
@@ -225,8 +180,119 @@
   </p>
 </header>
 
-<!-- GRID MED ALLA CARDS (oförändrade) -->
-<!-- … här ligger alla dina kort exakt som tidigare … -->
+<div class="grid">
+  <!-- FORDONSBOK -->
+  <div class="card" style="--card-accent:#3B82F6;--icon-bg:#EFF6FF">
+    <div class="card-top">
+      <div class="card-icon">🚗</div>
+      <div>
+        <div class="card-label">Ekonomi</div>
+        <div class="card-name">Fordonsbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Bokför och följ upp alla kostnader för dina fordon.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="fordonsapp.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="fordonsbok_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- MIN EKONOMI -->
+  <div class="card" style="--card-accent:#B8860B;--icon-bg:#FFF7E6">
+    <div class="card-top">
+      <div class="card-icon">💰</div>
+      <div>
+        <div class="card-label">Ekonomi</div>
+        <div class="card-name">Min Ekonomi</div>
+      </div>
+    </div>
+    <p class="card-desc">Följ din privatekonomi offline.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="Min_ekonomi.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="Manual_Min_Ekonomi.pdf" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- HUSBILSDAGBOK -->
+  <div class="card" style="--card-accent:#059669;--icon-bg:#ECFDF5">
+    <div class="card-top">
+      <div class="card-icon">🚐</div>
+      <div>
+        <div class="card-label">Resor</div>
+        <div class="card-name">Husbilsdagbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Digital dagbok för husbilsresor.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="husbilsdagbok.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="husbilsdagbok-sammanfattning.pdf" download>📄 Sammanfattning</a>
+    </div>
+  </div>
+
+  <!-- TRANSSÄK -->
+  <div class="card" style="--card-accent:#0F4C81;--icon-bg:#EBF4FF">
+    <div class="card-top">
+      <div class="card-icon">🚛</div>
+      <div>
+        <div class="card-label">Transport</div>
+        <div class="card-name">TransSäk</div>
+      </div>
+    </div>
+    <p class="card-desc">Affärssystem för transportbranschen.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="TransSäk_App.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="TransSäk_App_Manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- HEMLOGGBOK -->
+  <div class="card" style="--card-accent:#059669;--icon-bg:#ECFDF5">
+    <div class="card-top">
+      <div class="card-icon">🏡</div>
+      <div>
+        <div class="card-label">Boende</div>
+        <div class="card-name">Hemloggbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Dokumentera arbeten och händelser i hemmet.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="hemloggbok.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="hemloggbok_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- FORDONSKONTROLL -->
+  <div class="card" style="--card-accent:#7C3AED;--icon-bg:#F5F3FF">
+    <div class="card-top">
+      <div class="card-icon">🔍</div>
+      <div>
+        <div class="card-label">Kontroll</div>
+        <div class="card-name">Fordonskontroll</div>
+      </div>
+    </div>
+    <p class="card-desc">Snabb kontroll och registrering av fordon.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="fordonskontroll.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="fordonskontroll_manual.docx" download>📄 Manual</a>
+    </div>
+  </div>
+
+  <!-- TRÄNINGSDAGBOK -->
+  <div class="card" style="--card-accent:#DC2626;--icon-bg:#FEF2F2">
+    <div class="card-top">
+      <div class="card-icon">🏋️</div>
+      <div>
+        <div class="card-label">Hälsa</div>
+        <div class="card-name">Träningsdagbok</div>
+      </div>
+    </div>
+    <p class="card-desc">Logga träningspass och följ utveckling över tid.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="Traningsdagbok.html">🚀 Öppna app</a>
+      <a class="btn-app btn-secondary" href="Traningsdagbok_Manual.pdf" download>📄 Manual</a>
+    </div>
+  </div>
+</div>
 
 <footer>
   © <span id="year"></span> Mina appar • Skapad för snabb åtkomst på iPhone
