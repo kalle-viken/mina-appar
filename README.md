@@ -1,2 +1,3 @@
 # mina-appar
-Att ladda ner
+Här är lite små appar jag gjort
+Ladda net till Ipad och spara som genväg
