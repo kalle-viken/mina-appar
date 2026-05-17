@@ -347,7 +347,7 @@ input[type=file]{font-size:13px;color:var(--mu)}
 <script>
 const STORAGE_KEY='husbilsdagbok_v1';
 function loadData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{trips:[],vehicle:dv()};}catch(e){return{trips:[],vehicle:dv()};}}
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}catch(e){showToast('⚠️ Sparfel – bilderna tar för mycket plats!');console.error('saveData error:',e);}}
 function dv(){return{height:'3,0',width:'3,4',length:'7,0',lengthBikes:'7,7',totalWeight:'3 450',frontAxle:'1 445',rearAxle:'2 005',fuel:'Diesel',name:'Min husbil'};}
 
 let db=loadData(),currentTripId=null,currentTab='resor',currentView='home',selectedWeather='',selectedFacilities=[],selectedTripEmoji='🏔️',_pending=null,selectedRating=0,pendingPhotos=[];
@@ -372,7 +372,7 @@ const CB={drivmedel:'rgba(245,158,11,.12)',gasol:'rgba(251,146,60,.12)',camping:
 const CC={drivmedel:'#D97706',gasol:'#EA580C',camping:'#8B5CF6',restaurang:'#EF4444',väg:'#0284C7',tvätt:'#16A34A',inträde:'#059669',shopping:'#C026D3',övrigt:'#64748B'};
 const CL={drivmedel:'Drivmedel',gasol:'Gasol',camping:'Camping / Ställplats',restaurang:'Restaurang / Mat',väg:'Vägtull / Färja',tvätt:'Tvätt',inträde:'Inträde / Aktivitet',shopping:'Shopping',övrigt:'Övrigt'};
 const CBAR={drivmedel:'#D97706',gasol:'#EA580C',camping:'#8B5CF6',restaurang:'#EF4444',väg:'#0EA5E9',tvätt:'#22C55E',inträde:'#10B981',shopping:'#D946EF',övrigt:'#94A3B8'};
-function rfadu(file){return new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);});}
+function rfadu(file){return new Promise(r=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const maxW=900,maxH=900;let w=img.width,h=img.height;if(w>maxW||h>maxH){const s=Math.min(maxW/w,maxH/h);w=Math.round(w*s);h=Math.round(h*s);}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);r(c.toDataURL('image/jpeg',0.72));};img.onerror=()=>{URL.revokeObjectURL(url);const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);};img.src=url;});}
 
 function renderHome(){
   updateTopAction();
@@ -380,6 +380,7 @@ function renderHome(){
   const v=db.vehicle;
   const dateStr=new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long'});
   let html=`<div class="home-hero"><div class="hero-label">Resedagbok</div><div class="hero-title">Husbilsdagbok</div><div class="hero-date">${dateStr}</div></div>`;
+  if(trips.length>0){const totalDays=trips.reduce((s,t)=>s+(t.days||[]).length,0);const totalKm=trips.reduce((s,t)=>{const lo=(t.days||[]).reduce((a,d)=>d.odo?Math.max(a,d.odo):a,0);return s+(lo&&t.startOdo?lo-t.startOdo:0);},0);const totalMil=(totalKm/10).toFixed(1).replace('.',',');html+=`<div class="krow" style="margin-bottom:12px"><div class="kpi"><div class="kv">${totalDays}</div><div class="kl">🗓️ resdagar totalt</div></div><div class="kpi"><div class="kv">${totalKm>0?totalKm.toLocaleString('sv'):'–'}</div><div class="kl">📍 km totalt</div></div><div class="kpi"><div class="kv">${totalKm>0?totalMil:'–'}</div><div class="kl">🛣️ mil totalt</div></div></div>`;}
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="section-lbl" style="margin:0">Mina resor</div><button class="new-btn" onclick="openNewTripModal()">+ Ny resa</button></div>`;
   if(trips.length===0){html+=`<div class="empty"><div class="empty-i">🗺️</div><div class="empty-t">Inga resor ännu.<br>Skapa din första resa!</div></div>`;}
   else{trips.forEach(t=>{const meta=tripMeta(t);const s=t.startDate?formatDateShort(t.startDate):'';html+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="trip-icon">${t.emoji||'🚐'}</div><div class="trip-info"><div class="trip-name">${t.name}</div><div class="trip-meta">${s}${meta?' · '+meta:''}</div></div><button class="trip-del" onclick="event.stopPropagation();confirmDeleteTrip('${t.id}')">🗑</button><div class="trip-arr">›</div></div>`;});}
