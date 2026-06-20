@@ -146,6 +146,12 @@
     .btn-primary{background:var(--ink);color:#fff}
     .btn-secondary{background:var(--stone);border:1px solid var(--stone3);color:var(--ink2)}
 
+    /* Highlight-ring för semester-kortet */
+    .card-featured{
+      border-color:#F59E0B;
+      box-shadow:0 0 0 1px #F59E0B22, 0 4px 20px rgba(245,158,11,0.10);
+    }
+
     footer{
       text-align:center;padding:32px;
       font-size:12px;color:var(--ink3);
@@ -173,7 +179,7 @@
       <span class="i-badge">i</span>
       <span class="tooltip">
         Öppna sidan i Safari och välj
-        ”Lägg till på hemskärmen”
+        "Lägg till på hemskärmen"
         för att använda den som en app på din iPad.
       </span>
     </span>
@@ -181,6 +187,22 @@
 </header>
 
 <div class="grid">
+
+  <!-- SEMESTER 2026 – NY -->
+  <div class="card card-featured" style="--card-accent:#D97706;--icon-bg:#FFFBEB">
+    <div class="card-top">
+      <div class="card-icon">🌍</div>
+      <div>
+        <div class="card-label">Resor · 2026</div>
+        <div class="card-name">Europasemester</div>
+      </div>
+    </div>
+    <p class="card-desc">Planera och följ din husbilssemester i Europa — rutter, övernattningar, budget och minnen på ett ställe.</p>
+    <div class="card-btns">
+      <a class="btn-app btn-primary" href="semester_2026_app.html">🚀 Öppna app</a>
+    </div>
+  </div>
+
   <!-- FORDONSBOK -->
   <div class="card" style="--card-accent:#3B82F6;--icon-bg:#EFF6FF">
     <div class="card-top">

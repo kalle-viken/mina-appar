@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Europa med husbil · Juli–Augusti 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ed;
+  --surface: #ffffff;
+  --surface2: #f0ece5;
+  --border: #e2ddd6;
+  --text: #1c1a17;
+  --muted: #7a7267;
+  --faint: #b0aa9f;
+  --gold: #c08b2e;
+  --goldbg: #fdf3e0;
+  --purp: #5a4faa;
+  --purpbg: #efedf9;
+  --teal: #1a7a5e;
+  --tealbg: #e4f5ee;
+  --coral: #b84030;
+  --coralbg: #faeae7;
+  --amber: #c07018;
+  --amberbg: #fef0d8;
+  --blue: #2060a8;
+  --bluebg: #e6f0fc;
+  --grey: #6a6560;
+  --greybg: #f0ede8;
+  --pink: #a03060;
+  --pinkbg: #f9e8f0;
+  --green: #3a6e28;
+  --greenbg: #e8f3e2;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+/* HEADER */
+header {
+  background: var(--text);
+  color: #fff;
+  padding: 2.5rem 2rem 2rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
+.header-title h1 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; line-height: 1.1; }
+.header-title p { font-size: 0.8rem; color: #aaa; margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+.header-stats { display: flex; gap: 1.5rem; margin-left: auto; }
+.stat { text-align: center; }
+.stat-n { font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
+.stat-l { font-size: 0.7rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* NAV */
+nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 99; }
+.nav-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 0; }
+.nav-btn { padding: 0.85rem 1.4rem; font-family: var(--font-body); font-size: 0.82rem; font-weight: 500; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; letter-spacing: 0.02em; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* MAIN */
+main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* FILTER BAR */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.fbtn { font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+.fbtn:hover { border-color: var(--faint); color: var(--text); }
+.fbtn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* DAY CARDS */
+.day-list { display: flex; flex-direction: column; gap: 6px; }
+.day-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s; }
+.day-row:hover { border-color: var(--faint); }
+.day-header { display: grid; grid-template-columns: 58px 100px 1fr auto; gap: 0; align-items: center; cursor: pointer; }
+.day-date { padding: 12px 10px 12px 14px; }
+.day-date .dn { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.day-date .dw { font-size: 0.7rem; color: var(--faint); }
+.day-country { padding: 10px 8px; }
+.country-badge { font-size: 0.7rem; font-weight: 500; padding: 3px 9px; border-radius: 12px; display: inline-block; }
+.day-title-wrap { padding: 12px 8px; }
+.day-title { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.day-km { font-size: 0.75rem; color: var(--faint); margin-top: 1px; }
+.day-toggle { padding: 12px 16px; color: var(--faint); font-size: 1rem; transition: transform 0.2s; user-select: none; }
+.day-row.open .day-toggle { transform: rotate(180deg); }
+.day-body { display: none; padding: 0 14px 14px 14px; border-top: 1px solid var(--border); }
+.day-row.open .day-body { display: block; }
+.day-body-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.info-block { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 12px; }
+.info-label { font-size: 0.7rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.info-text { font-size: 0.82rem; color: var(--text); line-height: 1.5; }
+.warn-block { background: var(--coralbg); border-radius: var(--radius-sm); padding: 10px 12px; border-left: 3px solid var(--coral); }
+.warn-block .info-label { color: var(--coral); }
+.warn-block .info-text { color: var(--coral); }
+.must-block { background: var(--tealbg); border-radius: var(--radius-sm); padding: 10px 12px; border-left: 3px solid var(--teal); }
+.must-block .info-label { color: var(--teal); }
+.must-block .info-text { color: var(--teal); }
+.camp-block { background: var(--goldbg); border-radius: var(--radius-sm); padding: 10px 12px; border-left: 3px solid var(--gold); margin-top: 8px; }
+.camp-block .info-label { color: var(--gold); }
+.camp-block .info-text { color: var(--text); white-space: pre-line; }
+.note-block { margin-top: 10px; }
+.note-block .info-label { font-size: 0.7rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.note-block textarea {
+  width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-family: var(--font-body); font-size: 0.82rem; color: var(--text);
+  background: var(--surface); resize: vertical; min-height: 60px; outline: none;
+  transition: border-color 0.15s;
+}
+.note-block textarea:focus { border-color: var(--faint); }
+.note-block textarea::placeholder { color: var(--faint); }
+
+/* MUST-SEE */
+.must-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 10px; }
+.must-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: border-color 0.15s; }
+.must-card:hover { border-color: var(--faint); }
+.must-card.star3 { border-top: 3px solid var(--gold); }
+.must-card.star2 { border-top: 3px solid var(--purp); }
+.must-card.star1 { border-top: 3px solid var(--teal); }
+.must-stars { font-size: 0.8rem; color: var(--gold); margin-bottom: 6px; }
+.must-title { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.must-loc { font-size: 0.72rem; color: var(--muted); margin-bottom: 8px; }
+.must-body { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.must-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.mtag { font-size: 0.68rem; padding: 2px 8px; border-radius: 10px; }
+.mt-natur { background: var(--tealbg); color: var(--teal); }
+.mt-kultur { background: var(--purpbg); color: var(--purp); }
+.mt-mat { background: var(--amberbg); color: var(--amber); }
+.mt-utsikt { background: var(--bluebg); color: var(--blue); }
+.mt-historia { background: var(--coralbg); color: var(--coral); }
+
+/* COST TABLE */
+.cost-section h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+.cost-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+.cost-table thead tr { background: var(--text); color: #fff; }
+.cost-table th { padding: 10px 14px; text-align: left; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.cost-table td { padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+.cost-table tr:last-child td { border-bottom: none; }
+.cost-table tbody tr:nth-child(odd) { background: var(--surface2); }
+.cost-table tbody tr:last-child { background: var(--amberbg); font-weight: 500; color: var(--amber); }
+.cost-table td:last-child { text-align: right; font-weight: 500; }
+.status-ok { color: var(--teal); font-size: 0.75rem; }
+.status-warn { color: var(--amber); font-size: 0.75rem; }
+.status-done { color: var(--teal); font-weight: 500; }
+
+/* CHECKLIST */
+.checklist { display: flex; flex-direction: column; gap: 6px; }
+.check-item { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; transition: all 0.2s; cursor: pointer; }
+.check-item.done { background: var(--tealbg); border-color: #b5e0cc; }
+.check-item.done .check-title { text-decoration: line-through; color: var(--muted); }
+.check-item.done .check-body { color: var(--faint); }
+.check-box { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 5px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.check-item.done .check-box { background: var(--teal); border-color: var(--teal); }
+.check-box svg { display: none; }
+.check-item.done .check-box svg { display: block; }
+.check-content { flex: 1; }
+.check-title { font-size: 0.9rem; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.check-body { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.check-priority { font-size: 0.68rem; font-weight: 500; padding: 2px 8px; border-radius: 10px; margin-bottom: 4px; display: inline-block; }
+.pri-nu { background: var(--coralbg); color: var(--coral); }
+.pri-snart { background: var(--amberbg); color: var(--amber); }
+.pri-avfard { background: var(--greybg); color: var(--grey); }
+
+/* JOURNAL */
+.journal-intro { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+.journal-entry { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; }
+.journal-date { font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.journal-entry textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-family: var(--font-body); font-size: 0.82rem; color: var(--text); background: var(--surface2); resize: vertical; min-height: 80px; outline: none; transition: border-color 0.15s; }
+.journal-entry textarea:focus { border-color: var(--faint); }
+
+/* Misc */
+.section-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+.section-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.25rem; }
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+.saved-indicator { font-size: 0.7rem; color: var(--teal); opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+.saved-indicator.show { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .day-header { grid-template-columns: 52px 88px 1fr auto; }
+  .day-body-grid { grid-template-columns: 1fr; }
+  .header-stats { gap: 1rem; }
+  .must-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>Europa med husbil</h1>
+      <p>12 juli – 6 augusti 2026 &nbsp;·&nbsp; Viken, Skåne</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat"><div class="stat-n">26</div><div class="stat-l">dagar</div></div>
+      <div class="stat"><div class="stat-n">10</div><div class="stat-l">länder</div></div>
+      <div class="stat"><div class="stat-n">~5 400</div><div class="stat-l">km</div></div>
+      <div class="stat"><div class="stat-n">25</div><div class="stat-l">nätter</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-left:auto;">
+      <a href="https://www.google.com/maps/dir/Viken,H%C3%B6gan%C3%A4s,Sweden/Copenhagen,Denmark/Hamburg,Germany/Haarlem,Netherlands/Antwerp,Belgium/Luxembourg+City,Luxembourg/Metz,France/Colmar,France/Basel,Switzerland/Innsbruck,Austria/Salzburg,Austria" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1c1a17;font-size:0.75rem;font-weight:500;padding:7px 12px;border-radius:20px;text-decoration:none;font-family:var(--font-body);">
+        🗺 Google Maps – del 1<span style="font-size:0.65rem;color:#888;">(Viken → Salzburg via Innsbruck)</span>
+      </a>
+      <a href="https://www.google.com/maps/dir/Salzburg,Austria/Hallstatt,Austria/Zell+am+See,Austria/Grossglockner+Hochalpenstra%C3%9Fe,Austria/Melk,Austria/Vienna,Austria/%C4%8Cesk%C3%BD+Krumlov,Czech+Republic/Dresden,Germany/Potsdam,Germany/Rostock,Germany" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1c1a17;font-size:0.75rem;font-weight:500;padding:7px 12px;border-radius:20px;text-decoration:none;font-family:var(--font-body);">
+        🗺 Google Maps – del 2<span style="font-size:0.65rem;color:#888;">(Salzburg → Rostock)</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('dagplan')">Dagplan</button>
+    <button class="nav-btn" onclick="showSection('mustsee')">Must-see</button>
+    <button class="nav-btn" onclick="showSection('mat')">Mat & dryck</button>
+    <button class="nav-btn" onclick="showSection('kostnader')">Kostnader</button>
+    <button class="nav-btn" onclick="showSection('checklista')">Checklista</button>
+    <button class="nav-btn" onclick="showSection('camping')">Camping</button>
+    <button class="nav-btn" onclick="showSection('utrustning')">Utrustning</button>
+    <button class="nav-btn" onclick="showSection('fricampa')">Övernatta</button>
+    <button class="nav-btn" onclick="showSection('praktiskt')">Praktiskt</button>
+    <button class="nav-btn" onclick="showSection('dagbok')">Dagbok</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══ DAGPLAN ═══════════════════════════════════════════════════════════ -->
+<div id="sec-dagplan" class="section active">
+  <h2 class="section-title">Dagplan</h2>
+  <p class="section-sub">Klicka på en dag för att se tips, måsten och lägga till egna anteckningar.</p>
+  <div class="filters" id="day-filters">
+    <button class="fbtn active" data-f="all">Alla</button>
+    <button class="fbtn" data-f="se">Sverige</button>
+    <button class="fbtn" data-f="dk">Danmark</button>
+    <button class="fbtn" data-f="de">Tyskland</button>
+    <button class="fbtn" data-f="nl">Nederl.</button>
+    <button class="fbtn" data-f="be">Belgien</button>
+    <button class="fbtn" data-f="lu">Luxemburg</button>
+    <button class="fbtn" data-f="fr">Frankrike</button>
+    <button class="fbtn" data-f="ch">Schweiz</button>
+    <button class="fbtn" data-f="at">Österrike</button>
+    <button class="fbtn" data-f="cz">Tjeckien</button>
+  </div>
+  <div class="day-list" id="day-list"></div>
+</div>
+
+<!-- ═══ MUST-SEE ══════════════════════════════════════════════════════════ -->
+<div id="sec-mustsee" class="section">
+  <h2 class="section-title">Must-see highlights</h2>
+  <p class="section-sub">Filtrera på kategori. ★★★ är upplevelser du minns hela livet.</p>
+  <div class="filters" id="must-filters">
+    <button class="fbtn active" data-f="all">Alla</button>
+    <button class="fbtn" data-f="natur">Natur</button>
+    <button class="fbtn" data-f="kultur">Kultur</button>
+    <button class="fbtn" data-f="mat">Mat & vin</button>
+    <button class="fbtn" data-f="utsikt">Utsikt</button>
+    <button class="fbtn" data-f="historia">Historia</button>
+    <button class="fbtn" data-f="dk">Danmark</button>
+    <button class="fbtn" data-f="de">Tyskland</button>
+    <button class="fbtn" data-f="nl">Nederl.</button>
+    <button class="fbtn" data-f="be">Belgien</button>
+    <button class="fbtn" data-f="lu">Luxemburg</button>
+    <button class="fbtn" data-f="fr">Frankrike</button>
+    <button class="fbtn" data-f="ch">Schweiz</button>
+    <button class="fbtn" data-f="at">Österrike</button>
+    <button class="fbtn" data-f="cz">Tjeckien</button>
+  </div>
+  <div class="must-grid" id="must-grid"></div>
+</div>
+
+<!-- ═══ KOSTNADER ═════════════════════════════════════════════════════════ -->
+<div id="sec-kostnader" class="section">
+  <h2 class="section-title">Vinjetter & avgifter</h2>
+  <p class="section-sub">Husbil 7,2 m · 3 800 kg · ØresundPay (Österrike) · Crit'Air (Frankrike ✓)</p>
+
+  <div class="cost-section">
+    <h3>Vägtullar & vinjetter</h3>
+    <table class="cost-table">
+      <thead><tr><th>Post</th><th>Info</th><th>Status</th><th>Belopp</th></tr></thead>
+      <tbody>
+        <tr><td>Öresundsbron</td><td>ØresundPay, kategori 3 (6–10 m)</td><td><span class="status-ok">✓ Redo</span></td><td>~560 kr</td></tr>
+        <tr><td>Schweiz vinjett</td><td>Jahresvignette, CHF 40. Köps vid gränsen – dekal i vindrutan</td><td><span class="status-warn">Köp vid Basel</span></td><td>~€42</td></tr>
+        <tr><td>Österrike GO-toll</td><td>ØresundPay-bizzen hanterar automatiskt. Ta med Vehicle Declaration!</td><td><span class="status-ok">✓ ØresundPay</span></td><td>~€30–50 km-bas.</td></tr>
+        <tr><td>Grossglockner</td><td>Separat vägavgift vid tullbom. Betalas EJ via ØresundPay. Kort/kontant.</td><td><span class="status-warn">Kontant/kort</span></td><td>~€38–40</td></tr>
+        <tr><td>Tjeckien e-vinjett</td><td>10 dagar. Köp på edalnice.cz. Kopplas till reg.nummer.</td><td><span class="status-warn">Köp innan avfärd</span></td><td>~€13</td></tr>
+        <tr><td>Crit'Air · Frankrike</td><td>Krävs i miljözoner. Medfors i bilen.</td><td><span class="status-done">✓ Klar</span></td><td>–</td></tr>
+        <tr><td>Tysk grön miljödekal</td><td>Krävs i Hamburg, Dresden, Potsdam (Umweltzone). umwelt-plakette.de</td><td><span class="status-warn">Kontrollera</span></td><td>~€10</td></tr>
+        <tr><td>Antwerpen LEZ</td><td>Registrera fordonet på lezantwerp.be. Avgift beroende på euroklass.</td><td><span class="status-warn">Registrera nu</span></td><td>€0–35</td></tr>
+        <tr><td>DK, NL, BE, LU, DE (motorväg)</td><td>Inga vinjetter krävs</td><td><span class="status-ok">✓ Fritt</span></td><td>€0</td></tr>
+        <tr><td><strong>Totalt (uppskattning)</strong></td><td></td><td></td><td><strong>~€133–190 + 560 kr</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Nattfärja</h3>
+    <table class="cost-table">
+      <thead><tr><th>Post</th><th>Info</th><th>Status</th><th>Belopp</th></tr></thead>
+      <tbody>
+        <tr><td>Rostock–Trelleborg</td><td>TT-Line eller Stena Line. Avgång 5 aug ca 21–23.00. Ankomst 6 aug tidig morgon. Checka in 1,5h innan.</td><td><span class="status-warn">Boka nu!</span></td><td>~€80–120</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Noteringar</h3>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px;">Egna anteckningar om kostnader, bokningar mm:</div>
+      <textarea id="cost-notes" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:var(--font-body);font-size:0.82rem;background:var(--surface2);min-height:80px;outline:none;resize:vertical;" placeholder="T.ex. bokningsnummer, priser du hittat, rabattkoder..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHECKLISTA ════════════════════════════════════════════════════════ -->
+<div id="sec-checklista" class="section">
+  <h2 class="section-title">Checklista</h2>
+  <p class="section-sub">Klicka för att bocka av. Sparas automatiskt i webbläsaren.</p>
+  <div class="checklist" id="checklist"></div>
+</div>
+
+<!-- ═══ CAMPING ════════════════════════════════════════════════════════════ -->
+<div id="sec-camping" class="section">
+  <h2 class="section-title">Camping & ställplatser</h2>
+  <p class="section-sub">Alla 26 nätter samlade. Klicka på en rad för mer info. Boka markerade platser omedelbart – de fylls i juli.</p>
+
+  <div class="filters" id="camp-filters">
+    <button class="fbtn active" data-f="all">Alla länder</button>
+    <button class="fbtn" data-f="dk">Danmark</button>
+    <button class="fbtn" data-f="de">Tyskland</button>
+    <button class="fbtn" data-f="nl">Nederl.</button>
+    <button class="fbtn" data-f="be">Belgien</button>
+    <button class="fbtn" data-f="lu">Luxemburg</button>
+    <button class="fbtn" data-f="fr">Frankrike</button>
+    <button class="fbtn" data-f="ch">Schweiz</button>
+    <button class="fbtn" data-f="at">Österrike</button>
+    <button class="fbtn" data-f="cz">Tjeckien</button>
+  </div>
+
+  <div id="camp-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+  <div style="margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;">
+    <div style="font-size:0.8rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Bokningsappar & verktyg</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:2px;">ACSI / Eurocampings</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Rabattkort ~€20/år. 3 600+ campingar i Europa, ofta €14–20/natt. eurocampings.co.uk</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:2px;">Park4Night</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Bäst för aires, Stellplätze och spontana ställen. Gratis grundversion. park4night.com</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:2px;">Campsite.guide</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Realtidsrecensioner och kapacitetsstatus. Bra för att kolla om det är fullbokat.</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:2px;">Camping.info</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Bra sökfilter för max fordonslängd – viktigt för er med 7,2 m.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ UTRUSTNING ════════════════════════════════════════════════════════ -->
+<div id="sec-utrustning" class="section">
+  <h2 class="section-title">Obligatorisk utrustning</h2>
+  <p class="section-sub">Vad måste ni ha med er i bilen – land för land. Din husbil är 3 800 kg och registrerad i Sverige.</p>
+
+  <!-- Viktig notering -->
+  <div style="background:var(--amberbg);border:1px solid #e8c97a;border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;">
+    <div style="font-size:0.8rem;font-weight:500;color:var(--amber);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">⚠ Viktigt för din husbil</div>
+    <div style="font-size:0.82rem;color:var(--text);line-height:1.6;">
+      <strong>Frankrike "Angles mortes":</strong> Eftersom din husbil väger över 3,5 ton är <strong>döda vinkel-dekaler obligatoriska</strong> i Frankrike sedan 2021. Tre dekaler krävs – vänster sida, höger sida och baktill – placerade 90–150 cm ovanför marken. Böter upp till €135 vid kontroll. Köps på bildelar-butiker eller online.<br><br>
+      <strong>Belgien eldslockare:</strong> Din husbil (3,5–7,5 ton) kräver en 2 kg ABC-pulversläckare med BENOR V-etikett vid belgisk registrering. För utländska fordon är det tekniskt sett bara rekommenderat – men ha det med ändå. Obligatoriskt för alla.
+    </div>
+  </div>
+
+  <!-- Land-för-land tabell -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem;">
+    <div style="background:var(--text);color:#fff;padding:10px 16px;font-size:0.8rem;font-weight:500;letter-spacing:0.03em;text-transform:uppercase;">Land för land – obligatorisk utrustning</div>
+
+    <!-- Header row -->
+    <div style="display:grid;grid-template-columns:100px repeat(6,1fr);border-bottom:2px solid var(--border);background:var(--surface2);">
+      <div style="padding:8px 10px;font-size:0.7rem;font-weight:500;color:var(--muted);text-transform:uppercase;"></div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Varnings-triangel</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Reflexväst</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Försthjälpa-låda</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Brand-släckare</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Extra glödlampor</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Övrigt</div>
+    </div>
+
+    <div id="equip-rows"></div>
+  </div>
+
+  <!-- Vad ska ni ha med er – samlad lista -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:1.25rem;">
+    <div style="font-size:0.85rem;font-weight:500;color:var(--text);margin-bottom:12px;">📦 Er kompletta utrustningslista – ta med allt detta</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;">
+      <div style="font-size:0.82rem;color:var(--text);line-height:1.8;">
+        <div>✅ <strong>Varningstriangel</strong> – minst 1 st (ha 2 för säkerhets skull)</div>
+        <div>✅ <strong>Reflexväst</strong> – 1 per person i bilen</div>
+        <div>✅ <strong>Första hjälpen-låda</strong> – obligatorisk i Österrike, bra överallt</div>
+        <div>✅ <strong>Brandsläckare</strong> – obligatorisk i Belgien, rekommenderas överallt</div>
+        <div>✅ <strong>Extra glödlampor & säkringar</strong> – obligatorisk i FR & CZ</div>
+      </div>
+      <div style="font-size:0.82rem;color:var(--text);line-height:1.8;">
+        <div>✅ <strong>Crit'Air-dekal</strong> – redan klar ✓</div>
+        <div>✅ <strong>Tysk grön miljödekal</strong> – Hamburg, Dresden, Potsdam</div>
+        <div>✅ <strong>"Angles mortes" dekaler × 3</strong> – obligatorisk i Frankrike &gt;3,5 t</div>
+        <div>✅ <strong>ØresundPay Vehicle Declaration</strong> – med i handskfacket</div>
+        <div>✅ <strong>Försäkringsbevis / Grönt kort</strong> – krävs i Tjeckien</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PBII-info -->
+  <div style="background:var(--amberbg);border:1px solid #e8c97a;border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;">
+    <div style="font-size:0.8rem;font-weight:500;color:var(--amber);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">🇸🇪 Din husbil är PBII – vad betyder det utomlands?</div>
+    <div style="font-size:0.82rem;color:var(--text);line-height:1.7;">
+      PBII (personbil klass II) är en <strong>helt svensk fordonsklass</strong> som inte finns i något annat land. Utomlands bedöms fordonet enbart efter <strong>vikten</strong> – och din husbil på 3 800 kg är tyngre än 3,5 ton, vilket innebär:<br><br>
+      ▸ <strong>Hastighetsgränser</strong> – i Österrike gäller 70 km/h på landsväg och 80 km/h på motorväg (inte 100/130 som för lätta fordon). Se tabellen nedan.<br>
+      ▸ <strong>Vägtullar</strong> – behandlas som tungt fordon, därav GO-toll via ØresundPay i Österrike.<br>
+      ▸ <strong>Angles mortes</strong> – dekalkravet i Frankrike gäller just fordon över 3,5 ton – påverkas inte av PBII-kategorin.<br>
+      ▸ <strong>Körkort</strong> – fordon över 3,5 ton kräver C1- eller C-behörighet om körkortet togs efter juli 1996. B-kort taget före 1 juli 1996 gäller fortfarande. Kontrollera detta nu!
+    </div>
+  </div>
+
+  <!-- Cyklar baktill -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:1.25rem;">
+    <div style="font-size:0.85rem;font-weight:500;color:var(--text);margin-bottom:10px;">🚲 Cyklar baktill – vad gäller?</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.7rem;font-weight:500;color:var(--teal);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Obligatoriskt på er rutt</div>
+        <div style="font-size:0.8rem;color:var(--text);line-height:1.7;">
+          ▸ <strong>Ljusramp</strong> med bakljus, bromsljus och blinkers (om cyklarna skymmer husbilens bakljus)<br>
+          ▸ <strong>Extra registreringsskylt</strong> på hållaren med belysning – beställ via Transportstyrelsen, 62 kr<br>
+          ▸ <strong>13-polig kontakt</strong> på cykelhållaren – krav i Schweiz, Belgien och Österrike för att visa back- och dimljus
+        </div>
+      </div>
+      <div style="background:var(--greybg);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:0.7rem;font-weight:500;color:var(--grey);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Bra att ha men ej krav på er rutt</div>
+        <div style="font-size:0.8rem;color:var(--text);line-height:1.7;">
+          ▸ <strong>Röd flagga</strong> om last sticker ut mer än 1 meter bakåt (DE, FR)<br>
+          ▸ Röda reflexer vid körning i mörker med utskjutande last
+        </div>
+      </div>
+    </div>
+
+    <!-- Rödvit skylt förklaring -->
+    <div style="background:var(--coralbg);border-left:3px solid var(--coral);border-radius:var(--radius-sm);padding:12px 14px;">
+      <div style="font-size:0.75rem;font-weight:500;color:var(--coral);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">🟥 Den röd-vita diagonala skylten – när behövs den egentligen?</div>
+      <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">
+        Den fyrkantiga skylten (50×50 cm) med röda och vita diagonala ränder är <strong>inte obligatorisk på något land längs er rutt</strong>. Den krävs i <strong>Italien</strong> (alltid, oavsett utstick, aluminiumskylt med 5 ränder) och <strong>Spanien</strong> (3 ränder) – länder ni inte besöker på den här resan.<br><br>
+        I <strong>Tyskland och Frankrike</strong> räcker en röd flagga om lasten sticker ut mer än 1 meter bakåt. En normal cykelhållare sticker ut 60–80 cm – under gränsen.<br><br>
+        <strong>Varför ser man dem ändå?</strong> Många husbilar kör via Spanien/Italien och har skylten kvar. Det är aldrig fel att ha den – men obligatorisk på er resa är den alltså inte. Köp gärna en vändbar skylt (italiensk + spansk design) för ~100 kr inför framtida sydresor.
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservhjul -->
+  <div style="background:var(--purpbg);border:1px solid #c5bff5;border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;">
+    <div style="font-size:0.8rem;font-weight:500;color:var(--purp);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">🔧 Reservhjul – vad gäller?</div>
+    <div style="font-size:0.82rem;color:var(--text);line-height:1.6;">
+      Inget land på er rutt kräver reservhjul per lag, men det är <strong>starkt rekommenderat</strong> för en husbil på 3 800 kg långt hemifrån. Alternativet är punkteringsspray + kompressor (tar upp mindre plats) men fungerar bara på mindre skador. Om ni har ett reservhjul – ta med det. Om inte – se till att ha ett vägassistansavtal som täcker hela Europa (t.ex. via er bilförsäkring eller Falck/Assistancekåren). Kontrollera att avtalet gäller för fordon över 3,5 ton!
+    </div>
+  </div>
+
+  <!-- Hastigheter bonus -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <div style="background:var(--text);color:#fff;padding:10px 16px;font-size:0.8rem;font-weight:500;letter-spacing:0.03em;text-transform:uppercase;">Hastighetsgränser för husbil &gt;3,5 ton</div>
+    <div style="display:grid;grid-template-columns:110px 90px 90px 80px 1fr;border-bottom:1px solid var(--surface2);background:var(--surface2);">
+      <div style="padding:8px 10px;font-size:0.68rem;font-weight:500;color:var(--muted);text-transform:uppercase;">Land</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Motorväg</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Landsväg</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);text-align:center;">Tätort</div>
+      <div style="padding:8px 6px;font-size:0.68rem;font-weight:500;color:var(--muted);">Notering</div>
+    </div>
+    <div id="speed-rows"></div>
+  </div>
+  <div style="font-size:0.75rem;color:var(--muted);margin-top:8px;line-height:1.6;margin-bottom:1.25rem;">
+    * <strong>Sverige:</strong> PBII följer skyltad hastighet oavsett vikt – inga särskilda hastighetsbegränsningar för personbil klass II. &nbsp;·&nbsp; <strong>Utomlands</strong> bedöms fordonet efter vikten (3 800 kg = &gt;3,5 ton) och landets egna regler gäller – därav lägre gränser i bl.a. Österrike.
+  </div>
+
+</div>
+
+<!-- ═══ MAT & DRYCK ═══════════════════════════════════════════════════════ -->
+<div id="sec-mat" class="section">
+  <h2 class="section-title">Mat & dryck</h2>
+  <p class="section-sub">Vad du inte får missa i varje land – nationalrätter, lokala specialiteter och drycker. Filtrera på land.</p>
+
+  <div class="filters" id="mat-filters">
+    <button class="fbtn active" data-f="all">Alla</button>
+    <button class="fbtn" data-f="ol">🍺 Öl</button>
+    <button class="fbtn" data-f="vin">🍷 Vin</button>
+    <button class="fbtn" data-f="stark">🥃 Starkare</button>
+    <button class="fbtn" data-f="mat">🍽 Mat</button>
+    <button class="fbtn" data-f="dk">Danmark</button>
+    <button class="fbtn" data-f="de">Tyskland</button>
+    <button class="fbtn" data-f="nl">Nederl.</button>
+    <button class="fbtn" data-f="be">Belgien</button>
+    <button class="fbtn" data-f="lu">Luxemburg</button>
+    <button class="fbtn" data-f="fr">Frankrike</button>
+    <button class="fbtn" data-f="ch">Schweiz</button>
+    <button class="fbtn" data-f="at">Österrike</button>
+    <button class="fbtn" data-f="cz">Tjeckien</button>
+  </div>
+
+  <div id="mat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+</div>
+
+<!-- ═══ FRICAMPA ═══════════════════════════════════════════════════════════ -->
+<div id="sec-fricampa" class="section">
+  <h2 class="section-title">Får man fricampa?</h2>
+  <p class="section-sub">Kort svar: Nej, inte i något av länderna på er rutt. Men det finns smarta alternativ.</p>
+
+  <div style="display:grid;gap:10px;margin-bottom:2rem;">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="background:var(--text);color:#fff;padding:10px 16px;font-size:0.8rem;font-weight:500;letter-spacing:0.03em;text-transform:uppercase;">Länder på er rutt</div>
+      <div style="display:grid;gap:0;">
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Sverige</div>
+          <div style="padding:12px 8px;"><span style="background:var(--tealbg);color:var(--teal);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Tillåtet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Allemansrätten – ni kör bara igenom Malmö, men principen gäller ändå. Max 1–2 nätter på samma plats.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Danmark</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Strängt förbjudet utanför officiella platser. Böter är vanliga. Använd camping eller P-platser.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Tyskland</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet men böterna är relativt låga (€5–80). Stellplätze (kommunala ställplatser) är ett utmärkt lagligt alternativ – finns i hundratals städer och byar, ofta €5–15/natt.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Nederländerna</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet. Alternativet är "camperplaatsen" – enkla, billiga ställplatser som finns i Parks4Night och ACSI.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Belgien</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Strikt förbjudet. Belgien har dessutom lite vild natur kvar. Använd officiella campingar.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Luxemburg</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet. Camping Kockelscheuer är det naturliga valet för er natt där.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Frankrike</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Grå zon</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Tekniskt förbjudet, men aires de service (kommunala gratis-/billigplatser) är utbrett och helt lagligt. Kolla Park4Night – Frankrike har hundratals aires. Bivouac (1 natt solnedgång–soluppgång) tolereras i avlägsna områden.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Schweiz</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet. Ni är bara i Basel en natt – camping är enklaste vägen.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Österrike</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Grå zon</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet som huvudregel, böter upp till €500. Undantag: i avlägsna bergsområden ovanför trädgränsen tolereras bivouac (1 natt, tältet ej utfällt). I Salzburg-provinsen beslutar varje borgmästare lokalt. Använd Stellplätze eller campingar.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Tjeckien</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Grå zon</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet men bivouac (1 natt, utan tält) tolereras i opåverkade naturområden utanför nationalparker. Camping Krumlov är det enkla valet.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="background:var(--tealbg);border:1px solid #b5e0cc;border-radius:var(--radius);padding:16px 18px;">
+      <div style="font-size:0.8rem;font-weight:500;color:var(--teal);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Smarta lagliga alternativ</div>
+      <div style="font-size:0.85rem;color:var(--text);line-height:1.7;">
+        <strong>Park4Night-appen</strong> – bästa kartan för aires, Stellplätze, bondgårdar och andra lagliga övernattningar. Gratis grundversion räcker långt.<br>
+        <strong>ACSI-kortet</strong> – rabatt på 3 600+ campingar i Europa, ofta €14–20/natt istället för €30–45. Kortet kostar ~€20/år.<br>
+        <strong>Stellplatz (Tyskland)</strong> – kommunala ställplatser, ofta €5–12/natt med el och tömning. Finns i nästan varje by längs Rhein och Donau.<br>
+        <strong>Aires de service (Frankrike)</strong> – gratis eller billiga kommunala platser, fantastiskt nätverk. Kolla aire-camping.fr.<br>
+        <strong>Bondgårdar och privata</strong> – fråga alltid markägaren. Många österrikiska och tyska bönder tar gärna emot husbilar för en liten slant eller helt gratis.
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:2rem;">
+    <h3 style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">Får man sova i fordonet – utan att campa?</h3>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">Det är stor skillnad på att "fricampa" (fälla ut markis, ställa ut stolar, tälta) och att bara sova i fordonet på en parkeringsplats. Här är vad som gäller land för land.</p>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+      <div style="background:var(--text);color:#fff;padding:10px 16px;font-size:0.8rem;font-weight:500;letter-spacing:0.03em;text-transform:uppercase;">Land för land – sova i fordonet</div>
+
+      <div style="display:grid;gap:0;">
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Sverige</div>
+          <div style="padding:12px 8px;"><span style="background:var(--tealbg);color:var(--teal);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Fritt</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Allemansrätten – sova i fordonet är inga problem. Max 1–2 nätter på samma plats.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Danmark</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Officiella platser</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Tillåtet på officiella p-platser och rastplatser för en natt. Polisen kan visa bort er på andra platser.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Tyskland</div>
+          <div style="padding:12px 8px;"><span style="background:var(--tealbg);color:var(--teal);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Tillåtet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Tillåtet på parkeringsplats och motorvägens lastbilsparkeringar så länge inga skyltar förbjuder det. En natt på rastplats är okej. Autohöfe (stora kommersiella rastplatser) är det bästa alternativet – el, mat och bra belysning. Använd autohof.net.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Nederländerna</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet utanför officiella platser. Använd camperplaatsen eller camping.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Belgien</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet utanför officiella platser. Håll er till camping i Antwerpen.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Luxemburg</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet utanför officiella platser. En natt – camping Kockelscheuer är det givna valet.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Frankrike</div>
+          <div style="padding:12px 8px;"><span style="background:var(--tealbg);color:var(--teal);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Praktiskt OK</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Tekniskt förbjudet att campa vilt, men att sova i fordonet på aire de service eller parkeringsplats är helt accepterat och väldigt vanligt. Frankrike har Europas bästa nätverk av gratis aires specifikt för husbilar. Kolla aire-camping.fr eller Park4Night.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Schweiz</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Reglerat</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Strikt reglerat. Parkeringsplatser i städer kan ha övernattningsförbud. Ni är bara en natt i Basel – camping TCS är enklaste valet.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;border-bottom:1px solid var(--border);align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Österrike</div>
+          <div style="padding:12px 8px;"><span style="background:var(--coralbg);color:var(--coral);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Förbjudet</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Förbjudet utanför officiella platser. Böter upp till €500. Österrike har däremot utmärkta Stellplätze och Reisemobilstellplätze i de flesta städer – ofta €15–27/natt med el och tömning.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:110px 80px 1fr;align-items:start;">
+          <div style="padding:12px 14px;font-weight:500;font-size:0.85rem;">Tjeckien</div>
+          <div style="padding:12px 8px;"><span style="background:var(--amberbg);color:var(--amber);font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:10px;">Grå zon</span></div>
+          <div style="padding:12px 14px 12px 0;font-size:0.82rem;color:var(--muted);">Tekniskt otillåtet utan markägarens tillstånd, men tolereras ofta på parkeringsplatser i städer för en natt om inga skyltar förbjuder det. Camping Krumlov är ändå det givna valet.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="background:var(--goldbg);border:1px solid #e8c97a;border-radius:var(--radius);padding:14px 16px;">
+      <div style="font-size:0.8rem;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Skillnaden som avgör</div>
+      <div style="font-size:0.82rem;color:var(--text);line-height:1.6;">
+        I de flesta länder är det skillnad på att <strong>sova i fordonet</strong> (okej på p-plats) och att <strong>campa</strong> (fälla ut markis, ställa ut stolar, tälta – förbjudet). Håll allt inne i husbilen så är ni i regel på den säkra sidan. Och kom ihåg: <strong>Park4Night-appen</strong> visar exakt var det är okej att stanna för natten i varje enskilt land – den skiljer på aires, Stellplatz, fri övernattning och camping. Ladda ned den innan ni åker.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ PRAKTISKT ══════════════════════════════════════════════════════════ -->
+<div id="sec-praktiskt" class="section">
+  <h2 class="section-title">Praktiskt</h2>
+  <p class="section-sub">Mobildata, försäkring, valuta, gasol, vandring och nödnummer – anpassat för er resa.</p>
+
+  <!-- 1. MOBILDATA -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--purp);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">📱 Mobildata & roaming – Tre (3)</div>
+    <div style="padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:12px;">
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--teal);text-transform:uppercase;margin-bottom:4px;">✅ Ingår i EU-roaming</div>
+          <div style="font-size:0.8rem;color:var(--text);">Danmark, Tyskland, Nederl., Belgien, Luxemburg, Frankrike, Österrike, Tjeckien – surfa och ring precis som hemma.</div>
+        </div>
+        <div style="background:var(--amberbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--amber);text-transform:uppercase;margin-bottom:4px;">⚠ Schweiz – kontrollera!</div>
+          <div style="font-size:0.8rem;color:var(--text);">Schweiz ingår i Tres <strong>3Världen</strong>-tjänst – men bara om den är aktiv på ditt abonnemang. Logga in på tre.se och verifiera innan avfärd.</div>
+        </div>
+      </div>
+      <div style="background:var(--coralbg);border-left:3px solid var(--coral);border-radius:var(--radius-sm);padding:10px 12px;font-size:0.8rem;color:var(--text);">
+        <strong style="color:var(--coral);">Viktigt:</strong> Stäng av data-roaming tills ni vet att 3Världen är aktivt – annars kan mobilen koppla mot schweiziskt nät vid Basel eller Innsbruck.
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. IF FÖRSÄKRING -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--teal);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🛡 IF Försäkring – husbilsförsäkring & grönt kort</div>
+    <div style="padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--teal);text-transform:uppercase;margin-bottom:4px;">Täckning</div>
+          <div style="font-size:0.8rem;color:var(--text);">IF husbilsförsäkring gäller i alla länder anslutna till gröna kortsystemet – inkluderar Danmark, Tyskland, Belgien, Luxemburg, Frankrike, Schweiz, Österrike och Tjeckien.</div>
+        </div>
+        <div style="background:var(--greybg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--grey);text-transform:uppercase;margin-bottom:4px;">Grönt kort</div>
+          <div style="font-size:0.8rem;color:var(--text);">Beställ grönt kort från IF kostnadsfritt – krävs i Tjeckien, Tyskland och Österrike. Tar 2 vardagar med post. Beställ på <strong>if.se</strong> eller ring 0771-655 655.</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--amberbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--amber);text-transform:uppercase;margin-bottom:4px;">Körsträckeklass</div>
+          <div style="font-size:0.8rem;color:var(--text);">Kontrollera att er körsträckeklass täcker resan. 5 400 km tillkommer utöver normal körsträcka. Justera på Mina sidor på if.se.</div>
+        </div>
+        <div style="background:var(--purpbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--purp);text-transform:uppercase;margin-bottom:4px;">Vägassistans</div>
+          <div style="font-size:0.8rem;color:var(--text);">IFs vägassistans gäller i hela Europa. Ring <strong>+46 771-655 655</strong> vid problem – ring alltid IF direkt, skriv inte under dokument ni inte förstår.</div>
+        </div>
+      </div>
+      <div style="background:var(--coralbg);border-left:3px solid var(--coral);border-radius:var(--radius-sm);padding:10px 12px;font-size:0.8rem;color:var(--text);">
+        <strong style="color:var(--coral);">Att göra:</strong> 1) Beställ grönt kort på if.se nu. 2) Kontrollera körsträckeklass på Mina sidor. 3) Spara IFs nummer: <strong>+46 771-655 655</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. VALUTA -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--gold);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">💶 Valuta & betalning per land</div>
+    <div style="background:var(--text);color:#fff;display:grid;grid-template-columns:2fr 1fr 2fr;padding:8px 14px;font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;gap:8px;">
+      <div>Land</div><div>Valuta</div><div>Tips</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="padding:10px 14px;font-size:0.8rem;color:var(--text);">Sverige, Tyskland, Frankrike, Belgien, Luxemburg, Österrike, Nederl.</div>
+      <div style="padding:10px 10px;font-size:0.8rem;font-weight:500;color:var(--gold);">Euro (€)</div>
+      <div style="padding:10px 14px;font-size:0.78rem;color:var(--muted);">Kortbetalning fungerar överallt. Ta ut pengar i bankomat på orten, aldrig växelkontor på flygplatser.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr;border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="padding:10px 14px;font-size:0.8rem;color:var(--text);">Danmark</div>
+      <div style="padding:10px 10px;font-size:0.8rem;font-weight:500;color:var(--gold);">DKK</div>
+      <div style="padding:10px 14px;font-size:0.78rem;color:var(--muted);">1 DKK ≈ 1,45 SEK. Kortbetalning fungerar bra. Ta ut i dansk bankomat. Undvik Forex vid Öresundsbron.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="padding:10px 14px;font-size:0.8rem;color:var(--text);">Schweiz</div>
+      <div style="padding:10px 10px;font-size:0.8rem;font-weight:500;color:var(--gold);">CHF</div>
+      <div style="padding:10px 14px;font-size:0.78rem;color:var(--muted);">1 CHF ≈ 12 SEK. Dyrt land – ca 30–40% dyrare än Sverige. Visa/Mastercard fungerar fint.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr;border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="padding:10px 14px;font-size:0.8rem;color:var(--text);">Tjeckien</div>
+      <div style="padding:10px 10px;font-size:0.8rem;font-weight:500;color:var(--gold);">CZK</div>
+      <div style="padding:10px 14px;font-size:0.78rem;color:var(--muted);">1 CZK ≈ 0,45 SEK. Extremt billigt. Ta ut i bankomat i Český Krumlov, undvik växelkontor.</div>
+    </div>
+    <div style="padding:12px 14px;font-size:0.78rem;color:var(--muted);background:var(--goldbg);">
+      <strong style="color:var(--gold);">Tips:</strong> Ha alltid €50–100 kontant för Grossglockner-avgiften och nödsituationer.
+    </div>
+  </div>
+
+  <!-- 4. GASOL -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--amber);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🔥 Gasol / LPG längs rutten</div>
+    <div style="padding:14px 16px;">
+      <div style="font-size:0.82rem;color:var(--text);line-height:1.7;margin-bottom:12px;">
+        Gasol kallas <strong>LPG</strong> eller <strong>Autogas</strong> i Europa (<strong>GPL</strong> i Frankrike). Finns på fler än 45 000 tankstationer i Europa – men ni behöver rätt adapter.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:var(--coralbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--coral);text-transform:uppercase;margin-bottom:4px;">⚠ Adapter krävs!</div>
+          <div style="font-size:0.8rem;color:var(--text);">Svenska gasolflaskor har annat munstycke. Köp ett <strong>adapterset för Europa</strong> (ACME/W21,8 för DE/AT/NL – Klipp för FR/BE). Finns på Biltema eller Jula.</div>
+        </div>
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="font-size:0.7rem;font-weight:500;color:var(--teal);text-transform:uppercase;margin-bottom:4px;">Hitta stationer</div>
+          <div style="font-size:0.8rem;color:var(--text);"><strong>mylpg.eu</strong> – bästa kartan för LPG-stationer i hela Europa. Finns som app. Sök på "Autogas" vid bensinmackar längs motorvägarna.</div>
+        </div>
+      </div>
+      <div style="background:var(--greybg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;">
+        <div style="font-size:0.7rem;font-weight:500;color:var(--grey);text-transform:uppercase;margin-bottom:6px;">Vad gasolen heter per land</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:0.78rem;">
+          <div><strong>Deutschland:</strong> Autogas</div>
+          <div><strong>Frankrike:</strong> GPL/Autogas</div>
+          <div><strong>Österrike:</strong> Autogas</div>
+          <div><strong>Belgien:</strong> LPG/Autogas</div>
+          <div><strong>Schweiz:</strong> Autogas</div>
+          <div><strong>Tjeckien:</strong> LPG/Autogas</div>
+        </div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);">LPG/Autogas kostar ca €0,60–0,90/liter – klart billigare än diesel. Tankstationer längs motorvägar har nästan alltid Autogas.</div>
+    </div>
+  </div>
+
+  <!-- 5. VANDRING -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--teal);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🥾 Vandringsleder – Österrike</div>
+    <div style="padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;">
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Hallstatt – Echerntal</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Lätt</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ 2–3 h</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ +250 m</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Skogsdal bakom Hallstatt med vattenfall och klippformationer. Lugnt alternativ till folkmassan i byn.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Gosausee – runt sjön</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Lätt</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ 1,5 h</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ Platt</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Vandra runt hela sjön med Dachsteinglacicären framför er hela vägen. Lättaste och vackraste vandringen på resan.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Wolfgangsee – Falkensteig</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Medel</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ 3–4 h</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ +500 m</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Klippbana med järnkedjor längs Wolfgangsee. Dramatiska vyer ned mot sjön. Bra kondition krävs.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Zell am See – Pinzgauer Spazierweg</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Lätt–Medel</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ Halvdag</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ Linbana upp</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Ta linbanan till 2 000 m och vandra längs Pinzgauer Spazierweg med panorama över Grossglockner. Ta banan ned.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Grossglockner – Pasterzepromenaden</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Lätt</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ 1–2 h</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ +100 m</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Promenera ned mot glaciären från Kaiser-Franz-Josefs-Höhe. Kort men dramatisk – glaciären drar sig tillbaka synligt.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.82rem;font-weight:500;color:var(--teal);margin-bottom:4px;">Innsbruck – Nordkette</div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;background:#fff;color:var(--teal);padding:1px 7px;border-radius:8px;">Medel</span>
+            <span style="font-size:0.68rem;color:var(--muted);">⏱ 2–3 h</span>
+            <span style="font-size:0.68rem;color:var(--muted);">↑ Linbana</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text);">Ta Nordkettenbahn till Seegrube (1 905 m) och vandra till Hafelekar (2 256 m). Utsikten ned mot Innsbruck är extrem.</div>
+        </div>
+
+      </div>
+      <div style="margin-top:10px;background:var(--greybg);border-radius:var(--radius-sm);padding:10px 12px;font-size:0.78rem;color:var(--muted);">
+        <strong style="color:var(--text);">Appen Komoot</strong> – ladda ned österrikiska regioner offline innan avfärd. <strong style="color:var(--text);">Bergfex.at</strong> – väder och leder per topp.
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. NÖDNUMMER -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--coral);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🆘 Nödnummer per land</div>
+    <div style="background:var(--text);color:#fff;display:grid;grid-template-columns:140px 80px 80px 80px 1fr;padding:8px 14px;font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;gap:8px;">
+      <div>Land</div><div>Nöd</div><div>Polis</div><div>Ambulans</div><div>Notering</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--coralbg);">
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);">Alla länder</div>
+      <div style="font-size:0.85rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">112</div>
+      <div style="font-size:0.75rem;color:var(--muted);">112 fungerar alltid och gratis på alla mobiler, även utan SIM-kort</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="font-size:0.8rem;color:var(--text);">Danmark</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">114</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">112</div>
+      <div style="font-size:0.75rem;color:var(--muted);"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="font-size:0.8rem;color:var(--text);">Tyskland</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">110</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">112</div>
+      <div style="font-size:0.75rem;color:var(--muted);">Brandkår: 112. ADAC väghjälp: 0800-5 10 11 12</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="font-size:0.8rem;color:var(--text);">Belgien</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">101</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">100</div>
+      <div style="font-size:0.75rem;color:var(--muted);">101 polis, 100 ambulans/brand</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="font-size:0.8rem;color:var(--text);">Frankrike</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">17</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">15</div>
+      <div style="font-size:0.75rem;color:var(--muted);">15 SAMU (ambulans), 18 brandkår, 17 polis</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="font-size:0.8rem;color:var(--text);">Schweiz</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">117</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">144</div>
+      <div style="font-size:0.75rem;color:var(--muted);">Bergräddning: 1414 (Rega helikopter)</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+      <div style="font-size:0.8rem;color:var(--text);">Österrike</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">133</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">144</div>
+      <div style="font-size:0.75rem;color:var(--muted);">144 ambulans, 122 brand. Bergräddning: 140</div>
+    </div>
+    <div style="display:grid;grid-template-columns:140px 80px 80px 80px 1fr;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+      <div style="font-size:0.8rem;color:var(--text);">Tjeckien</div>
+      <div style="font-size:0.8rem;font-weight:500;color:var(--coral);text-align:center;">112</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">158</div>
+      <div style="font-size:0.8rem;color:var(--text);text-align:center;">155</div>
+      <div style="font-size:0.75rem;color:var(--muted);">155 ambulans, 150 brandkår</div>
+    </div>
+    <div style="padding:12px 14px;font-size:0.78rem;background:var(--coralbg);">
+      <strong style="color:var(--coral);">IF Vägassistans:</strong> +46 771-655 655 &nbsp;·&nbsp;
+      <strong style="color:var(--coral);">Tre kundtjänst:</strong> 0200-222 200 &nbsp;·&nbsp;
+      <strong style="color:var(--coral);">EU-kort:</strong> Ett per person – ta med alla
+    </div>
+  </div>
+
+  <!-- 7. HÄLSA -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--pink);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🏥 Hälsa längs resan</div>
+    <div style="padding:14px 16px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:12px;">
+
+        <div style="background:var(--coralbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--coral);text-transform:uppercase;margin-bottom:5px;">☀️ UV i alperna</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">På 2 000–2 400 m är UV-index extremt högt även på mulen dag – upp till UV 9–10 i juli. Ta med <strong>SPF50+</strong>, solglasögon med UV-skydd och täckande kläder. Grossglockner, Schmittenhöhe och Nordkette är de mest utsatta stoppen.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--teal);text-transform:uppercase;margin-bottom:5px;">💧 Dricksvatten</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">Kranvattnet är säkert att dricka i <strong>alla länder på er rutt</strong>. Österrike har faktiskt bättre kranvatten än Sverige i många regioner – källvatten direkt ur berget vid vandringsleder. Fyll husbildstanken från kranar på campingar.</div>
+        </div>
+
+        <div style="background:var(--greenbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--green);text-transform:uppercase;margin-bottom:5px;">💊 Apotek – grönt kors</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">Apotek känns igen på det <strong>gröna korset</strong> i hela Europa.<br>
+            DE/AT/CH: <strong>Apotheke</strong><br>
+            FR/BE/LU: <strong>Pharmacie</strong><br>
+            NL: <strong>Apotheek</strong><br>
+            DK: <strong>Apotek</strong><br>
+            CZ: <strong>Lékárna</strong>
+          </div>
+        </div>
+
+        <div style="background:var(--amberbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--amber);text-transform:uppercase;margin-bottom:5px;">🦟 Myggor vid sjöarna</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">Vid Hallstatt, Wolfgangsee och Zell am See är myggor ett reellt problem kvällstid i juli. Ta med myggmedel (DEET 30%+ eller Picaridin). Elinsticksskydd i husbilen är praktisk på kvällarna.</div>
+        </div>
+
+        <div style="background:var(--purpbg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--purp);text-transform:uppercase;margin-bottom:5px;">🧊 Temperatur i alperna</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">Juli är varmt i dalarna (25–35°C) men på Grossglockner kan det vara <strong>5–12°C</strong> med vindkyl. Ta alltid med fleece och vindtät jacka i ryggsäcken. Eftermiddagsåskor i alperna är vanliga juli 14–17.</div>
+        </div>
+
+        <div style="background:var(--bluebg);border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="font-size:0.75rem;font-weight:500;color:var(--blue);text-transform:uppercase;margin-bottom:5px;">🩺 EU-kort & sjukvård</div>
+          <div style="font-size:0.8rem;color:var(--text);line-height:1.6;">EU-kortet täcker akut sjukvård i alla EU-länder <strong>samt Schweiz</strong>. Beställ gratis via <strong>1177.se</strong>. Ett kort per person. Täcker EJ hemtransport – reseförsäkring via hemförsäkringen täcker det.</div>
+        </div>
+
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;font-size:0.78rem;color:var(--muted);">
+        <strong style="color:var(--text);">Hälsoplock att ha med:</strong> SPF50+ · Läppbalsam med UV · Solglasögon CE-märkta · Myggmedel DEET/Picaridin · Plåster & desinfektionsmedel · Smärtstillande · Allergimedel
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. DIESEL -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--grey);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">⛽ Dieselpriser & tanktips längs rutten</div>
+    <div style="padding:14px 16px;">
+      <div style="background:var(--goldbg);border:1px solid #e8c97a;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:0.78rem;font-weight:500;color:var(--gold);margin-bottom:5px;">💡 Viktigaste tipset – TANKA FULLT I LUXEMBURG</div>
+        <div style="font-size:0.82rem;color:var(--text);line-height:1.6;">Luxemburg har Europas lägsta dieselpris – ca 10–15% billigare än omgivande länder. Ni kör igenom Antwerpen → Luxemburg → Metz. <strong>Tanka husbilen helt full i Luxemburg</strong> och ni sparar 200–400 kr beroende på tankstorlek.</div>
+      </div>
+      <div style="background:var(--text);color:#fff;display:grid;grid-template-columns:130px 90px 1fr;padding:8px 14px;font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;gap:8px;">
+        <div>Land</div><div>Relativt pris</div><div>Tips</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <div style="font-size:0.8rem;font-weight:500;">Luxemburg</div>
+        <div style="font-size:0.78rem;color:var(--teal);">🟢 Billigast</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Tanka fullt! 10–15% under omgivande länder. Stationerna längs A1/A6 ut ur Luxemburg stad är billigast.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+        <div style="font-size:0.8rem;font-weight:500;">Tjeckien</div>
+        <div style="font-size:0.78rem;color:var(--teal);">🟢 Billigt</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Klart billigare än Österrike och Tyskland. Tanka i Český Krumlov inför Dresden.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <div style="font-size:0.8rem;font-weight:500;">Frankrike</div>
+        <div style="font-size:0.78rem;color:var(--amber);">🟡 Medel</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Motorvägsstationer dyra – kör av och tanka i byn i Alsace.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+        <div style="font-size:0.8rem;font-weight:500;">Belgien / NL / DK</div>
+        <div style="font-size:0.78rem;color:var(--amber);">🟡 Medel</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Ungefär EU-snittet. Tanka av vid lokala stationer, ej motorvägsmackar.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <div style="font-size:0.8rem;font-weight:500;">Tyskland</div>
+        <div style="font-size:0.78rem;color:var(--amber);">🟡 Medel</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Autohöfe är billigare än Autobahn-stationer. Avi-appen visar billigaste station lokalt.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2);">
+        <div style="font-size:0.8rem;font-weight:500;">Österrike</div>
+        <div style="font-size:0.78rem;color:var(--coral);">🟠 Dyrt</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Alpvägar och bergspassager har dyrare stationer. Tanka innan ni svänger av mot Salzkammergut.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 90px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface);">
+        <div style="font-size:0.8rem;font-weight:500;">Schweiz</div>
+        <div style="font-size:0.78rem;color:var(--coral);">🔴 Dyrt</div>
+        <div style="font-size:0.78rem;color:var(--muted);">Ni är bara i Basel – tanka hellre i Frankrike precis över gränsen om tanken är låg.</div>
+      </div>
+      <div style="padding:10px 14px;font-size:0.78rem;color:var(--muted);background:var(--greybg);">
+        <strong style="color:var(--text);">Appen Tankerkönig</strong> (DE/AT) visar aktuella priser i realtid. Bensinstationer på motorvägar är alltid dyrast – kör av och tanka i närmaste by.
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. SÖNDAGSSTÄNGNING & DRICKS -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;">
+    <div style="background:var(--purp);color:#fff;padding:10px 16px;font-size:0.82rem;font-weight:500;">🎭 Söndagsstängning & drickskultur</div>
+    <div style="padding:14px 16px;">
+
+      <div style="font-size:0.8rem;font-weight:500;color:var(--text);margin-bottom:8px;">🚫 Söndagsstängning – handla på lördagen!</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px;">
+
+        <div style="background:var(--coralbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇩🇪 Tyskland</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--coral);">STÄNGT</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Alla butiker stänger söndag. Bensinstationer och kiosker öppna. Planera matinköp till lördagen.</div>
+        </div>
+
+        <div style="background:var(--coralbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇦🇹 Österrike</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--coral);">STÄNGT</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Samma som Tyskland. Lördagar stänger kl 18 i Salzburg. Köp mat och förnödenheter i tid.</div>
+        </div>
+
+        <div style="background:var(--coralbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇨🇭 Schweiz</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--coral);">STÄNGT</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Stängt söndag. Undantag: stora tågstationer och turistorter har begränsad öppning.</div>
+        </div>
+
+        <div style="background:var(--amberbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇫🇷 Frankrike</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--amber);">Delvis öppet</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Söndagar delvis öppna, många stänger kl 13. Alsace har stark söndagstradition – handla lördag.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇧🇪 Belgien</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--teal);">Öppet</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Relativt fritt, många butiker öppna söndag. Antwerpen fungerar bra söndagar.</div>
+        </div>
+
+        <div style="background:var(--tealbg);border-radius:var(--radius-sm);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:0.8rem;font-weight:500;color:var(--text);">🇨🇿 Tjeckien</div>
+            <div style="font-size:0.68rem;font-weight:500;color:var(--teal);">Öppet</div>
+          </div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;">Öppet söndag som vanligt. Inga konstigheter.</div>
+        </div>
+
+      </div>
+
+      <div style="font-size:0.8rem;font-weight:500;color:var(--text);margin-bottom:8px;">💰 Drickskultur per land</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇩🇰 Danmark</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">Dricks inte förväntat men uppskattas. Runda upp notan eller säg "det stämmer".</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇩🇪 Tyskland</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">Runda upp till närmaste euro eller 5–10%. Säg beloppet du vill betala när du lämnar sedeln – du får inte tillbaka växeln om du inte anger det.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇳🇱 Nederländerna</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">Inte förväntat. Avrundning uppskattas. Serviceavgift ingår ofta i notan – kontrollera.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇧🇪 Belgien</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">5–10% uppskattas. Kontrollera om "service" ingår i notan (ofta 10% tillagt).</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇫🇷 Frankrike</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">Service compris (15%) ingår alltid lagstadgat i notan. Extra dricks ges om man är verkligt nöjd – aldrig förväntat.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇨🇭 Schweiz</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">Dricks ingår i priset (service charge lagstadgat). Runda upp om ni är nöjda, inte mer.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;border-bottom:1px solid var(--border);background:var(--surface);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇦🇹 Österrike</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">10% standard och förväntat. Säg beloppet till servitören – lämna INTE dricks på bordet, det är ovanligt.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;background:var(--surface2);">
+          <div style="padding:9px 12px;font-size:0.8rem;font-weight:500;color:var(--text);">🇨🇿 Tjeckien</div>
+          <div style="padding:9px 12px;font-size:0.78rem;color:var(--muted);">10% uppskattas men ej förväntat. Ölen är så billiga att notan ändå är låg – var generös.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ DAGBOK ════════════════════════════════════════════════════════════ -->
+<div id="sec-dagbok" class="section">
+  <h2 class="section-title">Resedagbok</h2>
+  <p class="section-sub journal-intro">Skriv fritt om varje dag – vad hände, vad var bäst, vad ska ni inte glömma. Sparas automatiskt.</p>
+  <div id="journal-list"></div>
+</div>
+
+</main>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────
+const DAYS = [
+  {id:"d01",date:"12 jul",wd:"Lör",country:"se",label:"Sverige",col:"coral",title:"Viken → Malmö → Köpenhamn",km:65,
+   body:"Avresa! Kort kördag. Kör via Öresundsbron (ØresundPay). Checka in tidigt och utforska på kvällen.",
+   must:"Nyhavn kvällspromenad, Gammel Strand",warn:"",night:"Köpenhamn",
+   camping:"Camping Absalon (Korsdalsvej 132) – välskött camping 8 km från centrum med direktbuss in. Stor och klarar 7,2 m. Book: absaloncamping.dk"},
+  {id:"d02",date:"13 jul",wd:"Sön",country:"dk",label:"Danmark",col:"coral",title:"Köpenhamn – vilodag",km:0,
+   body:"Tivoli, Strøget, Christiansborg och kanalerna. Hyr cykel för dagen. Smørrebrød till lunch.",
+   must:"Tivoli, Strøget, cykeltour",warn:"",night:"Köpenhamn",
+   camping:"Stannar kvar på Camping Absalon – ingen flytt idag."},
+  {id:"d03",date:"14 jul",wd:"Mån",country:"de",label:"Tyskland",col:"grey",title:"Köpenhamn → Hamburg",km:310,
+   body:"Mellanstopp i Hamburg. Speicherstadt (UNESCO) om ni stannar ett par timmar. Kvällspromenad vid Alster.",
+   must:"Speicherstadt, Alstersjön",warn:"Miljödekal krävs vid inkörning i Hamburg",night:"Hamburg",
+   camping:"Campingplatz Buchholz (Kielerstraße 374) – enkel ställplats norr om centrum med bra bussanslutning. Bra transitnatt. Alt: Stellplatz Hamburg-City vid Elbe."},
+  {id:"d04",date:"15 jul",wd:"Tis",country:"nl",label:"Nederl.",col:"blue",title:"Hamburg → Haarlem",km:390,
+   body:"Längre kördag men utmärkt motorväg hela vägen. Haarlem är ett perfekt alternativ till Amsterdam – kanaler och charme utan trängseln.",
+   must:"Gamla stan, blommarknaden, Grote Markt",warn:"Kontrollera LEZ/lågtsläppszon för din husbil!",night:"Haarlem",
+   camping:"Camping Bloemendaal (Zeeweg 72) – i Kennermerdynerna, 15 min promenad till stranden. Dedikerade husbilsplatser med el och tömning. Cykelavstånd till Haarlem. Book: campingbloemendaal.nl\nAlt: Camping Vogelenzang – 600 platser, 9 km från stranden, separat husbildsområde."},
+  {id:"d05",date:"16 jul",wd:"Ons",country:"nl",label:"Nederl.",col:"blue",title:"Haarlem + Haag (dagstrip)",km:50,
+   body:"Halvdagsutflykt till Den Haag. Mauritshuis-museet (Vermeers Flicka med pärlörhänge). Scheveningen strand om vädret tillåter.",
+   must:"Mauritshuis, Madurodam, Scheveningen",warn:"",night:"Haarlem",
+   camping:"Stannar kvar på Camping Bloemendaal – dagstrip till Haag med bil eller tåg."},
+  {id:"d06",date:"17 jul",wd:"Tor",country:"be",label:"Belgien",col:"amber",title:"Haarlem → Antwerpen",km:155,
+   body:"Välkommen till Belgien! Antwerpens gamla stan med barockkyrkor och designhotell. Rubenshuset och Grote Markt.",
+   must:"Grote Markt, Rubenshuis, MAS-museet",warn:"LEZ-zon i Antwerpen – kontrollera euroklass på lezantwerp.be!",night:"Antwerpen",
+   camping:"Camping Vogelzang (Vogelzanglaan) – kommunal camping söder om centrum, ~4 km från Grote Markt. Spårvagn in till stan. Kontrollera max längd vid bokning.\nAlt: Camping De Molen i Edegem (~8 km söder)."},
+  {id:"d07",date:"18 jul",wd:"Fre",country:"be",label:"Belgien",col:"amber",title:"Antwerpen – vilodag",km:0,
+   body:"En hel dag i Antwerpen. MAS-museets gratis takterrass (panoramautsikt), diamantkvarteret, ölprovning och belgisk choklad.",
+   must:"MAS-museet, belgiskt öl, pommes frites med mayo",warn:"",night:"Antwerpen",
+   camping:"Stannar kvar – ingen flytt idag."},
+  {id:"d08",date:"19 jul",wd:"Lör",country:"lu",label:"Luxemburg",col:"pink",title:"Antwerpen → Luxemburg",km:210,
+   body:"Luxemburg stad är liten men mäktig – UNESCO-listad fästning och fin matscen.",
+   must:"Bock-kasematterna, Grund-kvarteret, Chemin de la Corniche",warn:"",night:"Luxemburg",
+   camping:"Camping Kockelscheuer (Route de Bettembourg) – kommunalt driven, 8 km söder om centrum. Buss direkt in. Välskött och populär bland husbilar. Book via luxemburg.lu"},
+  {id:"d09",date:"20 jul",wd:"Sön",country:"fr",label:"Frankrike",col:"red",title:"Luxemburg → Metz",km:60,
+   body:"Kort kördag. Metz är en av Frankrikes vackraste och mest förbisedda städer. Saint-Étienne-katedralen är ett absolut måste.",
+   must:"Saint-Étienne-katedralen (Guds lykta), Place de la Comédie",warn:"Crit'Air behöver vara med i bilen",night:"Metz",
+   camping:"Camping Metz-Plage (Allée de Metz-Plage) – längs Moselle, 2 km från centrum. Fin grön miljö vid floden. Frankrike har också aires de service – gratis ställplatser i många städer, kolla Park4Night-appen."},
+  {id:"d10",date:"21 jul",wd:"Mån",country:"fr",label:"Frankrike",col:"red",title:"Metz → Colmar via Alsace vinväg",km:155,
+   body:"Kör Route des Vins d'Alsace. Stanna i Riquewihr och Kaysersberg. Smaka Riesling direkt hos producenter.",
+   must:"Riquewihr, Kaysersberg, alsacisk Riesling",warn:"",night:"Colmar",
+   camping:"Camping de l'Ill (2 Allée du Camping) – längs floden Ill, strax söder om Colmars centrum. Välskött, populär bland husbilar. BOKA TIDIGT – fylls i juli.\nAlt: Camping les Cigognes i Wintzenheim (~4 km väster om Colmar)."},
+  {id:"d11",date:"22 jul",wd:"Tis",country:"fr",label:"Frankrike",col:"red",title:"Colmar – vilodag",km:0,
+   body:"La Petite Venise på kvällen när dagsturisterna åkt hem – det är då magin slår till. Unterlinden-museet med Isenheim-altartavlan.",
+   must:"La Petite Venise (kväll!), Unterlinden, flammkuchen",warn:"Boka camping i förväg – extremt högsäsong i juli!",night:"Colmar",
+   camping:"Stannar kvar på Camping de l'Ill."},
+  {id:"d12",date:"23 jul",wd:"Ons",country:"ch",label:"Schweiz",col:"green",title:"Colmar → Basel",km:75,
+   body:"Schweiz börjar! Köp vinjett vid gränsen (CHF 40, dekal i vindrutan). Basel = kompakt kulturstad vid Rhen.",
+   must:"Kunstmuseum Basel, Rhen-promenaden, Tinguely-fontänen",warn:"Köp vinjett CHF 40 vid gränsen – obligatorisk!",night:"Basel",
+   camping:"Camping Basel TCS (Heideweg 16, Reinach) – 7 km söder om Basel centrum, välskött TCS-camping (schweizisk AA-standard). Direktbuss in. Book: camping.ch\nAlt: Camping Waldhort i Münchenbuchsee (~40 km söder) om ni vill ligga mer åt Bern-hållet."},
+  {id:"d13",date:"24 jul",wd:"Tor",country:"at",label:"Österrike",col:"purp",title:"Basel → Innsbruck (via A12/E45)",km:330,
+   body:"Lång men fantastisk kördag. Från Basel rakt in i Tyrolen. A12 längs Inndalen är en av Europas vackraste motorvägar – breda alpväggar på båda sidor hela vägen till Innsbruck.",
+   must:"Goldenes Dachl, Maria-Theresien-Straße, Nordkettenbahn upp mot 2000 m",warn:"ØresundPay-bizzen piper vid första österrikiska tullpassagen vid Kufstein – kontrollera!",night:"Innsbruck",
+   camping:"Camping Innsbruck Kranebitter (Kranebitter Allee 214) – 5 km väster om centrum med direktbuss in. Fin alputsikt. campinginnsbruck.at\nAlt: Camping Natterer See – 7 km söder om centrum vid en liten sjö, dramatisk alpbakgrund."},
+  {id:"d14",date:"25 jul",wd:"Fre",country:"at",label:"Österrike",col:"purp",title:"Innsbruck → Salzburg",km:185,
+   body:"Kör österut längs Inn och A12 vidare mot Salzburg. Vacker sträcka med Kaisergebirge och Berchtesgaden-alperna. Österrike börjar verkligen ta tag i en här.",
+   must:"Hohensalzburg (linbana upp!), Getreidegasse, Mozart Wohnhaus",warn:"Kontrollera att bizzen piper vid tullpassager längs A12!",night:"Salzburg",
+   camping:"Reisemobil-Stellplatz Salzburg (Carl-Zuckmayer-Straße) – exklusiv ställplats för husbilar, 3 km från centrum. ~€27/natt inkl. el. Buss 21 stannar utanför grinden. Book: reisemobilstellplatz-salzburg.at\nAlt: Camping Panorama Stadtblick – utsikt över Salzburg, 4 km från centrum."},
+  {id:"d15",date:"26 jul",wd:"Lör",country:"at",label:"Österrike",col:"purp",title:"Salzburg dag 2 + Königssee",km:60,
+   body:"Mirabellgarten och Hellbrunn. Dagstrip till Königssee i Berchtesgaden (30 min) – spegelblank fjordsjö med elbåt till Sankt Bartholomä.",
+   must:"Mirabellgarten, Hellbrunn, Königssee + elbåt",warn:"Königssee är värd halvdagen – missa inte!",night:"Salzburg",
+   camping:"Stannar kvar på Reisemobil-Stellplatz Salzburg."},
+  {id:"d16",date:"27 jul",wd:"Sön",country:"at",label:"Österrike",col:"purp",title:"Salzburg → Hallstatt / Salzkammergut",km:80,
+   body:"KÖR DIT TIDIGT! Bussarna börjar 09.00. Gosausee samma dag för glaciärutsikt och lugn.",
+   must:"Hallstatt (tidigt!), Gosausee, saltgruvan",warn:"Anlända Hallstatt senast 08.30 – extremt folkfullt",night:"Salzkammergut",
+   camping:"Camping Klausner-Höll (Lahnstraße 201, Hallstatt) – familjärt driven, 800 m från Hallstatt centrum, 100 m från badstranden. Enda rimliga alternativet direkt vid Hallstatt. BOKA NU! camping@hallstatt.net\nAlt: Camping Park am See (Obertraun) – 3 km från Hallstatt, fantastisk utsikt mot byn, lite lugnare."},
+  {id:"d17",date:"28 jul",wd:"Mån",country:"at",label:"Österrike",col:"purp",title:"Wolfgangsee + Bad Ischl",km:30,
+   body:"Lugn dag vid Wolfgangsee. Schafbergbahn-ångbanan (Sound of Music!). Bad Ischl – österrikisk kaffekultur.",
+   must:"Wolfgangsee, Schafbergbahn, Bad Ischl konditori",warn:"",night:"Salzkammergut",
+   camping:"Camping Lindenstrand (Wolfgangsee) – direkt vid sjön med utsikt mot alperna. Romantiskt läge och nära Schafbergbahn. campinglindenstrand.at"},
+  {id:"d18",date:"29 jul",wd:"Tis",country:"at",label:"Österrike",col:"purp",title:"Salzkammergut → Zell am See",km:95,
+   body:"Alpdalen och glaciärvy. Schmittenhöhe-linbanan (2000 m) ger 360-graders panorama. Boka camping NU!",
+   must:"Schmittenhöhe panorama, Zell am See stad, sjöbad",warn:"Boka camping i förväg – Zell am See är extremt populärt i juli!",night:"Zell am See",
+   camping:"Seecamp Zell am See (Seecampweg 10) – nyrenoverad 2024, DIREKT vid sjön. 80–100 m² platser med el + WiFi. Mobilitetskort = gratis kollektivtrafik i Salzburg-regionen. ~€43/natt. BOKA MED DEPOSITION: seecamp.at\nAlt: Panorama Camp Zell am See – 500 m från sjön, lugnare och lite billigare. panoramacamp.at"},
+  {id:"d19",date:"30 jul",wd:"Ons",country:"at",label:"Österrike",col:"purp",title:"Grossglockner Hochalpenstrasse",km:60,
+   body:"Resans spektakuläraste kördag. Kör av tidigt (före 08.00). Kaiser-Franz-Josefs-Höhe vid 2369 m. Ta med jacka.",
+   must:"Kaiser-Franz-Josefs-Höhe, Pasterzeglacicären, Fuscher Törl",warn:"Kontrollera väder dagen innan. Vägavgift ~€38 vid tullbom (ej ØresundPay).",night:"Zell am See",
+   camping:"Återvänder till Seecamp eller Panorama Camp Zell am See – Grossglockner-dagen är en dagstrip med retur."},
+  {id:"d20",date:"31 jul",wd:"Tor",country:"at",label:"Österrike",col:"purp",title:"Zell am See → Wien via Wachau",km:310,
+   body:"Omväg längs Donau via Melk och Wachaudalen (UNESCO). En av Europas vackraste floddalar.",
+   must:"Melk-klostret, Wachaudalen, Dürnstein, Krems",warn:"",night:"Wien",
+   camping:"Wien West Camping (Hütteldorferstraße 80) – klassisk välkänd camping, U-banestation Wien West 10 min bort (20 min till centrum). Klarar stora husbilar. Book: wiencamping.at\nAlt: Camping Neue Donau (norr om stan) – vid Donau-stranden, direktspårvagn in."},
+  {id:"d21",date:"1 aug",wd:"Fre",country:"at",label:"Österrike",col:"purp",title:"Wien – hela dagen",km:0,
+   body:"Lämna husbilen och ta tunnelbanan in. Belvedere för Klimts Kyssen. Naschmarkt. Wiener Schnitzel.",
+   must:"Belvedere (Klimts Kyssen), Naschmarkt, Prater-Riesenrad",warn:"",night:"Wien",
+   camping:"Stannar kvar på Wien West Camping."},
+  {id:"d22",date:"2 aug",wd:"Lör",country:"cz",label:"Tjeckien",col:"amber",title:"Wien → Český Krumlov",km:200,
+   body:"Köp tjeckisk e-vinjett på edalnice.cz innan avfärd. Český Krumlov – UNESCO-renässansslott högt ovanför Vltava.",
+   must:"Slottet + barockträdgården, kanot i Vltava",warn:"Köp e-vinjett INNAN du korsar gränsen!",night:"Český Krumlov",
+   camping:"Camping Krumlov (Chvalšinská 4) – 1 km från slottet längs Vltava. Välskött och populär bland husbilar. Fin ström-miljö. campingkrumlov.cz\nAlt: Camping Intercamp Týn – lite billigare, 2 km från centrum."},
+  {id:"d23",date:"3 aug",wd:"Sön",country:"de",label:"Tyskland",col:"grey",title:"Český Krumlov → Dresden",km:160,
+   body:"Tillbaka i Tyskland. Dresden är Elbens Florens. Frauenkirche återuppbyggd efter bombningen 1945.",
+   must:"Frauenkirche, Zwinger, Brühlsche Terrasse",warn:"",night:"Dresden",
+   camping:"Campingplatz Mockritz (Boderitzer Straße 30) – välskött camping söder om centrum, buss in till stan. Lummig och lugnt läge. campingplatz-mockritz.de"},
+  {id:"d24",date:"4 aug",wd:"Mån",country:"de",label:"Tyskland",col:"grey",title:"Dresden → Potsdam",km:200,
+   body:"Schloss Sanssouci och de enorma parkerna – ta cykeln. Berlin med pendeltåg 30 min.",
+   must:"Schloss Sanssouci + parken (cykel!), holländska kvarteret",warn:"",night:"Potsdam",
+   camping:"Camping Sanssouci Potsdam (An der Pirschheide 41) – cykla direkt till slottsparken. Välskött och välbeläget. camping-potsdam.de\nAlt: Camping Gatow i Berlin-Spandau om ni vill ligga närmre Berlin."},
+  {id:"d25",date:"5 aug",wd:"Tis",country:"de",label:"Tyskland",col:"grey",title:"Potsdam → Rostock + nattfärja",km:220,
+   body:"Sista köretappen. Fischbrötchen vid Stadthafen. TT-Line eller Stena avgår ca 21–23.00.",
+   must:"Rostock gamla stan, Fischbrötchen vid Stadthafen",warn:"Checka in husbilen 90 min innan avgång!",night:"Nattfärja → Trelleborg",
+   camping:"Ingen camping – nattfärjan är övernattningen. Parkera i Rostocks hamn och promenera till Fischbrötchen-stånd vid Stadthafen på kvällen."},
+  {id:"d26",date:"6 aug",wd:"Ons",country:"se",label:"Sverige",col:"teal",title:"Trelleborg → Viken – HEMMA!",km:70,
+   body:"Ankommer Trelleborg tidig morgon. Sista milen hem. 25 nätter, 10 länder, otaliga minnen.",
+   must:"Välkommen hem – häng upp kartorna och sätt på kaffet!",warn:"",night:"Viken",
+   camping:"Hemma!"},
+];
+
+const MUST = [
+
+  // ── DANMARK ───────────────────────────────────────────────────────────
+  {stars:3,country:"dk",title:"Nyhavn",loc:"Danmark, Köpenhamn",body:"Köpenhamns ikoniska kanalhamnsgata med 1600-talshus i regnbågsfärger. Bäst tidig morgon eller kväll – dagtid fullpackat med turister.",tags:["kultur","historia","utsikt"]},
+  {stars:2,country:"dk",title:"Tivoli",loc:"Danmark, Köpenhamn",body:"Världens näst äldsta nöjespark (1843) – charmig och genuint rolig för alla åldrar. Blomsterarrangemangen och historisk arkitektur är lika lockande som åkena.",tags:["kultur"]},
+  {stars:2,country:"dk",title:"Kronborg Slot (Hamlets slott)",loc:"Danmark, Helsingør (45 min från Köpenhamn)",body:"Shakespeares Elsinore – renässansfästning vid Öresunds smalaste punkt. Sverige syns på andra sidan. Dagstrip från Köpenhamn.",tags:["historia","utsikt"]},
+  {stars:2,country:"dk",title:"Louisiana Museum of Modern Art",loc:"Danmark, Humlebæk (35 km norr)",body:"Ett av norra Europas bästa moderna konstmuseer direkt vid Öresund med skulpturpark utomhus. Calder, Giacometti och Picasso i havsutsikt.",tags:["kultur"]},
+  {stars:1,country:"dk",title:"Strøget & gamla staden",loc:"Danmark, Köpenhamn",body:"Europas längsta gågata (1,1 km) från Rådhuspladsen till Kongens Nytorv. Gatumusikanter, caféer och Christiansborg slott i närheten.",tags:["kultur","historia"]},
+
+  // ── TYSKLAND ──────────────────────────────────────────────────────────
+  {stars:3,country:"de",title:"Speicherstadt, Hamburg",loc:"Tyskland, Hamburg",body:"Världens största lagerhusdistrift i rött tegel – UNESCO-världsarv. Kanaler, broar och kaféer bland gamla kryddmagasin. Miniatur Wunderland ligger här.",tags:["historia","kultur"]},
+  {stars:2,country:"de",title:"Miniatur Wunderland",loc:"Tyskland, Hamburg",body:"Världens största miniatyrjärnvägsutställning – 16 000 m² tåg, städer och flygplatser i skala 1:87. Magi för barn och vuxna. Boka biljett i förväg.",tags:["kultur"]},
+  {stars:2,country:"de",title:"Schloss Sanssouci + parkerna",loc:"Tyskland, Potsdam",body:"Fredrik den stores drömpalats – Preussens Versailles. 300 hektar park med 150 byggnader. Hyr cykel och utforska hela dagen. Holländska kvarteret i stan är bonus.",tags:["historia","kultur","utsikt"]},
+  {stars:2,country:"de",title:"Frauenkirche & Zwinger, Dresden",loc:"Tyskland, Dresden",body:"Frauenkirche återuppbyggd med originalstenar efter 1945 – ett gripande monument. Zwinger är ett av Europas vackraste barockpalats med Rafaels Sixtinska Madonna.",tags:["historia","kultur"]},
+  {stars:1,country:"de",title:"Hamburger Fischmarkt",loc:"Tyskland, Hamburg",body:"Söndagsmorgon 05.00–09.30 – fiskmarknad vid Elbe med frukt, blommor och levande ål. En institution sedan 1703. Atmosfären är oslagbar.",tags:["mat","kultur"]},
+  {stars:1,country:"de",title:"Brühlsche Terrasse, Dresden",loc:"Tyskland, Dresden",body:"Kallad Europas balkong – promenadväg längs Elbe med utsikt över floddalen och de barockiga silhuetterna. Perfekt vid solnedgång.",tags:["utsikt","historia"]},
+
+  // ── NEDERLÄNDERNA ─────────────────────────────────────────────────────
+  {stars:3,country:"nl",title:"Mauritshuis, Den Haag",loc:"Nederländerna, Den Haag",body:"Litet men perfekt museum med Vermeers Flicka med pärlörhänge och Rembrandts Anatomilektionen. Kortare köer och intimare upplevelse än Rijksmuseum.",tags:["kultur","historia"]},
+  {stars:2,country:"nl",title:"Haarlem – kanaler & Grote Kerk",loc:"Nederländerna, Haarlem",body:"Charmigare än Amsterdam utan trängseln. Gotiska Grote Kerk med Müllerorgeln (Mozarts favoritorgel), blommarknaden och kanalnätet. Frans Hals Museum.",tags:["kultur","historia"]},
+  {stars:2,country:"nl",title:"Scheveningen strand",loc:"Nederländerna, Den Haag (15 min)",body:"Nordsjöstranden precis utanför Den Haag – fin sandstrand med stor pier och restauranger. I juli fullt liv. Kombinera med Mauritshuis-besöket.",tags:["natur"]},
+  {stars:1,country:"nl",title:"Haringkiosker & Jenever-proflokaler",loc:"Nederländerna, Haarlem/Den Haag",body:"Hollandse Nieuwe (råsill) direkt vid kiosken vid kanalen – håll upp sillen och sänk ned den i munnen. Kombinera med jenever-provning i ett proeflokal.",tags:["mat","kultur"]},
+
+  // ── BELGIEN ───────────────────────────────────────────────────────────
+  {stars:3,country:"be",title:"Grote Markt & Onze-Lieve-Vrouwekathedralen",loc:"Belgien, Antwerpen",body:"Antwerpens medeltida torg omgett av barockgillen – ett av Europas vackraste. Katedralen hyser fyra Rubens-målningar inkl. Kristi Nedstigelse från korset.",tags:["historia","kultur","utsikt"]},
+  {stars:2,country:"be",title:"MAS Museum (Museum aan de Stroom)",loc:"Belgien, Antwerpen",body:"Spiralformad museibyggnad vid hamnkajerna. Gratis takterrass ger Antwerpens bästa panorama. Utställningar om diamanthandel och stadens historia.",tags:["kultur","utsikt"]},
+  {stars:2,country:"be",title:"Rubenshuis",loc:"Belgien, Antwerpen",body:"Rubens ateljeé och bostad – en av Europas bäst bevarade konstnärshem. Barockträdgård och originalmöbler. Förstå geniet bakom kathedralmålningarna.",tags:["historia","kultur"]},
+  {stars:1,country:"be",title:"Diamantkvarteret",loc:"Belgien, Antwerpen",body:"85% av världens rådiamanter handlas i Antwerpen. Kvarteret kring Hoveniersstraat är fascinerande att promenera igenom – diskreta affärer med oceaner av värde.",tags:["historia","kultur"]},
+
+  // ── LUXEMBURG ─────────────────────────────────────────────────────────
+  {stars:2,country:"lu",title:"Bock-kasematterna",loc:"Luxemburg stad",body:"Underjordiska gångar klippta i klippan av spanjorerna 1644 – 23 km totalt. Dramatisk utsikt över Alzette-dalen uppifrån.",tags:["historia","utsikt"]},
+  {stars:2,country:"lu",title:"Chemin de la Corniche",loc:"Luxemburg stad",body:"Kallas Europas vackraste balkong – smal promenadväg längs gamla stadsmuren med utsikt över Alzette-dalen och tornens silhuett. Bäst i kvällsljus.",tags:["utsikt","historia"]},
+  {stars:1,country:"lu",title:"Grund-kvarteret",loc:"Luxemburg stad",body:"Medeltida undre stad i dalbotten – restauranger, caféer och pittoreska hus längs floden Alzette. Promenera ned via Chemin de la Corniche.",tags:["historia","kultur","mat"]},
+
+  // ── FRANKRIKE ─────────────────────────────────────────────────────────
+  {stars:3,country:"fr",title:"La Petite Venise, Colmar",loc:"Frankrike, Alsace",body:"Alsaces kanalnät i kvällsljus. Besök sent på kvällen när dagsturisterna åkt hem – det är då magin verkligen slår till.",tags:["kultur","historia"]},
+  {stars:2,country:"fr",title:"Riquewihr & Kaysersberg",loc:"Frankrike, Alsace vinväg",body:"Medeltida byar längs Route des Vins knappt förändrade på 500 år. Riquewihr är den vackraste – inga moderna byggnader, bara 1300-talsmiljö och vinhus.",tags:["historia","kultur","mat"]},
+  {stars:2,country:"fr",title:"Unterlinden Museum, Colmar",loc:"Frankrike, Alsace",body:"Isenheim-altartavlan (1515) av Grünewald – ett av konsthistoriens mest gripande verk. Korsfästelsebilden är så intensiv att den chockerar. Planera 2 timmar.",tags:["historia","kultur"]},
+  {stars:2,country:"fr",title:"Saint-Étienne-katedralen, Metz",loc:"Frankrike, Lorraine",body:"Kallas Guds lykta – 6 500 m² glasmålningar, mer än någon annan katedral. Marc Chagall-fönster. Ljusspelet inuti förändras timme för timme.",tags:["historia","kultur"]},
+  {stars:1,country:"fr",title:"Place de la Comédie & Metz centrum",loc:"Frankrike, Lorraine",body:"Metz är en av Frankrikes mest förbisedda städer – elegant arkitektur, floden Moselle och levande cafékultur.",tags:["historia","kultur"]},
+
+  // ── SCHWEIZ ───────────────────────────────────────────────────────────
+  {stars:2,country:"ch",title:"Kunstmuseum Basel",loc:"Schweiz, Basel",body:"Ett av världens äldsta och bästa konstmuseer – Holbein, Cranach, Picasso och Warhol. Nybyggnaden (2016) är arkitektoniskt fantastisk.",tags:["kultur"]},
+  {stars:2,country:"ch",title:"Rhen-promenaden & Tinguely-fontänen",loc:"Schweiz, Basel",body:"Promenera längs Rhen – Baselborna simmar i floden om sommaren. Tinguely-fontänen med rörliga mekaniska skulpturer är ett oväntat nöje.",tags:["natur","kultur"]},
+  {stars:1,country:"ch",title:"Basler Münster",loc:"Schweiz, Basel",body:"Romansk katedral i rött sandsten från 1019 med utsikt från tornet över Rhen. Erasmus av Rotterdams grav finns inuti.",tags:["historia","utsikt"]},
+
+  // ── ÖSTERRIKE ─────────────────────────────────────────────────────────
+  {stars:3,country:"at",title:"Grossglockner Hochalpenstrasse",loc:"Österrike",body:"Europas spektakuläraste panoramaväg. Kaiser-Franz-Josefs-Höhe vid 2 369 m ger utsikt över Pasterzeglacicären. Kör tidigt – molnen kommer på eftermiddagen.",tags:["utsikt","natur"]},
+  {stars:3,country:"at",title:"Hallstatt",loc:"Österrike, Salzkammergut",body:"En av världens mest fotograferade platser. Sjöby med dramatisk bergvägg. Gå dit tidigt – bussarna börjar 09.00 och det är redan fullpackat.",tags:["natur","historia","utsikt"]},
+  {stars:3,country:"at",title:"Hohensalzburg + Salzburg",loc:"Österrike",body:"En av Europas bäst bevarade medeltida fästningar. Utsikten är oslagbar. Ta linbanan upp och promenera ned. Getreidegasse och Mirabellgarten.",tags:["historia","utsikt","kultur"]},
+  {stars:2,country:"at",title:"Goldenes Dachl & Nordkettenbahn, Innsbruck",loc:"Österrike, Innsbruck",body:"Goldenes Dachl med 2 657 förgyllda kopparplattor i medeltida centrum. Nordkettenbahn tar er på 20 min till 2 256 m med utsikt ned mot Innsbruck och Inndalen.",tags:["historia","utsikt","natur"]},
+  {stars:2,country:"at",title:"Gosausee",loc:"Österrike, Salzkammergut",body:"Dachsteins glaciär speglad i turkost vatten. Dramatiskt vackrare än Hallstatt och nästan inga turister. Österrikes bäst bevarade hemlighet.",tags:["natur","utsikt"]},
+  {stars:2,country:"at",title:"Königssee, Berchtesgaden",loc:"Bayern (30 min från Salzburg)",body:"Spegelblank fjordsjö omgiven av lodräta klippsidor. Elbåt till Sankt Bartholomä-kapellet. En av de vackraste sjöar du sett.",tags:["natur","utsikt"]},
+  {stars:2,country:"at",title:"Belvedere & Klimts Kyssen",loc:"Österrike, Wien",body:"Klimts Kyssen live är en helt annan upplevelse än i böcker. Övre Belvedere hyser en av världens bästa samlingar av wiensk jugendstil.",tags:["kultur","historia"]},
+  {stars:2,country:"at",title:"Wolfgangsee & Schafbergbahn",loc:"Österrike, Salzkammergut",body:"Ångbanan upp till Schafberg (1 783 m) är Sound of Music-klassiker. Utsikten ned mot sjöarna och alperna är värd varje sekund.",tags:["natur","utsikt"]},
+  {stars:2,country:"at",title:"Wachaudalen & Melk-klostret",loc:"Österrike, längs Donau",body:"UNESCO-flodlandskap med vingårdar och benediktinklostret på klippan i Melk. Kör längs floden via Dürnstein och Krems – ta er tid.",tags:["historia","natur","kultur"]},
+  {stars:1,country:"at",title:"Naschmarkt, Wien",loc:"Österrike, Wien",body:"Wiens stora utomhusmarknad – mat, vin, kryddor och stämning. Bäst på lördagsförmiddag. Frukost bland handelsmännen.",tags:["mat","kultur"]},
+  {stars:1,country:"at",title:"Schmittenhöhe, Zell am See",loc:"Österrike",body:"Linbana till 2 000 m. 360-graders panorama över Hohe Tauern och Grossglockner.",tags:["utsikt","natur"]},
+  {stars:1,country:"at",title:"Wiener Kaffeehuskultur",loc:"Österrike, Wien",body:"Café Central och Café Demel är de klassiska. Kaffehusen är UNESCO-immateriellt kulturarv – man sitter timmar utan att bli bortkört.",tags:["mat","kultur"]},
+
+  // ── TJECKIEN ──────────────────────────────────────────────────────────
+  {stars:3,country:"cz",title:"Český Krumlov slott & stad",loc:"Tjeckien",body:"UNESCO-listat renässansslott med barockträdgård högt ovanför Vltava. Medeltida stadskärna nästan orörd sedan 1300-talet – en av Centraleuropas vackraste städer.",tags:["historia","kultur","utsikt"]},
+  {stars:2,country:"cz",title:"Vltava-kanot under slottet",loc:"Tjeckien, Český Krumlov",body:"Hyr kanot och paddla Vltava-slingan under slottets klippa – bästa perspektivet på hela anläggningen. Lugn ström och slottet tronande 40 m ovanför. Ca 200 CZK/tim.",tags:["natur","utsikt"]},
+];
+
+
+const CHECKS = [
+  {id:"c1",pri:"nu",title:"Boka nattfärja Rostock–Trelleborg",body:"TT-Line eller Stena Line, 5 aug ca 21–23.00. Boka nu – säljer slut i sommar."},
+  {id:"c2",pri:"nu",title:"Boka campingplatser Österrike",body:"Hallstatt-området, Zell am See och Salzburg fylls snabbt i juli. Boka omedelbart via ACSI eller Campsite.guide. Kontrollera max längd 7,2 m."},
+  {id:"c3",pri:"nu",title:"Ladda ned Vehicle Declaration (ØresundPay)",body:"Logga in på oresundpay.com → My Account → klicka på bizzen → Vehicles → ladda ned PDF. Skriv ut och lägg i handskfacket."},
+  {id:"c4",pri:"nu",title:"Kontrollera att ØresundPay-bizzen är Österrike-kompatibel",body:"Den nya bizzen ska kunna pipa vid österrikiska tullportar. Om du har en gammal modell – beställ ny under My Account."},
+  {id:"c5",pri:"nu",title:"Registrera fordon i Antwerpen LEZ",body:"Gå till lezantwerp.be och registrera husbilens reg.nummer. Gratis om euroklass 5 eller 6. Bötfälls annars."},
+  {id:"c6",pri:"snart",title:"Köp tjeckisk e-vinjett",body:"edalnice.cz – 10 dagar, ~€13. Kopplas till reg.numret. Köp dagarna innan du korsar gränsen."},
+  {id:"c7",pri:"snart",title:"Skaffa tysk grön miljödekal",body:"Krävs i Hamburg, Dresden och Potsdam. Beställ på umwelt-plakette.de (~€10). Kontrollera din euroklass i registreringsbeviset."},
+  {id:"c8",pri:"snart",title:"Boka campingplatser Colmar och Haarlem/Haag",body:"Juli är högsäsong – boka senast 4–6 veckor i förväg. Kolla att camping klarar 7,2 m."},
+  {id:"c9",pri:"avfard",title:"Schweizisk vinjett",body:"Köps vid gränsen mot Schweiz (Basel). CHF 40, fysisk dekal i vindrutan. Behöver inte förbokas."},
+  {id:"c10",pri:"avfard",title:"Kontant/kort för Grossglockner",body:"Ca €38–40 betalas direkt vid tullbommen. Inga transponders fungerar här – ta med kort eller euro."},
+  {id:"c11",pri:"avfard",title:"Medfört: Crit'Air, Vehicle Declaration, reg.bevis",body:"Lägg alla viktiga dokument i ett kuvert i handskfacket: Crit'Air-dekal (FR), Vehicle Declaration (AT via ØresundPay), registreringsbevis, försäkringsbrev."},
+  {id:"c12",pri:"avfard",title:"Kolla ACSI-app för dagliga campingbokningar",body:"ACSI-kortet ger rabatt på 600+ campingplatser i Europa. Campsite.guide för realtidsrecensioner och kapacitet."},
+];
+
+// ── COLORS ────────────────────────────────────────────────────────────────
+const COL = {
+  coral:{bg:"var(--coralbg)",fg:"var(--coral)"},
+  grey:{bg:"var(--greybg)",fg:"var(--grey)"},
+  blue:{bg:"var(--bluebg)",fg:"var(--blue)"},
+  amber:{bg:"var(--amberbg)",fg:"var(--amber)"},
+  pink:{bg:"var(--pinkbg)",fg:"var(--pink)"},
+  red:{bg:"var(--coralbg)",fg:"var(--coral)"},
+  green:{bg:"var(--greenbg)",fg:"var(--green)"},
+  purp:{bg:"var(--purpbg)",fg:"var(--purp)"},
+  teal:{bg:"var(--tealbg)",fg:"var(--teal)"},
+};
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ── DAGPLAN ───────────────────────────────────────────────────────────────
+let dayFilter = "all";
+function renderDays() {
+  const list = document.getElementById("day-list");
+  list.innerHTML = "";
+  const filtered = dayFilter === "all" ? DAYS : DAYS.filter(d => d.country === dayFilter);
+  filtered.forEach(d => {
+    const {bg,fg} = COL[d.col] || COL.grey;
+    const notes = localStorage.getItem("note_"+d.id) || "";
+    const div = document.createElement("div");
+    div.className = "day-row";
+    div.id = "row_"+d.id;
+    div.innerHTML = `
+      <div class="day-header" onclick="toggleDay('${d.id}')">
+        <div class="day-date"><div class="dn">${d.date}</div><div class="dw">${d.wd}</div></div>
+        <div class="day-country"><span class="country-badge" style="background:${bg};color:${fg}">${d.label}</span></div>
+        <div class="day-title-wrap">
+          <div class="day-title">${d.title}</div>
+          ${d.km > 0 ? `<div class="day-km">${d.km} km</div>` : ''}
+        </div>
+        <div class="day-toggle">▾</div>
+      </div>
+      <div class="day-body">
+        <div style="font-size:0.85rem;color:var(--muted);padding:10px 0 4px;">${d.body}</div>
+        <div class="day-body-grid">
+          ${d.must ? `<div class="info-block must-block"><div class="info-label">Måste</div><div class="info-text">${d.must}</div></div>` : ''}
+          ${d.warn ? `<div class="info-block warn-block"><div class="info-label">OBS</div><div class="info-text">${d.warn}</div></div>` : ''}
+          ${d.night ? `<div class="info-block"><div class="info-label">Övernattning</div><div class="info-text">${d.night}</div></div>` : ''}
+        </div>
+        ${d.camping ? `<div class="camp-block"><div class="info-label">⛺ Camping / Ställplats</div><div class="info-text">${d.camping}</div></div>` : ''}
+        <div class="note-block">
+          <div class="info-label">Egna anteckningar <span class="saved-indicator" id="saved_${d.id}">Sparad!</span></div>
+          <textarea placeholder="Skriv anteckningar här – campingplats, bokningsnr, tips ni hörde..." id="note_${d.id}" onchange="saveNote('${d.id}')">${notes}</textarea>
+        </div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function toggleDay(id) {
+  const row = document.getElementById("row_"+id);
+  row.classList.toggle("open");
+}
+
+function saveNote(id) {
+  const val = document.getElementById("note_"+id).value;
+  localStorage.setItem("note_"+id, val);
+  const ind = document.getElementById("saved_"+id);
+  ind.classList.add("show");
+  setTimeout(() => ind.classList.remove("show"), 1500);
+}
+
+document.getElementById("day-filters").addEventListener("click", e => {
+  if (!e.target.matches(".fbtn")) return;
+  dayFilter = e.target.dataset.f;
+  document.querySelectorAll("#day-filters .fbtn").forEach(b => b.classList.toggle("active", b === e.target));
+  renderDays();
+});
+
+// ── MUST-SEE ──────────────────────────────────────────────────────────────
+let mustFilter = "all";
+function renderMust() {
+  const grid = document.getElementById("must-grid");
+  grid.innerHTML = "";
+  const tags = ["natur","kultur","mat","utsikt","historia"];
+  let filtered;
+  if (mustFilter === "all") filtered = MUST;
+  else if (tags.includes(mustFilter)) filtered = MUST.filter(m => m.tags.includes(mustFilter));
+  else filtered = MUST.filter(m => m.country === mustFilter);
+  filtered.sort((a,b) => b.stars - a.stars);
+  filtered.forEach(m => {
+    const stars = "★".repeat(m.stars) + "☆".repeat(3-m.stars);
+    const cls = `star${m.stars}`;
+    const div = document.createElement("div");
+    div.className = `must-card ${cls}`;
+    div.innerHTML = `
+      <div class="must-stars">${stars}</div>
+      <div class="must-title">${m.title}</div>
+      <div class="must-loc">${m.loc}</div>
+      <div class="must-body">${m.body}</div>
+      <div class="must-tags">${m.tags.map(t=>`<span class="mtag mt-${t}">${t}</span>`).join("")}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById("must-filters").addEventListener("click", e => {
+  if (!e.target.matches(".fbtn")) return;
+  mustFilter = e.target.dataset.f;
+  document.querySelectorAll("#must-filters .fbtn").forEach(b => b.classList.toggle("active", b === e.target));
+  renderMust();
+});
+
+// ── CHECKLISTA ────────────────────────────────────────────────────────────
+function renderChecklist() {
+  const list = document.getElementById("checklist");
+  list.innerHTML = "";
+  const priLabels = {nu:"Gör nu!", snart:"Snart", avfard:"Inför avfärd"};
+  let lastPri = null;
+  CHECKS.forEach(c => {
+    if (c.pri !== lastPri) {
+      const h = document.createElement("div");
+      h.style.cssText = "font-size:0.72rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 6px;";
+      h.textContent = priLabels[c.pri];
+      list.appendChild(h);
+      lastPri = c.pri;
+    }
+    const done = localStorage.getItem("check_"+c.id) === "1";
+    const div = document.createElement("div");
+    div.className = "check-item" + (done ? " done" : "");
+    div.onclick = () => toggleCheck(c.id, div);
+    div.innerHTML = `
+      <div class="check-box">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-content">
+        <div class="check-priority pri-${c.pri}">${priLabels[c.pri]}</div>
+        <div class="check-title">${c.title}</div>
+        <div class="check-body">${c.body}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function toggleCheck(id, el) {
+  const done = localStorage.getItem("check_"+id) === "1";
+  localStorage.setItem("check_"+id, done ? "0" : "1");
+  el.classList.toggle("done", !done);
+}
+
+// ── KOSTNADER – anteckningar ───────────────────────────────────────────────
+document.getElementById("cost-notes").value = localStorage.getItem("cost_notes") || "";
+document.getElementById("cost-notes").addEventListener("change", e => {
+  localStorage.setItem("cost_notes", e.target.value);
+});
+
+// ── DAGBOK ────────────────────────────────────────────────────────────────
+function renderJournal() {
+  const list = document.getElementById("journal-list");
+  list.innerHTML = "";
+  DAYS.forEach(d => {
+    const val = localStorage.getItem("journal_"+d.id) || "";
+    const div = document.createElement("div");
+    div.className = "journal-entry";
+    div.innerHTML = `
+      <div class="journal-date">${d.date} ${d.wd} &nbsp;·&nbsp; <span style="font-size:0.8rem;font-weight:400;color:var(--muted)">${d.title}</span></div>
+      <textarea placeholder="Hur var dagen? Vad var bäst? Vad glömmer ni aldrig?" id="journal_${d.id}">${val}</textarea>`;
+    list.appendChild(div);
+    div.querySelector("textarea").addEventListener("change", e => {
+      localStorage.setItem("journal_"+d.id, e.target.value);
+    });
+  });
+}
+
+// ── CAMPING TAB ───────────────────────────────────────────────────────────
+const CAMPS = [
+  {natt:1, date:"12–13 jul", country:"dk", label:"Danmark", nights:2,
+   name:"Camping Absalon", loc:"Korsdalsvej 132, Köpenhamn", urgent:false,
+   desc:"Välskött camping 8 km från centrum. Direktbuss in till Nyhavn. Stor och klarar 7,2 m.",
+   book:"absaloncamping.dk", price:"~€30–35/natt"},
+  {natt:3, date:"14 jul", country:"de", label:"Tyskland", nights:1,
+   name:"Campingplatz Buchholz", loc:"Kielerstraße 374, Hamburg", urgent:false,
+   desc:"Enkel transitnatt norr om Hamburg. Bra bussanslutning. Alt: Stellplatz Hamburg-City vid Elbe.",
+   book:"stellplatz.info / Park4Night", price:"~€15–22/natt"},
+  {natt:4, date:"15–16 jul", country:"nl", label:"Nederl.", nights:2,
+   name:"Camping Bloemendaal", loc:"Zeeweg 72, Bloemendaal", urgent:true,
+   desc:"I Kennermerdynerna, 15 min promenad till stranden. Dedikerade husbilsplatser med el och tömning. Cykelavstånd till Haarlem centrum och Amsterdam.",
+   book:"campingbloemendaal.nl", price:"~€35–45/natt"},
+  {natt:6, date:"17–18 jul", country:"be", label:"Belgien", nights:2,
+   name:"Camping Vogelzang", loc:"Vogelzanglaan, Antwerpen", urgent:false,
+   desc:"Kommunal camping söder om centrum, ~4 km från Grote Markt. Spårvagn in till stan. Kontrollera max längd vid bokning. Alt: Camping De Molen i Edegem.",
+   book:"camping-antwerpen.be", price:"~€20–28/natt"},
+  {natt:8, date:"19 jul", country:"lu", label:"Luxemburg", nights:1,
+   name:"Camping Kockelscheuer", loc:"Route de Bettembourg, Luxemburg", urgent:false,
+   desc:"Kommunalt driven, 8 km söder om centrum. Buss direkt in. Välskött och populär bland husbilar.",
+   book:"luxemburg.lu", price:"~€20–25/natt"},
+  {natt:9, date:"20 jul", country:"fr", label:"Frankrike", nights:1,
+   name:"Camping Metz-Plage", loc:"Allée de Metz-Plage, Metz", urgent:false,
+   desc:"Längs Moselle, 2 km från centrum. Fin grön miljö vid floden. Frankrike har också aires de service – kolla Park4Night för gratis alternativ.",
+   book:"metz.fr / park4night.com", price:"~€18–25/natt"},
+  {natt:10, date:"21–22 jul", country:"fr", label:"Frankrike", nights:2,
+   name:"Camping de l'Ill", loc:"2 Allée du Camping, Colmar", urgent:true,
+   desc:"Längs floden Ill, strax söder om Colmars centrum. Välskött, populär bland husbilar. BOKA OMEDELBART – fylls i juli. Alt: Camping les Cigognes i Wintzenheim, 4 km väster.",
+   book:"camping-colmar.fr", price:"~€30–40/natt"},
+  {natt:12, date:"23 jul", country:"ch", label:"Schweiz", nights:1,
+   name:"Camping Basel TCS", loc:"Heideweg 16, Reinach BS", urgent:false,
+   desc:"7 km söder om Basel centrum. TCS-standard (schweizisk toppkvalitet). Direktbuss in till Kunstmuseum och Rhen. Tänk på att köpa vinjett CHF 40 vid gränsen.",
+   book:"camping.ch", price:"~CHF 45–55/natt"},
+  {natt:13, date:"24 jul", country:"de", label:"Tyskland", nights:1,
+   name:"Campingplatz Thalkirchen", loc:"Zentralländstraße 49, München", urgent:false,
+   desc:"Bäst belägna campingen i München, vid Isar-floden. Buss in till centrum. Välskött och populär – boka! Alt om ni kör förbi: Stellplatz Rosenheim vid Inn, lugnare transitnatt.",
+   book:"muenchen.de/camping", price:"~€30–38/natt"},
+  {natt:14, date:"25–26 jul", country:"at", label:"Österrike", nights:2,
+   name:"Reisemobil-Stellplatz Salzburg", loc:"Carl-Zuckmayer-Straße, Salzburg", urgent:true,
+   desc:"Exklusiv ställplats ENDAST för husbilar, 3 km från centrum. ~€27/natt inkl. el. Buss 21 stannar utanför grinden – 20 min till Getreidegasse. Utmärkta recensioner sommaren 2025. Alt: Camping Panorama Stadtblick med utsikt.",
+   book:"reisemobilstellplatz-salzburg.at", price:"~€27–30/natt"},
+  {natt:16, date:"27–28 jul", country:"at", label:"Österrike", nights:2,
+   name:"Camping Klausner-Höll", loc:"Lahnstraße 201, Hallstatt", urgent:true,
+   desc:"Enda rimliga campingen direkt vid Hallstatt, 800 m från centrum och 100 m från badstranden. Familjärt driven. BOKA NU – detta är det svåraste att få plats på hela resan! Alt: Camping Park am See i Obertraun, 3 km från Hallstatt med fantastisk utsikt mot byn.",
+   book:"camping@hallstatt.net", price:"~€30–40/natt"},
+  {natt:18, date:"29–30 jul", country:"at", label:"Österrike", nights:2,
+   name:"Seecamp Zell am See", loc:"Seecampweg 10, Zell am See", urgent:true,
+   desc:"Nyrenoverad 2024, DIREKT vid sjön. 80–100 m² platser med el + WiFi. Mobilitetskort = gratis kollektivtrafik i hela Salzburgs-regionen. 50% rabatt på inomhusbad. Grossglockner är en dagstrip härifrån. Alt: Panorama Camp (500 m från sjön, lite billigare).",
+   book:"seecamp.at (kräver 50% deposition)", price:"~€40–50/natt"},
+  {natt:20, date:"31 jul", country:"at", label:"Österrike", nights:1,
+   name:"Wien West Camping", loc:"Hütteldorferstraße 80, Wien", urgent:false,
+   desc:"Klassisk välkänd camping. U-banestation Wien West 10 min bort, 20 min till centrum. Klarar stora husbilar. Alt: Camping Neue Donau norr om stan, direktspårvagn in.",
+   book:"wiencamping.at", price:"~€30–40/natt"},
+  {natt:21, date:"1 aug", country:"at", label:"Österrike", nights:1,
+   name:"Wien West Camping", loc:"Hütteldorferstraße 80, Wien", urgent:false,
+   desc:"Stannar kvar – Wien-dagen är en utflykt med tunnelbana.",
+   book:"wiencamping.at", price:"~€30–40/natt"},
+  {natt:22, date:"2 aug", country:"cz", label:"Tjeckien", nights:1,
+   name:"Camping Krumlov", loc:"Chvalšinská 4, Český Krumlov", urgent:false,
+   desc:"1 km från slottet längs Vltava. Välskött och populär bland husbilar. Fin ström-miljö. Alt: Camping Intercamp Týn, lite billigare, 2 km från centrum.",
+   book:"campingkrumlov.cz", price:"~€20–28/natt"},
+  {natt:23, date:"3 aug", country:"de", label:"Tyskland", nights:1,
+   name:"Campingplatz Mockritz", loc:"Boderitzer Straße 30, Dresden", urgent:false,
+   desc:"Välskött camping söder om centrum. Lummigt och lugnt läge med buss in till Frauenkirche.",
+   book:"campingplatz-mockritz.de", price:"~€22–30/natt"},
+  {natt:24, date:"4 aug", country:"de", label:"Tyskland", nights:1,
+   name:"Camping Sanssouci Potsdam", loc:"An der Pirschheide 41, Potsdam", urgent:false,
+   desc:"Cykla direkt till Sanssouci-parken. Välskött och välbeläget. Berlin nås med pendeltåg på 30 min från Potsdam Hbf.",
+   book:"camping-potsdam.de", price:"~€25–33/natt"},
+  {natt:25, date:"5 aug", country:"de", label:"Tyskland", nights:0,
+   name:"Ingen camping – nattfärjan", loc:"Fährterminal Rostock", urgent:false,
+   desc:"Parkera i hamnen och ät Fischbrötchen vid Stadthafen på kvällen. Nattfärjan till Trelleborg är övernattningen.",
+   book:"ttline.com / stenaline.se", price:"~€80–120 inkl. husbil"},
+];
+
+let campFilter = "all";
+
+function renderCamping() {
+  const list = document.getElementById("camp-list");
+  list.innerHTML = "";
+  const filtered = campFilter === "all" ? CAMPS : CAMPS.filter(c => c.country === campFilter);
+
+  filtered.forEach((c, i) => {
+    const {bg, fg} = COL[c.country] || COL.grey;
+    const urgentBadge = c.urgent
+      ? `<span style="background:var(--coralbg);color:var(--coral);font-size:0.68rem;font-weight:500;padding:2px 8px;border-radius:10px;margin-left:6px;">Boka nu!</span>`
+      : '';
+    const ferryStyle = c.nights === 0
+      ? `background:var(--surface2);`
+      : '';
+
+    const row = document.createElement("div");
+    row.className = "day-row";
+    row.style.cssText = ferryStyle;
+    row.id = "camp_" + i;
+    row.innerHTML = `
+      <div class="day-header" onclick="toggleCamp(${i})">
+        <div class="day-date"><div class="dn">${c.date}</div><div class="dw">${c.nights > 0 ? c.nights + (c.nights===1?' natt':' nätter') : 'Färja'}</div></div>
+        <div class="day-country"><span class="country-badge" style="background:${bg};color:${fg}">${c.label}</span></div>
+        <div class="day-title-wrap">
+          <div class="day-title">${c.name}${urgentBadge}</div>
+          <div class="day-km">${c.loc}</div>
+        </div>
+        <div class="day-toggle">▾</div>
+      </div>
+      <div class="day-body">
+        <div style="font-size:0.85rem;color:var(--muted);padding:10px 0 8px;">${c.desc}</div>
+        <div class="day-body-grid">
+          <div class="info-block"><div class="info-label">Pris (uppskattning)</div><div class="info-text">${c.price}</div></div>
+          <div class="info-block must-block"><div class="info-label">Boka via</div><div class="info-text">${c.book}</div></div>
+        </div>
+        <div class="note-block">
+          <div class="info-label">Bokningsstatus / anteckning <span class="saved-indicator" id="campsaved_${i}">Sparad!</span></div>
+          <textarea placeholder="Bokningsnummer, pris, bekräftelse..." id="campnote_${i}" onchange="saveCampNote(${i})">${localStorage.getItem('campnote_'+i)||''}</textarea>
+        </div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleCamp(i) {
+  const row = document.getElementById("camp_" + i);
+  row.classList.toggle("open");
+}
+
+function saveCampNote(i) {
+  localStorage.setItem("campnote_" + i, document.getElementById("campnote_" + i).value);
+  const ind = document.getElementById("campsaved_" + i);
+  ind.classList.add("show");
+  setTimeout(() => ind.classList.remove("show"), 1500);
+}
+
+document.getElementById("camp-filters").addEventListener("click", e => {
+  if (!e.target.matches(".fbtn")) return;
+  campFilter = e.target.dataset.f;
+  document.querySelectorAll("#camp-filters .fbtn").forEach(b => b.classList.toggle("active", b === e.target));
+  renderCamping();
+});
+
+// ── UTRUSTNING ────────────────────────────────────────────────────────────
+const O = "✅ Obligatorisk";
+const R = "☑ Rekommenderas";
+const N = "– Ej krav";
+
+const EQUIP = [
+  {land:"Sverige",    tri:O, vest:R,              aid:R,              ext:R,              bulb:R, note:""},
+  {land:"Danmark",    tri:O, vest:O,              aid:R,              ext:R,              bulb:R, note:""},
+  {land:"Tyskland",   tri:O, vest:"✅ Obligatorisk (egna fordon)", aid:R, ext:R,          bulb:R, note:"Grön miljödekal i städer"},
+  {land:"Nederl.",    tri:O, vest:N,              aid:R,              ext:R,              bulb:R, note:"Inga krav på väst"},
+  {land:"Belgien",    tri:O, vest:O,              aid:O,              ext:"✅ 2 kg ABC BENOR", bulb:R, note:"Brandsläckare obligatorisk"},
+  {land:"Luxemburg",  tri:O, vest:O,              aid:R,              ext:R,              bulb:R, note:""},
+  {land:"Frankrike",  tri:O, vest:"✅ Förare",    aid:R,              ext:R,              bulb:O, note:"Angles mortes-dekaler >3,5t"},
+  {land:"Schweiz",    tri:O, vest:O,              aid:R,              ext:R,              bulb:R, note:""},
+  {land:"Österrike",  tri:O, vest:O,              aid:O,              ext:R,              bulb:R, note:"Försthjälpa obligatorisk"},
+  {land:"Tjeckien",   tri:O, vest:O,              aid:R,              ext:R,              bulb:O, note:"Extra lampor obligatorisk"},
+];
+
+const SPEEDS = [
+  {land:"Sverige",   hw:"120 (skylt)",  road:"80–100 (skylt)",  town:"50", note:"PBII följer skyltad hastighet – inga begränsningar pga vikt"},
+  {land:"Danmark",   hw:"130",          road:"80",               town:"50", note:"Samma som personbil – ni kör bara förbi Köpenhamn"},
+  {land:"Tyskland",  hw:"80",           road:"80",               town:"50", note:"Max 80 km/h även på obegränsad Autobahn – håll höger fil"},
+  {land:"Nederl.",   hw:"100",          road:"80",               town:"50", note:"Fordon >3,5 ton: 100 på motorväg"},
+  {land:"Belgien",   hw:"90",           road:"80",               town:"50", note:"Frekventa fartkameror"},
+  {land:"Luxemburg", hw:"90",           road:"80",               town:"50", note:""},
+  {land:"Frankrike", hw:"90",           road:"80",               town:"50", note:"Automatiska fartkameror – håll er väl under gränsen"},
+  {land:"Schweiz",   hw:"80",           road:"80",               town:"50", note:"Strikta kontroller, höga böter"},
+  {land:"Österrike", hw:"80",           road:"70",               town:"50", note:"Viktigast att komma ihåg – 70 på landsväg gäller i alperna"},
+  {land:"Tjeckien",  hw:"80",           road:"80",               town:"50", note:"Radarkameror längs E55 mot Dresden"},
+];
+
+function cellStyle(val) {
+  if (val.startsWith("✅")) return "color:var(--teal);font-weight:500;";
+  if (val.startsWith("☑")) return "color:var(--amber);";
+  if (val.startsWith("–")) return "color:var(--faint);";
+  return "color:var(--teal);font-weight:500;";
+}
+
+function renderEquip() {
+  const el = document.getElementById("equip-rows");
+  if (!el) return;
+  el.innerHTML = EQUIP.map((r, i) => `
+    <div style="display:grid;grid-template-columns:100px repeat(6,1fr);border-bottom:1px solid var(--border);background:${i%2===0?"var(--surface)":"var(--surface2)"};">
+      <div style="padding:10px;font-size:0.82rem;font-weight:500;color:var(--text);">${r.land}</div>
+      <div style="padding:10px 6px;font-size:0.72rem;${cellStyle(r.tri)};text-align:center;">${r.tri.replace("Obligatorisk","Oblig.").replace("Rekommenderas","Rek.")}</div>
+      <div style="padding:10px 6px;font-size:0.72rem;${cellStyle(r.vest)};text-align:center;">${r.vest.replace("✅ Obligatorisk","✅ Ja").replace("Rekommenderas","Rek.")}</div>
+      <div style="padding:10px 6px;font-size:0.72rem;${cellStyle(r.aid)};text-align:center;">${r.aid.replace("Obligatorisk","Oblig.").replace("Rekommenderas","Rek.")}</div>
+      <div style="padding:10px 6px;font-size:0.72rem;${cellStyle(r.ext)};text-align:center;">${r.ext.replace("Rekommenderas","Rek.")}</div>
+      <div style="padding:10px 6px;font-size:0.72rem;${cellStyle(r.bulb)};text-align:center;">${r.bulb.replace("Obligatorisk","Oblig.").replace("Rekommenderas","Rek.")}</div>
+      <div style="padding:10px 6px;font-size:0.7rem;color:var(--muted);">${r.note}</div>
+    </div>`).join("");
+}
+
+function renderSpeeds() {
+  const el = document.getElementById("speed-rows");
+  if (!el) return;
+  el.innerHTML = SPEEDS.map((r, i) => `
+    <div style="display:grid;grid-template-columns:110px 90px 90px 80px 1fr;border-bottom:1px solid var(--border);background:${i%2===0?"var(--surface)":"var(--surface2)"};">
+      <div style="padding:10px;font-size:0.82rem;font-weight:500;color:var(--text);">${r.land}</div>
+      <div style="padding:10px 6px;font-size:0.85rem;font-weight:500;color:var(--purp);text-align:center;">${r.hw}</div>
+      <div style="padding:10px 6px;font-size:0.85rem;color:var(--text);text-align:center;">${r.road}</div>
+      <div style="padding:10px 6px;font-size:0.85rem;color:var(--muted);text-align:center;">${r.town}</div>
+      <div style="padding:10px 8px;font-size:0.75rem;color:var(--muted);">${r.note}</div>
+    </div>`).join("");
+}
+
+// ── MAT DATA ──────────────────────────────────────────────────────────────
+const MAT = [
+  // DANMARK
+  { country:"dk", type:"mat", flag:"🇩🇰", land:"Danmark", col:"coral",
+    title:"Smørrebrød",
+    national:"★ Nationalrätt",
+    desc:"Öppen smörgås på mörkt rågbröd med pålägget staplat i lager – sill, räkor, roastbeef eller leverpostej. Ät med kniv och gaffel, aldrig med händerna.",
+    tips:"Beställ på Café Halvvejen eller Aamanns i Köpenhamn. Prova kombinationen sill + ägg + räkor.",
+    drink:"Snaps (aquavit) till sill är klassiskt. Carlsberg eller Tuborg till mat." },
+
+  { country:"dk", type:"mat", flag:"🇩🇰", land:"Danmark", col:"coral",
+    title:"Wienerbrød & Kanelsnurra",
+    national:"Bakverk",
+    desc:"Det vi kallar 'dansk' – fluffigt smörigt wienerbrød i otaliga varianter. Kanelsnurran är den mest älskade. Bagerier öppnar 07.00 och morgonstunden är bäst.",
+    tips:"Lagkagehuset är Danmarks bästa bagerijkedja – finns vid centralstationen i Köpenhamn.",
+    drink:"Kaffe, alltid kaffe." },
+
+  { country:"dk", type:"mat", flag:"🇩🇰", land:"Danmark", col:"coral",
+    title:"Rød pølse",
+    national:"Gatumat",
+    desc:"Den röda korven – Danmarks svar på hotdog. Kokt i varmvatten, serverad i bröd med remoulade, senap och rostad lök. Köps på pølsevognar längs gatorna.",
+    tips:"Pølsevognarna utanför Tivoli och på Rådhuspladsen är klassiska stopp.",
+    drink:"Fadøl (fatöl) eller sodavatten." },
+
+  { country:"dk", type:"ol", flag:"🇩🇰", land:"Danmark", col:"coral",
+    title:"Mikkeller & dansk craftöl",
+    national:"🍺 Öl",
+    desc:"Danmark har Europas mest spännande craftölscen. Mikkeller (grundat i Köpenhamn 2006) är nu ett världsvarumärke med hundratals bryggningar. To Øl, Bøgedal och Amager Bryghus är andra toppnamn.",
+    tips:"Mikkeller Bar på Viktoriagade i Köpenhamn – 20 kranar med allt från suröl till Imperial Stout. Boka bord i förväg.",
+    drink:"Beställ ett 'flight' (4 x litet glas) för att prova bredden. Bryggeriets egen rekommendation slår aldrig fel." },
+
+  { country:"dk", type:"stark", flag:"🇩🇰", land:"Danmark", col:"coral",
+    title:"Aquavit & Gammel Dansk",
+    national:"🥃 Snaps",
+    desc:"Aalborg Akvavit är Danmarks nationalsprit – kryddad med kummin och dill, drucks iskall ur snapseglas till sill och smørrebrød. Gammel Dansk är en bitter med 29 örter, tradition att dricka till frukost.",
+    tips:"Drick aquavit KAL – aldrig rumstempererat. Skål-kulturen vid danska middagar är utpräglad. Prova Brøndum, Aalborg Jubilæums eller den sällsynta Aalborg Porse.",
+    drink:"Serveras alltid med öl och kallt vatten vid sidan." },
+
+  // TYSKLAND
+  { country:"de", type:"mat", flag:"🇩🇪", land:"Tyskland", col:"grey",
+    title:"Fischbrötchen",
+    national:"Hamburg-klassiker",
+    desc:"Hamburgsk institution – inlagd sill eller stekt fisk i mjukt bröd med remoulade och lök. Äts stående vid hamnkajerna. Enkel, billig och fantastisk.",
+    tips:"Stadthafen i Rostock till nattfärjan. Fischmarkt Hamburg på söndagsmorgon (05.00–09.30).",
+    drink:"Kall öl eller mineralvatten." },
+
+  { country:"de", type:"mat", flag:"🇩🇪", land:"Tyskland", col:"grey",
+    title:"Bratwurst & Weisswurst",
+    national:"★ Nationalrätt",
+    desc:"Bratwurst är grillad fläskkorv med senap och bröd – serveras överallt. Weisswurst (Bayern) är vit kalvkorv med söt senap och Brezel till frukost – en tradition sedan 1857.",
+    tips:"Weisswurst äts traditionellt bara på förmiddagen och sugs ur skinnet. Beställ i München om ni stannar.",
+    drink:"Weizenbier (vetemjölsöl) i Bayern. Pils i norr." },
+
+  { country:"de", type:"ol", flag:"🇩🇪", land:"Tyskland", col:"grey",
+    title:"Weizenbier & Hefeweizen",
+    national:"🍺 Öl",
+    desc:"Bayerskt vetemjölsöl – grumligt, bananigt och kryddigt med naturlig jäst. Paulaner, Erdinger och Franziskaner är standardnamnen. Hälls i ett 50 cl-glas som rengörs med lite öl innan servering.",
+    tips:"I Hamburg: Astra och Holsten är lokala favoriter. Flensburger Pilsner med poppkorken är ikonisk. Be om 'ein Helles' i Bayern (ljust lager) och 'ein Pils' i norra Tyskland.",
+    drink:"Masskrug (1 liters ölkrus) på Oktoberfest-stil är upplevelse i sig – inte bara i oktober." },
+
+  { country:"de", type:"stark", flag:"🇩🇪", land:"Tyskland", col:"grey",
+    title:"Schnapps & Obstler",
+    national:"🥃 Fruktbrännvin",
+    desc:"Obstler (fruktbrännvin av äpple/päron) och Kirschwasser (körsbärsbrandy från Schwarzwald) är tyska klassiker. Klara, torra och starka (40–50%). Dricks iskalla som digestif.",
+    tips:"I Dresden: prova Lausitzer Obstbrand lokalt. I Hamburg: Korn (vetebrännvin) är nordens version. Aldrig söta likörer – äkta tyskt schnapps är alltid torrt.",
+    drink:"Digestif efter en rejäl middag. Aldrig blandat." },
+
+  // NEDERLÄNDERNA
+  { country:"nl", type:"mat", flag:"🇳🇱", land:"Nederländerna", col:"blue",
+    title:"Hollandse Nieuwe (råsill)",
+    national:"★ Nationalrätt",
+    desc:"Färsk holländsk sill – äts med hackad lök och gurka. Hålls upp i luften och sänks ned i munnen. Säsongen är juni–juli, perfekt timing för er resa!",
+    tips:"Beställ vid en haringkar i Haarlem eller längs kanalerna. Säg 'één haring graag'.",
+    drink:"Jenever (holländsk gin) eller vatten." },
+
+  { country:"nl", type:"mat", flag:"🇳🇱", land:"Nederländerna", col:"blue",
+    title:"Stroopwafel & Bitterballen",
+    national:"Snacks",
+    desc:"Stroopwafel: tunn våffelkaka med karamellfyllning – lägg den på kaffekoppen i 60 sekunder. Bitterballen: friterade köttbollssnacks på bar.",
+    tips:"Köp äkta stroopwafel på marknaden i Haarlem. Bitterballen serveras på alla brune kroegen.",
+    drink:"Jenever till bitterballen. Kaffe till stroopwafel." },
+
+  { country:"nl", type:"stark", flag:"🇳🇱", land:"Nederländerna", col:"blue",
+    title:"Jenever – holländsk gin",
+    national:"🥃 Nationaldryck",
+    desc:"Jenever är urmodern till gin – uppfunnet i Holland på 1600-talet. Oude jenever (gammal stil) är maltig, rund och komplex med viskytoner. Jonge jenever är torrare och mer som modern gin.",
+    tips:"Drink i ett Proeflokal (smaklokal) – liten brun lokal med fat bakom bardisken. Bols Proeflokal i Amsterdam är det klassiska. I Haarlem: In Den Uiver på Riviervismarkt.",
+    drink:"Traditionellt drucken kall i ett tulpanglas fyllt till brädden – luta dig ned och ta första klunken utan att lyfta glaset. Det kallas 'kopstoot'." },
+
+  { country:"nl", type:"ol", flag:"🇳🇱", land:"Nederländerna", col:"blue",
+    title:"Brouwerij 't IJ & holländskt craftöl",
+    national:"🍺 Öl",
+    desc:"Hollands craftölscen är stor. Brouwerij 't IJ brygger i en gammal väderkvarn i Amsterdam – ikonisk destination. Texels, Gulpener och Brand är bra regionala namn.",
+    tips:"Heineken och Amstel smakar faktiskt bättre hemma i Holland. Be om lokalt craftöl istället. Prova IPA Columbus eller Zatte tripel från 't IJ.",
+    drink:"Fatöl alltid framför buteljerat i Holland." },
+
+  // BELGIEN
+  { country:"be", type:"mat", flag:"🇧🇪", land:"Belgien", col:"amber",
+    title:"Moules-frites & Carbonade",
+    national:"★ Nationalrätt",
+    desc:"Blåmusslor ångkokta med selleri, lök och vitvin – stor kastrull med pommes frites vid sidan. Carbonade flamande: nötköttsgryta kokt i mörkt belgiskt öl med sirap.",
+    tips:"'t Scheepke nära Grote Markt i Antwerpen för moules. Be om Carbonade om det är på menyn.",
+    drink:"Belgiskt öl – Duvel, Chimay eller en lokal tripel." },
+
+  { country:"be", type:"ol", flag:"🇧🇪", land:"Belgien", col:"amber",
+    title:"Trappistöl – världens bästa öl",
+    national:"🍺 ★★★ Öl",
+    desc:"Belgien har 6 av världens 14 autentiska Trappistbryggerier. Chimay Bleu (9%), Rochefort 10 (11,3%), Orval (6,2%) och det sällsynta Westvleteren 12 (10,2%) är legenderna. Bryggs av munkar i kloster.",
+    tips:"Westvleteren 12 säljs bara vid klostret (Sint-Sixtusabdij) i begränsad mängd – svår att hitta i affär. Orval har unik vinliknande karaktär av brett-jäst. Köp Chimay och Rochefort i vanlig butik.",
+    drink:"Serveras i eget märkesglas vid rätt temperatur (10–14°C). Be ALDRIG om kallt belgiskt öl." },
+
+  { country:"be", type:"ol", flag:"🇧🇪", land:"Belgien", col:"amber",
+    title:"Lambic, Gueuze & Kriek",
+    national:"🍺 Spontanjäst öl",
+    desc:"Lambic är spontanjäst öl – bryggs utan tillsatt jäst, enbart med luftburna viljästar i Bruxelles-regionen. Gueuze är en blend av gammal och ung lambic – torrt, syrligt, komplext. Kriek är lambic med körsbär.",
+    tips:"Cantillon-bryggeriet i Bryssel är vallfärdsmålet för ölnördar. Boon Kriek finns i välsorterade affärer. Smaken är radikal första gången – syrlig, torr, nästan vinaktig.",
+    drink:"Perfekt sommaröl – friskare än allt annat. Prova Oude Gueuze Boon eller Cantillon Rosé de Gambrinus." },
+
+  { country:"be", type:"stark", flag:"🇧🇪", land:"Belgien", col:"amber",
+    title:"Belgisk choklad & Genever",
+    national:"🥃 & Choklad",
+    desc:"Belgisk genever liknar holländsk jenever men ofta något sötare. Élixir d'Anvers är en lokal Antwerpen-likör av 32 örter – anisig, komplex och 37%. Chokladen är inte starkare men lika beroendeframkallande.",
+    tips:"Élixir d'Anvers finns på de flesta barer i Antwerpen. Pierre Marcolini och Neuhaus för chokladen. Ta med en ask hem.",
+    drink:"Élixir d'Anvers serveras ofta i litet glas med is. Choklad passar till allt." },
+
+  // LUXEMBURG
+  { country:"lu", type:"mat", flag:"🇱🇺", land:"Luxemburg", col:"pink",
+    title:"Judd mat Gaardebounen",
+    national:"★ Nationalrätt",
+    desc:"Rökt fläskhals kokt med breda bondbönor i örtbuljong – Luxemburgs nationalrätt. Kraftig och välsmakande.",
+    tips:"Beim Domm eller Brasserie Guillaume i Luxemburg stad. Rejälma portioner.",
+    drink:"Crémant de Luxembourg eller Rivaner vitt vin." },
+
+  { country:"lu", type:"vin", flag:"🇱🇺", land:"Luxemburg", col:"pink",
+    title:"Luxemburgsk Mosel-vin & Crémant",
+    national:"🍷 ★ Vin",
+    desc:"Luxemburgs Moseldal producerar eleganta Riesling, Pinot Gris, Auxerrois och Rivaner. Crémant de Luxembourg är landets mousserande stolthet – liknande Champagne till halva priset.",
+    tips:"Köp en flaska Crémant direkt från Bernard-Massard eller Caves St Martin längs Route du Vin. Riesling från Clos des Rochers är landets finaste.",
+    drink:"Crémant passar som aperitif. Rivaner (Müller-Thurgau) är enkel och frisk till mat." },
+
+  // FRANKRIKE
+  { country:"fr", type:"mat", flag:"🇫🇷", land:"Frankrike", col:"red",
+    title:"Tarte Flambée & Quiche Lorraine",
+    national:"★ Alsace/Lorraine",
+    desc:"Tarte flambée: tunn krispig botten med crème fraîche, lök och rökt bacon. Quiche Lorraine: ägg, grädde och bacon – aldrig ost i originalet.",
+    tips:"Winstub i Colmar för flammkuchen. Brasserier i Metz för quiche.",
+    drink:"Alsacisk Riesling till båda." },
+
+  { country:"fr", type:"vin", flag:"🇫🇷", land:"Frankrike", col:"red",
+    title:"Alsacisk Riesling & Gewürztraminer",
+    national:"🍷 ★★★ Vin",
+    desc:"Route des Vins d'Alsace är Europas mest aromatiska vinregion. Riesling: torr, mineralisk, citrusaktig. Gewürztraminer: blommig med ros, litchi och kryddor – omedelbart igenkännbar. Pinot Gris: rund och rik. Muscat: torrt och druvaromatiskt.",
+    tips:"Stanna vid ett vinhus i Riquewihr (Hugel & Fils) eller Kaysersberg (Albert Mann) och gör en gratis provning. Köp Vendanges Tardives (senlördsskördat) om ni gillar söt stil.",
+    drink:"Alsace-vin drucks lite kallare än burgundy. Gewürztraminer vid 8°C, Riesling vid 10°C." },
+
+  { country:"fr", type:"stark", flag:"🇫🇷", land:"Frankrike", col:"red",
+    title:"Mirabelle de Lorraine & Eau de Vie",
+    national:"🥃 Fruktbrännvin",
+    desc:"Mirabelle – liten gul plommon – är Lorraines nationalsymbol. Destillerad till en klar, aromatisk eau de vie på 45%. Colmar-regionen producerar dessutom körsbärskirsch och päron-williams.",
+    tips:"Köp direkt från ett lokalt destilleri. Legler och Metté i Ribeauvillé är välkända. Prova Poire Williams – den klara pärondestillaten med en hel päron inuti flaskan.",
+    drink:"Iskall som digestif. Häll aldrig is i – det är förolämpning mot tillverkaren." },
+
+  { country:"fr", type:"ol", flag:"🇫🇷", land:"Frankrike", col:"red",
+    title:"Kronenbourg 1664 & Alsaciskt öl",
+    national:"🍺 Öl",
+    desc:"Kronenbourg 1664 bryggs i Strasbourg sedan 1664 – ett av Europas äldsta bryggerier. Lättdrucket lager som smakar bäst kallt i sommarvärmen. Fischer, Météor och Licorne är andra alsaciska bryggerier.",
+    tips:"Fischer Tradition (amber lager) är det lokala alternativet till Kronenbourg. Prova 1664 Blanc (veteöl) – fräschare och mer komplex än standardversionen.",
+    drink:"Kall lager i ett frostigt glas är det rätta till flammkuchen och sommarvärme." },
+
+  // SCHWEIZ
+  { country:"ch", type:"mat", flag:"🇨🇭", land:"Schweiz", col:"green",
+    title:"Rösti & Fondue",
+    national:"★ Nationalrätt",
+    desc:"Rösti: stekta rivna potatisar – krispig kaka. Fondue: smält ost (Gruyère + Emmental) med kirsch och vitvin – man doppar brödkuber. Raclette: smält ost skrapat över potatis och cornichoner.",
+    tips:"Rösti till frukost med ägg i Basel. Fondue hittar ni mer i bergbyarna nära Innsbruck-hållet.",
+    drink:"Schweiziskt Chasselas-vin eller kirsch i osten." },
+
+  { country:"ch", type:"ol", flag:"🇨🇭", land:"Schweiz", col:"green",
+    title:"Rugenbräu & Appenzeller Bier",
+    national:"🍺 Öl",
+    desc:"Schweiz har en rik bryggerihistoria. Rugenbräu (bryggt i Interlaken) är välkänt alpöl. Appenzeller är öl bryggt av ost-regionen och smakar faktiskt lite av örter. Feldschlösschen är det nationella storbryggeriet.",
+    tips:"I Basel: Fischerstube-bryggeriet på Rheingasse är ett litet hantverksbrygggeri direkt vid Rhen. Prova deras Ueli Bier.",
+    drink:"Dunkel (mörkt lager) passar utmärkt till Rösti och alpmat." },
+
+  { country:"ch", type:"vin", flag:"🇨🇭", land:"Schweiz", col:"green",
+    title:"Chasselas & Schweiziska viner",
+    national:"🍷 Vin",
+    desc:"Schweiz exporterar knappt något vin – 98% drucks inom landet. Chasselas (Fendant i Valais) är den inhemska vita druvan – lätt, neutral och mineralisk. Dôle är den röda blandningen (Pinot Noir + Gamay).",
+    tips:"I Basel: vinbaren Zum Roten Engel vid Marktplatz. Be om ett glas lokalt Riesling × Sylvaner (Müller-Thurgau) – ovanlig men intressant.",
+    drink:"Schweiziska viner drucks unga och svala. Chasselas är bäst som aperitif." },
+
+  { country:"ch", type:"stark", flag:"🇨🇭", land:"Schweiz", col:"green",
+    title:"Kirsch & Williams-brännvin",
+    national:"🥃 Fruktbrännvin",
+    desc:"Zug Kirsch (körsbärsbrännvin) och Williams-päron är Schweiz destillationskonst. Klara, rena och aromatiska – ingrediens i fondue men lika bra iskalla i glaset.",
+    tips:"Köp Kirsch från Schladerer eller Dettling. Prova det av butikspersonalen rekommenderade lokala märket.",
+    drink:"Digestif efter fondue. Eller ett par droppar i kaffet (Kaffee Fertig)." },
+
+  // ÖSTERRIKE
+  { country:"at", type:"mat", flag:"🇦🇹", land:"Österrike", col:"purp",
+    title:"Wiener Schnitzel & Kaiserschmarrn",
+    national:"★ Nationalrätt",
+    desc:"Wiener Schnitzel: kalvkotlett bankat tunt i smör tills gyllengult. Kaiserschmarrn: riven luftig pannkaka med florsocker och plommonmos.",
+    tips:"Figlmüller Wien för schnitzel. Café Central för Kaiserschmarrn och kaffe.",
+    drink:"Grüner Veltliner till schnitzel. Melange-kaffe till desserter." },
+
+  { country:"at", type:"vin", flag:"🇦🇹", land:"Österrike", col:"purp",
+    title:"Grüner Veltliner & Wachauer Riesling",
+    national:"🍷 ★★★ Vin",
+    desc:"Österrike är ett av Europas mest underskattat vinländer. Grüner Veltliner: frisk, pepprigt, mineral – världens bästa mat-vin. Wachauer Riesling (Smaragd-klassificering) är landets absoluta topp – komplexa, åldringsvärdiga viner.",
+    tips:"Stanna vid ett Heuriger (vingårdsrestaurang) längs Wachaudalen – enkelt, billigt och autentiskt. Beställ 'ein Viertel Grüner' (25 cl karaff). Loibner Riesling från Knoll och Tegernseerhof är de bästa.",
+    drink:"Vinstugor öppnar klockan 11 och stänger sent. Heurigen känns igen på grankvisten ovanför dörren." },
+
+  { country:"at", type:"ol", flag:"🇦🇹", land:"Österrike", col:"purp",
+    title:"Zipfer, Ottakringer & Schwechater",
+    national:"🍺 Öl",
+    desc:"Österrike är ett ölland lika mycket som vinland. Zipfer Urtyp (från Oberösterreich) är ett elegant Märzen-lager. Ottakringer är Wiens lokala bryggeri sedan 1837. Schwechater är det klassiska pilsnern.",
+    tips:"Beställ alltid 'ein Krügel' (50 cl) eller 'ein Seidel' (30 cl) – aldrig 'ett öl' utan specifik storlek. I alpbyarna: lokala Kellerbier (grumliga, ofiltrerade) serveras från fat.",
+    drink:"Radler (öl + citronläsk 50/50) är Alpernas sommardryck – uppfriskande och låg alkohol vid vandring." },
+
+  { country:"at", type:"stark", flag:"🇦🇹", land:"Österrike", col:"purp",
+    title:"Obstler & Schnapps",
+    national:"🥃 Fruktbrännvin",
+    desc:"Österrikisk Obstler (äpple-päron) och Zwetschke (plommon) är Alpernas digestif. Serveras i små glas iskalla efter maten på varje Berghütte och restaurant. Williams-päron från Wachau är en favorit.",
+    tips:"På bergstugor: be om ett 'Stamperl Obstler' (litet shot). Fråga alltid om de har husbryggt – det är alltid bättre än industriellt. Gräddfil och socker serveras ofta vid sidan.",
+    drink:"Digestif på bergstugor är en institution. Beställ ett med kaffet." },
+
+  // TJECKIEN
+  { country:"cz", type:"mat", flag:"🇨🇿", land:"Tjeckien", col:"amber",
+    title:"Svíčková & Guláš",
+    national:"★ Nationalrätt",
+    desc:"Svíčková: marinerad nötfilé i gräddsås med brödknödel, tranbär och grädde. Guláš: tjeckisk variant av ungersk gulasch – mörkare, rikare och alltid med knödel.",
+    tips:"Krčma Markéta i Český Krumlov för autentisk svíčková. Be om 'knedlíky' (knödlar) vid sidan.",
+    drink:"Pilsner Urquell på fat – alltid." },
+
+  { country:"cz", type:"ol", flag:"🇨🇿", land:"Tjeckien", col:"amber",
+    title:"Pilsner Urquell & Budvar",
+    national:"🍺 ★★★ Öl",
+    desc:"Pilsnern uppfanns i Plzeň 1842 – Pilsner Urquell (Urquell = originalkällan). Budvar (Budějovický Budvar) bryggs i České Budějovice, 20 km från Český Krumlov. Bernard och Kozel är andra favoriter. Tjeckerna dricker mest öl per person på Earth.",
+    tips:"Budvar-bryggeriet i České Budějovice erbjuder guidade rundturer och provsmakning direkt i källaren – en halvdagsutflykt från Český Krumlov värd varje sekund. Ölet smakar HELT annorlunda än exportversionen.",
+    drink:"Be alltid om 'točené pivo' (fatöl). Priset är löjligt lågt – ca 40–60 CZK (~15–25 kr) för 50 cl." },
+
+  { country:"cz", type:"stark", flag:"🇨🇿", land:"Tjeckien", col:"amber",
+    title:"Becherovka & Slivovitz",
+    national:"🥃 Starkare",
+    desc:"Becherovka är en tjeckisk örterlikör (38%) från Karlovy Vary med 32 örter och kryddor – anisig, komplex och söt. Slivovitz är klar plommonbrännvin – stark (52%) och rak.",
+    tips:"Becherovka drucks iskall som digestif eller blandas med tonic ('Beton' = Becherovka + tonic). Finns på alla barer. Slivovitz: be om ett litet glas på en lokal pivnice (ölkrog).",
+    drink:"Becherovka on the rocks eller i Beton. Slivovitz alltid rak och kall." },
+];
+
+let matFilter = "all";
+
+function renderMat() {
+  const grid = document.getElementById("mat-grid");
+  if (!grid) return;
+  let filtered;
+  if (matFilter === "all") filtered = MAT;
+  else if (["ol","vin","stark","mat"].includes(matFilter)) filtered = MAT.filter(m => m.type === matFilter);
+  else filtered = MAT.filter(m => m.country === matFilter);
+
+  const colMap = { coral:"var(--coral)", grey:"var(--grey)", blue:"var(--blue)", amber:"var(--amber)", pink:"var(--pink)", red:"var(--coral)", green:"var(--green)", purp:"var(--purp)" };
+  const bgMap  = { coral:"var(--coralbg)", grey:"var(--greybg)", blue:"var(--bluebg)", amber:"var(--amberbg)", pink:"var(--pinkbg)", red:"var(--coralbg)", green:"var(--greenbg)", purp:"var(--purpbg)" };
+  grid.innerHTML = filtered.map(m => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-top:3px solid ${colMap[m.col]||"var(--purp)"};border-radius:var(--radius);padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:1.2rem;">${m.flag}</span>
+        <span style="font-size:0.7rem;font-weight:500;color:${colMap[m.col]};background:${bgMap[m.col]};padding:2px 8px;border-radius:10px;">${m.national}</span>
+      </div>
+      <div style="font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--text);margin-bottom:4px;">${m.title}</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;font-weight:500;">${m.land}</div>
+      <div style="font-size:0.8rem;color:var(--text);line-height:1.55;margin-bottom:10px;">${m.desc}</div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:6px;">
+        <div style="font-size:0.68rem;font-weight:500;color:var(--teal);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">💡 Tips</div>
+        <div style="font-size:0.78rem;color:var(--text);line-height:1.5;">${m.tips}</div>
+      </div>
+      <div style="padding:6px 10px;border-radius:var(--radius-sm);border-left:2px solid ${colMap[m.col]};">
+        <span style="font-size:0.68rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;">🍷 Dryck  </span>
+        <span style="font-size:0.78rem;color:var(--text);">${m.drink}</span>
+      </div>
+    </div>`).join("");
+}
+
+document.getElementById("mat-filters").addEventListener("click", e => {
+  if (!e.target.matches(".fbtn")) return;
+  matFilter = e.target.dataset.f;
+  document.querySelectorAll("#mat-filters .fbtn").forEach(b => b.classList.toggle("active", b === e.target));
+  renderMat();
+});
+
+renderDays();
+renderMust();
+renderMat();
+renderChecklist();
+renderCamping();
+renderJournal();
+renderEquip();
+renderSpeeds();
+</script>
+</body>
+</html>
