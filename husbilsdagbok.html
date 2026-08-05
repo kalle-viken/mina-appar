@@ -445,15 +445,57 @@ function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
 
-function exportBackup(){try{const json=JSON.stringify(db,null,2);const blob=new Blob([json],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='husbilsdagbok-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('Backup exporterad!');}catch(e){alert('Kunde inte exportera: '+e.message);}}
+function exportBackup(silent){try{const json=JSON.stringify(db,null,2);const blob=new Blob([json],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='husbilsdagbok-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);localStorage.setItem('hbd_last_backup',Date.now());if(!silent)showToast('Backup exporterad!');}catch(e){alert('Kunde inte exportera: '+e.message);}}
 function importBackup(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const parsed=JSON.parse(e.target.result);if(!parsed.trips){alert('Ogiltig backupfil.');return;}_pending=parsed;const tc=parsed.trips.length;const dc=parsed.trips.reduce((s,t)=>s+(t.days||[]).length,0);const cc=parsed.trips.reduce((s,t)=>s+(t.costs||[]).length,0);document.getElementById('importInfo').innerHTML=`<strong>Fil:</strong> ${file.name}<br><strong>Innehåller:</strong> ${tc} resa${tc!==1?'r':''}, ${dc} dag${dc!==1?'ar':''}, ${cc} kostnadsposter<br><strong>Just nu:</strong> ${db.trips.length} resa${db.trips.length!==1?'r':''}`;openModal('modalImport');}catch(err){alert('Kunde inte läsa filen: '+err.message);}};reader.readAsText(file);event.target.value='';}
 function doImport(mode){if(!_pending)return;closeModal('modalImport');if(mode==='replace'){db=_pending;if(!db.vehicle)db.vehicle=dv();saveData();goHome();showToast('Data återställd från backup');}else{const ex=new Set(db.trips.map(t=>t.id));const added=_pending.trips.filter(t=>!ex.has(t.id));db.trips=[...db.trips,...added];saveData();goHome();showToast(added.length+' ny'+(added.length!==1?'a resor':' resa')+' lades till');}_pending=null;}
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function applyTheme(dark){document.body.classList.toggle('light',!dark);document.getElementById('themeBtn').textContent=dark?'☀️':'🌙';try{localStorage.setItem('hbd_theme',dark?'dark':'light');}catch(e){}}
 function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
-(function(){try{const s=localStorage.getItem('hbd_theme');applyTheme(s!=='light');}catch(e){applyTheme(true);}})();
-goHome();
+(function(){
+  // Tema
+  try{const s=localStorage.getItem('hbd_theme');applyTheme(s!=='light');}catch(e){applyTheme(true);}
+
+  goHome();
+
+  // Auto-backup vid start (om det finns data) + påminnelse om >5 dagar
+  setTimeout(()=>{
+    try{
+      const hasData=db.trips&&db.trips.length>0;
+      if(!hasData)return;
+
+      // Auto-exportera backup tyst vid varje start
+      exportBackup(true);
+
+      // Visa varningsruta om det gått 5+ dagar sedan senaste manuella backup
+      const last=parseInt(localStorage.getItem('hbd_last_backup')||'0');
+      const daysSince=last>0?Math.floor((Date.now()-last)/86400000):null;
+      const shouldWarn=last===0||(daysSince!==null&&daysSince>=5);
+      if(shouldWarn){
+        const el=document.getElementById('backupDaysAgo');
+        if(el){
+          if(last===0){el.textContent='aldrig';}
+          else{el.textContent=daysSince+' dag'+(daysSince===1?'':'ar');}
+        }
+        document.getElementById('modalBackupReminder').classList.add('show');
+      }
+    }catch(e){}
+  },1200);
+})();
 </script>
+<!-- BACKUP-PÅMINNELSE MODAL -->
+<div class="overlay" id="modalBackupReminder">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title" style="color:var(--warn)">⚠️ Dags för backup!</div>
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:14px;line-height:1.6;color:var(--tx)">
+      Det har gått <strong id="backupDaysAgo"></strong> sedan din senaste backup.<br><br>
+      Om Safari rensar cachen eller du byter enhet förlorar du all data sedan dess. Exportera en backup nu och spara den på iCloud Drive.
+    </div>
+    <button class="sbtn sbtn-primary" onclick="exportBackup();closeModal('modalBackupReminder')">📤 Exportera backup nu</button>
+    <button class="sbtn sbtn-cancel" style="margin-top:8px" onclick="closeModal('modalBackupReminder')">Påminn mig senare</button>
+  </div>
+</div>
+
 </body>
 </html>
