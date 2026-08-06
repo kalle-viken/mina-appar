@@ -399,7 +399,7 @@ function openVehicleModal(){
   document.getElementById('vv-warn-w').textContent = v.width+' m';
   document.getElementById('vView').classList.remove('hidden');
   document.getElementById('vEdit').classList.add('hidden');
-  document.getElementById('vModalTitle').innerHTML='Fordonet <button class="modal-close" onclick="closeModal('modalVehicle')">×</button>';
+  document.getElementById('vModalTitle').innerHTML='Fordonet <button class="modal-close" onclick="closeModal(\'modalVehicle\')">×</button>';
   openModal('modalVehicle');
 }
 
@@ -419,7 +419,7 @@ function switchToVehicleEdit(){
   document.getElementById('veRA').value    = v.rearAxle||'';
   document.getElementById('vView').classList.add('hidden');
   document.getElementById('vEdit').classList.remove('hidden');
-  document.getElementById('vModalTitle').innerHTML='Redigera fordon <button class="modal-close" onclick="closeModal('modalVehicle')">×</button>';
+  document.getElementById('vModalTitle').innerHTML='Redigera fordon <button class="modal-close" onclick="closeModal(\'modalVehicle\')">×</button>';
 }
 
 function switchToVehicleView(){ openVehicleModal(); }
@@ -716,7 +716,6 @@ function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
       checkBackupReminder();
     }, 800);
   }
-  },1200);
 })();
 </script>
 <!-- FORDONS-MODAL -->
