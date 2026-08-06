@@ -315,8 +315,12 @@ input[type=file]{font-size:13px;color:var(--mu)}
 <script>
 const STORAGE_KEY='husbilsdagbok_v1';
 function loadData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{trips:[],vehicle:dv()};}catch(e){return{trips:[],vehicle:dv()};}}
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}
-function dv(){return{height:'3,0',width:'3,4',length:'7,0',lengthBikes:'7,7',totalWeight:'3 450',frontAxle:'1 445',rearAxle:'2 005',fuel:'Diesel',name:'Min husbil'};}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
+  const tok=getDropboxToken();
+  if(tok) dropboxBackup(tok, true);
+}
+function dv(){return{name:'Min husbil',fuel:'Diesel',euroClass:'Euro 6',regNum:'',year:'',height:'3,0',width:'3,4',length:'7,0',lengthBikes:'7,7',totalWeight:'3 450',frontAxle:'1 445',rearAxle:'2 005'};}
 
 let db=loadData(),currentTripId=null,currentTab='resor',currentView='home',selectedWeather='',selectedFacilities=[],selectedTripEmoji='🏔️',_pending=null;
 
@@ -351,9 +355,93 @@ function renderHome(){
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="section-lbl" style="margin:0">Mina resor</div><button class="new-btn" onclick="openNewTripModal()">+ Ny resa</button></div>`;
   if(trips.length===0){html+=`<div class="empty"><div class="empty-i">🗺️</div><div class="empty-t">Inga resor ännu.<br>Skapa din första resa!</div></div>`;}
   else{trips.forEach(t=>{const meta=tripMeta(t);const s=t.startDate?formatDateShort(t.startDate):'';html+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="trip-icon">${t.emoji||'🚐'}</div><div class="trip-info"><div class="trip-name">${t.name}</div><div class="trip-meta">${s}${meta?' · '+meta:''}</div></div><button class="trip-del" onclick="event.stopPropagation();confirmDeleteTrip('${t.id}')">🗑</button><div class="trip-arr">›</div></div>`;});}
-  html+=`<div class="section-lbl">Säkerhetskopiering</div><div class="exp-row"><button class="exp-btn" onclick="exportBackup()"><div class="exp-btn-icon">📤</div><div class="exp-btn-text">Exportera</div><div class="exp-btn-sub">Spara backup</div></button><button class="exp-btn" onclick="document.getElementById('importFile').click()"><div class="exp-btn-icon">📥</div><div class="exp-btn-text">Importera</div><div class="exp-btn-sub">Återställ data</div></button></div><input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">`;
-  html+=`<div class="section-lbl">Fordonet</div><div class="hbtn" onclick="goVehicle()"><div class="hbtn-icon">🚐</div><div style="flex:1"><div class="hbtn-text">${v.name}</div><div class="hbtn-sub">${v.height}m hög · ${v.width}m bred · ${v.length}m lång · ${v.totalWeight}kg</div></div><div style="color:var(--mu2);font-size:16px">›</div></div>`;
+  const dbxToken=getDropboxToken();const dbxSub=dbxToken?'Ansluten ✓':'Ej konfigurerad';const dbxColor=dbxToken?'var(--success, #4ADE80)':'var(--mu)';
+  html+=`<div class="section-lbl">Säkerhetskopiering</div><div class="exp-row"><button class="exp-btn" onclick="exportBackup()"><div class="exp-btn-icon">📤</div><div class="exp-btn-text">Exportera</div><div class="exp-btn-sub">Lokal backup</div></button><button class="exp-btn" onclick="document.getElementById('importFile').click()"><div class="exp-btn-icon">📥</div><div class="exp-btn-text">Importera</div><div class="exp-btn-sub">Återställ data</div></button></div><input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)"><button class="hbtn" style="margin-bottom:10px" onclick="openDropboxSettings()"><div class="hbtn-icon" style="background:var(--sbg)">📦</div><div style="flex:1"><div class="hbtn-text">Dropbox-synk</div><div class="hbtn-sub" style="color:${dbxColor}">${dbxSub}</div></div><div style="color:var(--mu2);font-size:16px">›</div></button>`;
+  html+=`<div class="section-lbl">Fordonet</div>
+  <div class="hbtn" onclick="openVehicleModal()" style="align-items:flex-start;padding:14px 15px 14px 19px">
+    <div class="hbtn-icon" style="margin-top:2px">🚐</div>
+    <div style="flex:1;min-width:0">
+      <div class="hbtn-text">${v.name}${v.regNum?' · '+v.regNum:''}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-top:6px">
+        <div class="hbtn-sub">📏 Höjd: ${v.height} m</div>
+        <div class="hbtn-sub">↔️ Bredd: ${v.width} m</div>
+        <div class="hbtn-sub">📐 Längd: ${v.length} m</div>
+        <div class="hbtn-sub">⚖️ Vikt: ${v.totalWeight} kg</div>
+        <div class="hbtn-sub">⛽ ${v.fuel}</div>
+        <div class="hbtn-sub">🌿 ${v.euroClass||'–'}</div>
+      </div>
+      <div class="hbtn-sub" style="margin-top:6px;color:var(--warn)">⚠️ Max höjd bro/tunnel: ${v.height} m</div>
+    </div>
+    <div style="color:var(--mu2);font-size:16px;margin-top:2px">›</div>
+  </div>`;
   document.getElementById('mainContent').innerHTML=html;
+}
+
+function openVehicleModal(){
+  const v=db.vehicle;
+  // Fyll visningsläge
+  document.getElementById('vv-name').textContent = v.name||'–';
+  document.getElementById('vv-reg').textContent  = v.regNum||'–';
+  document.getElementById('vv-year').textContent = v.year||'–';
+  document.getElementById('vv-fuel').textContent = v.fuel||'–';
+  document.getElementById('vv-euro').textContent = v.euroClass||'–';
+  document.getElementById('vv-h').textContent    = v.height+' m';
+  document.getElementById('vv-w').textContent    = v.width+' m';
+  document.getElementById('vv-l').textContent    = v.length+' m';
+  document.getElementById('vv-lb').textContent   = v.lengthBikes+' m';
+  document.getElementById('vv-tw').textContent   = v.totalWeight+' kg';
+  document.getElementById('vv-fa').textContent   = v.frontAxle+' kg';
+  document.getElementById('vv-ra').textContent   = v.rearAxle+' kg';
+  document.getElementById('vv-warn-h').textContent = v.height+' m';
+  document.getElementById('vv-warn-w').textContent = v.width+' m';
+  document.getElementById('vView').classList.remove('hidden');
+  document.getElementById('vEdit').classList.add('hidden');
+  document.getElementById('vModalTitle').innerHTML='Fordonet <button class="modal-close" onclick="closeModal('modalVehicle')">×</button>';
+  openModal('modalVehicle');
+}
+
+function switchToVehicleEdit(){
+  const v=db.vehicle;
+  document.getElementById('veName').value  = v.name||'';
+  document.getElementById('veReg').value   = v.regNum||'';
+  document.getElementById('veYear').value  = v.year||'';
+  document.getElementById('veFuel').value  = v.fuel||'Diesel';
+  document.getElementById('veEuro').value  = v.euroClass||'Euro 6';
+  document.getElementById('veH').value     = v.height||'';
+  document.getElementById('veW').value     = v.width||'';
+  document.getElementById('veL').value     = v.length||'';
+  document.getElementById('veLB').value    = v.lengthBikes||'';
+  document.getElementById('veTW').value    = v.totalWeight||'';
+  document.getElementById('veFA').value    = v.frontAxle||'';
+  document.getElementById('veRA').value    = v.rearAxle||'';
+  document.getElementById('vView').classList.add('hidden');
+  document.getElementById('vEdit').classList.remove('hidden');
+  document.getElementById('vModalTitle').innerHTML='Redigera fordon <button class="modal-close" onclick="closeModal('modalVehicle')">×</button>';
+}
+
+function switchToVehicleView(){ openVehicleModal(); }
+
+function saveVehicleModal(){
+  db.vehicle={
+    name:      document.getElementById('veName').value.trim()||'Min husbil',
+    regNum:    document.getElementById('veReg').value.trim().toUpperCase(),
+    year:      document.getElementById('veYear').value.trim(),
+    fuel:      document.getElementById('veFuel').value,
+    euroClass: document.getElementById('veEuro').value,
+    height:    document.getElementById('veH').value.trim(),
+    width:     document.getElementById('veW').value.trim(),
+    length:    document.getElementById('veL').value.trim(),
+    lengthBikes:document.getElementById('veLB').value.trim(),
+    totalWeight:document.getElementById('veTW').value.trim(),
+    frontAxle: document.getElementById('veFA').value.trim(),
+    rearAxle:  document.getElementById('veRA').value.trim(),
+  };
+  saveData();
+  showToast('Fordon sparat');
+  openVehicleModal(); // tillbaka till visningsläge
+  renderHome();       // uppdatera kortet på startsidan
+  // Uppdatera fordonsfliken om den är öppen
+  if(currentTab==='fordon') renderFordonTab();
 }
 
 function goVehicle(){currentView='vehicle';showTripTabs(false);document.getElementById('topBack').classList.remove('hidden');document.getElementById('topAction').classList.add('hidden');document.getElementById('topTitle').textContent='Fordonet';document.getElementById('topSub').textContent='';setNavTab('');renderVehiclePage();}
@@ -410,13 +498,37 @@ function renderStatistik(){
 function renderFordonTab(){renderVehiclePage();}
 function renderVehiclePage(){
   const v=db.vehicle;
-  document.getElementById('mainContent').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="section-lbl" style="margin:0">Fordonet</div><button class="new-btn" onclick="openEditVehicle()">✏️ Redigera</button></div><div style="text-align:center;font-size:56px;margin:14px 0 18px">🚐</div><div class="card"><div class="card-label">Identitet</div><div class="veh-row"><span class="veh-k">Namn</span><span class="veh-v">${v.name}</span></div><div class="veh-row"><span class="veh-k">Drivmedel</span><span class="veh-v">${v.fuel}</span></div></div><div class="card"><div class="card-label">Mått</div><div class="veh-row"><span class="veh-k">Höjd</span><span class="veh-v">${v.height} m</span></div><div class="veh-row"><span class="veh-k">Bredd</span><span class="veh-v">${v.width} m</span></div><div class="veh-row"><span class="veh-k">Längd (utan cyklar)</span><span class="veh-v">${v.length} m</span></div><div class="veh-row"><span class="veh-k">Längd (med cyklar)</span><span class="veh-v">${v.lengthBikes} m</span></div></div><div class="card"><div class="card-label">Vikter (uppmätt)</div><div class="veh-row"><span class="veh-k">Totalvikt</span><span class="veh-v">${v.totalWeight} kg</span></div><div class="veh-row"><span class="veh-k">Framaxel</span><span class="veh-v">${v.frontAxle} kg</span></div><div class="veh-row"><span class="veh-k">Bakaxel</span><span class="veh-v">${v.rearAxle} kg</span></div></div><div class="warn-card"><div class="warn-title">⚠️ Viktigt att komma ihåg</div><div class="veh-row"><span class="veh-k">Max bro / tunnel</span><span class="veh-v" style="color:var(--warn)">${v.height} m</span></div><div class="veh-row" style="border:none"><span class="veh-k">Max bredd väg</span><span class="veh-v" style="color:var(--warn)">${v.width} m</span></div></div>`;
+  document.getElementById('mainContent').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div class="section-lbl" style="margin:0">Fordonet</div>
+    <button class="new-btn" onclick="openVehicleModal()">✏️ Redigera</button>
+  </div>
+  <div style="text-align:center;font-size:56px;margin:14px 0 18px">🚐</div>
+  <div class="card"><div class="card-label">Identitet</div>
+    <div class="veh-row"><span class="veh-k">Namn</span><span class="veh-v">${v.name}</span></div>
+    ${v.regNum?`<div class="veh-row"><span class="veh-k">Reg.nummer</span><span class="veh-v">${v.regNum}</span></div>`:''}
+    ${v.year?`<div class="veh-row"><span class="veh-k">Årsmodell</span><span class="veh-v">${v.year}</span></div>`:''}
+    <div class="veh-row"><span class="veh-k">Drivmedel</span><span class="veh-v">${v.fuel}</span></div>
+    <div class="veh-row"><span class="veh-k">Euroklass</span><span class="veh-v">${v.euroClass||'–'}</span></div>
+  </div>
+  <div class="card"><div class="card-label">Mått</div>
+    <div class="veh-row"><span class="veh-k">Höjd</span><span class="veh-v">${v.height} m</span></div>
+    <div class="veh-row"><span class="veh-k">Bredd</span><span class="veh-v">${v.width} m</span></div>
+    <div class="veh-row"><span class="veh-k">Längd (utan cyklar)</span><span class="veh-v">${v.length} m</span></div>
+    <div class="veh-row"><span class="veh-k">Längd (med cyklar)</span><span class="veh-v">${v.lengthBikes} m</span></div>
+  </div>
+  <div class="card"><div class="card-label">Vikter (uppmätt)</div>
+    <div class="veh-row"><span class="veh-k">Totalvikt</span><span class="veh-v">${v.totalWeight} kg</span></div>
+    <div class="veh-row"><span class="veh-k">Framaxel</span><span class="veh-v">${v.frontAxle} kg</span></div>
+    <div class="veh-row"><span class="veh-k">Bakaxel</span><span class="veh-v">${v.rearAxle} kg</span></div>
+  </div>
+  <div class="warn-card"><div class="warn-title">⚠️ Viktigt att komma ihåg</div>
+    <div class="veh-row"><span class="veh-k">Max bro / tunnel</span><span class="veh-v" style="color:var(--warn)">${v.height} m</span></div>
+    <div class="veh-row" style="border:none"><span class="veh-k">Max bredd väg</span><span class="veh-v" style="color:var(--warn)">${v.width} m</span></div>
+  </div>`;
 }
-function openEditVehicle(){
-  const v=db.vehicle;
-  document.getElementById('mainContent').innerHTML=`<div class="section-lbl">Redigera fordon</div><div class="card"><div class="fg"><label>Fordonets namn</label><input type="text" id="vName" value="${v.name}"></div><div class="fg"><label>Drivmedel</label><select id="vFuel"><option ${v.fuel==='Diesel'?'selected':''}>Diesel</option><option ${v.fuel==='Bensin'?'selected':''}>Bensin</option><option ${v.fuel==='El'?'selected':''}>El</option><option ${v.fuel==='Hybrid'?'selected':''}>Hybrid</option></select></div><div class="fr"><div class="fg"><label>Höjd (m)</label><input type="text" id="vH" value="${v.height}"></div><div class="fg"><label>Bredd (m)</label><input type="text" id="vW" value="${v.width}"></div></div><div class="fr"><div class="fg"><label>Längd utan cyklar (m)</label><input type="text" id="vL" value="${v.length}"></div><div class="fg"><label>Längd med cyklar (m)</label><input type="text" id="vLB" value="${v.lengthBikes}"></div></div><div class="fr"><div class="fg"><label>Totalvikt (kg)</label><input type="text" id="vTW" value="${v.totalWeight}"></div><div class="fg"><label>Framaxel (kg)</label><input type="text" id="vFA" value="${v.frontAxle}"></div></div><div class="fg"><label>Bakaxel (kg)</label><input type="text" id="vRA" value="${v.rearAxle}"></div><button class="sbtn sbtn-primary" style="margin-top:14px" onclick="saveVehicle()">Spara fordon</button><button class="sbtn sbtn-cancel" onclick="${currentView==='vehicle'?'goHome()':'renderFordonTab()'}">Avbryt</button></div>`;
-}
-function saveVehicle(){db.vehicle={name:document.getElementById('vName').value.trim()||'Min husbil',fuel:document.getElementById('vFuel').value,height:document.getElementById('vH').value.trim(),width:document.getElementById('vW').value.trim(),length:document.getElementById('vL').value.trim(),lengthBikes:document.getElementById('vLB').value.trim(),totalWeight:document.getElementById('vTW').value.trim(),frontAxle:document.getElementById('vFA').value.trim(),rearAxle:document.getElementById('vRA').value.trim()};saveData();showToast('Fordon sparat');if(currentView==='vehicle')goHome();else renderFordonTab();}
+function openEditVehicle(){ openVehicleModal(); switchToVehicleEdit(); }
+function saveVehicle(){ saveVehicleModal(); }
 
 function openNewTripModal(){document.getElementById('tripName').value='';document.getElementById('tripStart').value=new Date().toISOString().slice(0,10);document.getElementById('tripOdo').value='';selectedTripEmoji='🏔️';document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(el=>el.classList.toggle('sel',el.dataset.e===selectedTripEmoji));openModal('modalTrip');}
 document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(el=>{el.onclick=()=>{selectedTripEmoji=el.dataset.e;document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');};});
@@ -449,40 +561,264 @@ function exportBackup(silent){try{const json=JSON.stringify(db,null,2);const blo
 function importBackup(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const parsed=JSON.parse(e.target.result);if(!parsed.trips){alert('Ogiltig backupfil.');return;}_pending=parsed;const tc=parsed.trips.length;const dc=parsed.trips.reduce((s,t)=>s+(t.days||[]).length,0);const cc=parsed.trips.reduce((s,t)=>s+(t.costs||[]).length,0);document.getElementById('importInfo').innerHTML=`<strong>Fil:</strong> ${file.name}<br><strong>Innehåller:</strong> ${tc} resa${tc!==1?'r':''}, ${dc} dag${dc!==1?'ar':''}, ${cc} kostnadsposter<br><strong>Just nu:</strong> ${db.trips.length} resa${db.trips.length!==1?'r':''}`;openModal('modalImport');}catch(err){alert('Kunde inte läsa filen: '+err.message);}};reader.readAsText(file);event.target.value='';}
 function doImport(mode){if(!_pending)return;closeModal('modalImport');if(mode==='replace'){db=_pending;if(!db.vehicle)db.vehicle=dv();saveData();goHome();showToast('Data återställd från backup');}else{const ex=new Set(db.trips.map(t=>t.id));const added=_pending.trips.filter(t=>!ex.has(t.id));db.trips=[...db.trips,...added];saveData();goHome();showToast(added.length+' ny'+(added.length!==1?'a resor':' resa')+' lades till');}_pending=null;}
 
+// ════════════════════════════════════════════
+// DROPBOX
+// ════════════════════════════════════════════
+const DBX_KEY = 'hbd_dropbox_token';
+const DBX_FILE = '/husbilsdagbok-backup.json';
+
+function getDropboxToken(){ try{ return localStorage.getItem(DBX_KEY)||''; }catch(e){ return ''; } }
+
+function openDropboxSettings(){
+  const token = getDropboxToken();
+  document.getElementById('dbxTokenInput').value = token;
+  document.getElementById('dbxStatus').textContent = '';
+  document.getElementById('dbxClearBtn').classList.toggle('hidden', !token);
+  openModal('modalDropbox');
+}
+
+function saveDropboxToken(){
+  const token = document.getElementById('dbxTokenInput').value.trim();
+  if(!token){ alert('Klistra in en token först.'); return; }
+  const statusEl = document.getElementById('dbxStatus');
+  statusEl.style.color = 'var(--mu)';
+  statusEl.textContent = 'Testar anslutning…';
+  // Test: hämta kontoinformation
+  fetch('https://api.dropboxapi.com/2/users/get_current_account', {
+    method:'POST', headers:{'Authorization':'Bearer '+token}
+  }).then(r=>{
+    if(r.ok) return r.json();
+    throw new Error('HTTP '+r.status);
+  }).then(data=>{
+    localStorage.setItem(DBX_KEY, token);
+    statusEl.style.color = '#4ADE80';
+    statusEl.textContent = '✓ Ansluten som '+( data.name&&data.name.display_name ? data.name.display_name : data.email||'okänd');
+    document.getElementById('dbxClearBtn').classList.remove('hidden');
+    // Kör en backup direkt
+    dropboxBackup(token, false);
+  }).catch(err=>{
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = '✗ Misslyckades – kontrollera att token är korrekt.';
+  });
+}
+
+function clearDropboxToken(){
+  if(!confirm('Ta bort Dropbox-anslutningen?')) return;
+  localStorage.removeItem(DBX_KEY);
+  document.getElementById('dbxTokenInput').value = '';
+  document.getElementById('dbxStatus').textContent = '';
+  document.getElementById('dbxClearBtn').classList.add('hidden');
+  renderHome();
+}
+
+// Spara till Dropbox
+function dropboxBackup(token, silent){
+  if(!token) return;
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], {type:'application/octet-stream'});
+  fetch('https://content.dropboxapi.com/2/files/upload', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer '+token,
+      'Dropbox-API-Arg': JSON.stringify({path:DBX_FILE, mode:'overwrite', autorename:false, mute:true}),
+      'Content-Type': 'application/octet-stream'
+    },
+    body: blob
+  }).then(r=>{
+    if(r.ok){ localStorage.setItem('hbd_last_backup', Date.now()); if(!silent) showToast('Dropbox: data sparad!'); }
+    else { if(!silent) showToast('Dropbox: fel vid sparning'); }
+  }).catch(()=>{ if(!silent) showToast('Dropbox: kunde inte spara'); });
+}
+
+// Ladda från Dropbox — returnerar Promise<bool>
+function dropboxLoad(token){
+  return fetch('https://content.dropboxapi.com/2/files/download', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer '+token,
+      'Dropbox-API-Arg': JSON.stringify({path:DBX_FILE})
+    }
+  }).then(r=>{
+    if(r.status === 409) return null; // filen finns inte än
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(data=>{
+    if(!data) return false;
+    if(!data.trips) return false;
+    // Jämför: använd Dropbox-data om den är nyare eller har fler resor
+    const dbxTrips = data.trips.length;
+    const localTrips = db.trips.length;
+    // Alltid lita på Dropbox som källa om Dropbox har data
+    db = data;
+    if(!db.vehicle) db.vehicle = dv();
+    saveData();
+    return true;
+  }).catch(()=>false);
+}
+
+function checkBackupReminder(){
+  try{
+    const hasData=db.trips&&db.trips.length>0;
+    if(!hasData) return;
+    const last=parseInt(localStorage.getItem('hbd_last_backup')||'0');
+    const daysSince=last>0?Math.floor((Date.now()-last)/86400000):null;
+    const shouldWarn=!getDropboxToken()&&(last===0||(daysSince!==null&&daysSince>=5));
+    if(shouldWarn){
+      const el=document.getElementById('backupDaysAgo');
+      if(el){ el.textContent=last===0?'aldrig':daysSince+' dag'+(daysSince===1?'':'ar'); }
+      document.getElementById('modalBackupReminder').classList.add('show');
+    }
+  }catch(e){}
+}
+
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function showSyncStatus(msg, color='var(--mu)'){
+  let el=document.getElementById('syncStatus');
+  if(!el){el=document.createElement('div');el.id='syncStatus';el.style.cssText='position:fixed;top:12px;right:56px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--sf2);border:1px solid var(--bd);z-index:50;transition:opacity .3s';document.body.appendChild(el);}
+  el.textContent=msg; el.style.color=color; el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0', 3000);
+}
 function applyTheme(dark){document.body.classList.toggle('light',!dark);document.getElementById('themeBtn').textContent=dark?'☀️':'🌙';try{localStorage.setItem('hbd_theme',dark?'dark':'light');}catch(e){}}
 function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
 (function(){
   // Tema
   try{const s=localStorage.getItem('hbd_theme');applyTheme(s!=='light');}catch(e){applyTheme(true);}
 
-  goHome();
-
-  // Auto-backup vid start (om det finns data) + påminnelse om >5 dagar
-  setTimeout(()=>{
-    try{
-      const hasData=db.trips&&db.trips.length>0;
-      if(!hasData)return;
-
-      // Auto-exportera backup tyst vid varje start
-      exportBackup(true);
-
-      // Visa varningsruta om det gått 5+ dagar sedan senaste manuella backup
-      const last=parseInt(localStorage.getItem('hbd_last_backup')||'0');
-      const daysSince=last>0?Math.floor((Date.now()-last)/86400000):null;
-      const shouldWarn=last===0||(daysSince!==null&&daysSince>=5);
-      if(shouldWarn){
-        const el=document.getElementById('backupDaysAgo');
-        if(el){
-          if(last===0){el.textContent='aldrig';}
-          else{el.textContent=daysSince+' dag'+(daysSince===1?'':'ar');}
-        }
-        document.getElementById('modalBackupReminder').classList.add('show');
+  const token = getDropboxToken();
+  if(token){
+    // Visa laddningsstatus
+    showSyncStatus('Synkar med Dropbox…');
+    dropboxLoad(token).then(loaded=>{
+      if(loaded){
+        showSyncStatus('✓ Synkad med Dropbox', '#4ADE80');
+      } else {
+        showSyncStatus('Dropbox: ny fil skapas');
       }
-    }catch(e){}
+      goHome();
+      // Spara alltid tillbaka (så lokal enhet också har senaste)
+      dropboxBackup(token, true);
+      checkBackupReminder();
+    }).catch(()=>{
+      showSyncStatus('Dropbox ej tillgänglig – kör lokalt', 'var(--warn)');
+      goHome();
+      checkBackupReminder();
+    });
+  } else {
+    goHome();
+    // Ingen Dropbox – kör lokal auto-backup
+    setTimeout(()=>{
+      if(db.trips&&db.trips.length>0) exportBackup(true);
+      checkBackupReminder();
+    }, 800);
+  }
   },1200);
 })();
 </script>
+<!-- FORDONS-MODAL -->
+<div class="overlay" id="modalVehicle">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title" id="vModalTitle">Fordonet <button class="modal-close" onclick="closeModal('modalVehicle')">×</button></div>
+
+    <!-- VISNINGSLÄGE -->
+    <div id="vView">
+      <div style="text-align:center;font-size:48px;margin-bottom:14px">🚐</div>
+
+      <div class="card">
+        <div class="card-label">Identitet</div>
+        <div class="veh-row"><span class="veh-k">Namn</span><span class="veh-v" id="vv-name"></span></div>
+        <div class="veh-row"><span class="veh-k">Reg.nummer</span><span class="veh-v" id="vv-reg"></span></div>
+        <div class="veh-row"><span class="veh-k">Årsmodell</span><span class="veh-v" id="vv-year"></span></div>
+        <div class="veh-row"><span class="veh-k">Drivmedel</span><span class="veh-v" id="vv-fuel"></span></div>
+        <div class="veh-row"><span class="veh-k">Euroklass</span><span class="veh-v" id="vv-euro"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Mått</div>
+        <div class="veh-row"><span class="veh-k">Höjd</span><span class="veh-v" id="vv-h"></span></div>
+        <div class="veh-row"><span class="veh-k">Bredd</span><span class="veh-v" id="vv-w"></span></div>
+        <div class="veh-row"><span class="veh-k">Längd (utan cyklar)</span><span class="veh-v" id="vv-l"></span></div>
+        <div class="veh-row"><span class="veh-k">Längd (med cyklar)</span><span class="veh-v" id="vv-lb"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Vikter (uppmätt)</div>
+        <div class="veh-row"><span class="veh-k">Totalvikt</span><span class="veh-v" id="vv-tw"></span></div>
+        <div class="veh-row"><span class="veh-k">Framaxel</span><span class="veh-v" id="vv-fa"></span></div>
+        <div class="veh-row"><span class="veh-k">Bakaxel</span><span class="veh-v" id="vv-ra"></span></div>
+      </div>
+
+      <div class="warn-card">
+        <div class="warn-title">⚠️ Viktigt att komma ihåg</div>
+        <div class="veh-row"><span class="veh-k">Max bro / tunnel</span><span class="veh-v" style="color:var(--warn)" id="vv-warn-h"></span></div>
+        <div class="veh-row" style="border:none"><span class="veh-k">Max bredd väg</span><span class="veh-v" style="color:var(--warn)" id="vv-warn-w"></span></div>
+      </div>
+
+      <button class="sbtn sbtn-primary" onclick="switchToVehicleEdit()">✏️ Redigera</button>
+      <button class="sbtn sbtn-cancel" style="margin-top:8px" onclick="closeModal('modalVehicle')">Stäng</button>
+    </div>
+
+    <!-- REDIGERINGSLÄGE -->
+    <div id="vEdit" class="hidden">
+      <div class="fr">
+        <div class="fg"><label>Fordonets namn</label><input type="text" id="veName" placeholder="Min husbil"></div>
+        <div class="fg"><label>Reg.nummer</label><input type="text" id="veReg" placeholder="ABC123"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Årsmodell</label><input type="text" id="veYear" placeholder="2019"></div>
+        <div class="fg"><label>Drivmedel</label>
+          <select id="veFuel">
+            <option>Diesel</option><option>Bensin</option><option>El</option><option>Hybrid</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Euroklass</label>
+        <select id="veEuro">
+          <option>Euro 6</option><option>Euro 5</option><option>Euro 4</option>
+          <option>Euro 3</option><option>Euro 2</option><option>Euro 1</option><option>–</option>
+        </select>
+      </div>
+      <div class="card-label" style="margin-top:14px">Mått</div>
+      <div class="fr">
+        <div class="fg"><label>Höjd (m)</label><input type="text" id="veH" placeholder="3,0"></div>
+        <div class="fg"><label>Bredd (m)</label><input type="text" id="veW" placeholder="3,4"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Längd utan cyklar (m)</label><input type="text" id="veL" placeholder="7,0"></div>
+        <div class="fg"><label>Längd med cyklar (m)</label><input type="text" id="veLB" placeholder="7,7"></div>
+      </div>
+      <div class="card-label" style="margin-top:14px">Vikter (uppmätt)</div>
+      <div class="fr">
+        <div class="fg"><label>Totalvikt (kg)</label><input type="text" id="veTW" placeholder="3 450"></div>
+        <div class="fg"><label>Framaxel (kg)</label><input type="text" id="veFA" placeholder="1 445"></div>
+      </div>
+      <div class="fg"><label>Bakaxel (kg)</label><input type="text" id="veRA" placeholder="2 005"></div>
+      <button class="sbtn sbtn-primary" style="margin-top:14px" onclick="saveVehicleModal()">Spara</button>
+      <button class="sbtn sbtn-cancel" style="margin-top:8px" onclick="switchToVehicleView()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- DROPBOX-INSTÄLLNINGAR MODAL -->
+<div class="overlay" id="modalDropbox">
+  <div class="modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title">Dropbox-synk <button class="modal-close" onclick="closeModal('modalDropbox')">×</button></div>
+    <div style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:14px">
+      Klistra in din Dropbox Access Token nedan. Backuper sparas automatiskt till din Dropbox-mapp varje gång appen startar.<br><br>
+      Hämta token på <strong style="color:var(--tx)">dropbox.com/developers/apps</strong> → din app → Generate access token.
+    </div>
+    <div class="fg">
+      <label>Access Token</label>
+      <textarea id="dbxTokenInput" style="height:90px;font-size:12px;font-family:monospace;word-break:break-all" placeholder="sl.u.ABCxyz..."></textarea>
+    </div>
+    <div id="dbxStatus" style="font-size:13px;margin-bottom:10px;min-height:20px"></div>
+    <button class="sbtn sbtn-primary" onclick="saveDropboxToken()">Spara & testa anslutning</button>
+    <button class="sbtn sbtn-del hidden" id="dbxClearBtn" onclick="clearDropboxToken()" style="margin-top:8px">Ta bort token</button>
+    <button class="sbtn sbtn-cancel" style="margin-top:8px" onclick="closeModal('modalDropbox')">Stäng</button>
+  </div>
+</div>
+
 <!-- BACKUP-PÅMINNELSE MODAL -->
 <div class="overlay" id="modalBackupReminder">
   <div class="modal">
