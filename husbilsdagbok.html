@@ -317,12 +317,15 @@ const STORAGE_KEY='husbilsdagbok_v1';
 function loadData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{trips:[],vehicle:dv()};}catch(e){return{trips:[],vehicle:dv()};}}
 function saveData(){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
-  const tok=getDropboxToken();
-  if(tok) dropboxBackup(tok, true);
+  // Dropbox-synk sker via saveAndSync() för att undvika ordningsproblem
+  if(typeof _dbxSyncReady!=='undefined'&&_dbxSyncReady){
+    const tok=getDropboxToken();
+    if(tok) dropboxBackup(tok, true);
+  }
 }
 function dv(){return{name:'Min husbil',fuel:'Diesel',euroClass:'Euro 6',regNum:'',year:'',height:'3,0',width:'3,4',length:'7,0',lengthBikes:'7,7',totalWeight:'3 450',frontAxle:'1 445',rearAxle:'2 005'};}
 
-let db=loadData(),currentTripId=null,currentTab='resor',currentView='home',selectedWeather='',selectedFacilities=[],selectedTripEmoji='🏔️',_pending=null;
+let db=loadData(),_dbxSyncReady=false,currentTripId=null,currentTab='resor',currentView='home',selectedWeather='',selectedFacilities=[],selectedTripEmoji='🏔️',_pending=null;
 
 const TRIP_TABS=['dagbok','kostnader','statistik','fordon'];
 function showTripTabs(v){TRIP_TABS.forEach(t=>{const el=document.getElementById('tab'+t[0].toUpperCase()+t.slice(1));if(el)el.classList.toggle('hidden',!v);});}
@@ -694,16 +697,18 @@ function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
       } else {
         showSyncStatus('Dropbox: ny fil skapas');
       }
+      _dbxSyncReady=true;
       goHome();
-      // Spara alltid tillbaka (så lokal enhet också har senaste)
       dropboxBackup(token, true);
       checkBackupReminder();
     }).catch(()=>{
       showSyncStatus('Dropbox ej tillgänglig – kör lokalt', 'var(--warn)');
+      _dbxSyncReady=true;
       goHome();
       checkBackupReminder();
     });
   } else {
+    _dbxSyncReady=true;
     goHome();
     // Ingen Dropbox – kör lokal auto-backup
     setTimeout(()=>{
