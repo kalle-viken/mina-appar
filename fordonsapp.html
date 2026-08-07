@@ -215,6 +215,21 @@ textarea{resize:none;height:64px}
 .ic-btn.primary{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3)}
 .ic-title{font-size:14px;font-weight:700;margin-bottom:3px}
 .ic-sub{font-size:12px;color:var(--mu);line-height:1.4}
+/* Swipe-radera */
+.ec-wrap{position:relative;overflow:hidden;margin-bottom:8px;border-radius:var(--r)}
+.ec-delete-bg{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--re);display:flex;align-items:center;justify-content:center;font-size:22px;border-radius:0 var(--r) var(--r) 0}
+.ec{position:relative;transition:transform .2s ease;touch-action:pan-y;cursor:default}
+.ec.swiped{transform:translateX(-80px)}
+/* År-sektioner i historik */
+.year-header{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;padding:14px 0 6px;border-bottom:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.year-total{font-size:12px;color:var(--mu);font-weight:600}
+.year-entries.collapsed{display:none}
+/* Snabbregistrering-widget */
+.quick-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin:0 18px 10px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s}
+.quick-card:active{background:var(--sf2)}
+.quick-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+/* Milkostnad på fordonskort */
+.vc-cpm{font-size:11px;color:var(--mu);margin-top:2px;text-align:right}
 
 @media(min-width:600px){.vgrid,.cont,.tabs,.vhdr,.home-btns{padding-left:24px;padding-right:24px}}
 </style>
@@ -233,6 +248,18 @@ textarea{resize:none;height:64px}
     <div class="theme-btn" onclick="toggleTheme()" title="Byt tema" style="margin-top:52px">🌙</div>
   </div>
   <div id="home-warnings" style="padding:0 18px;margin-top:4px"></div>
+  <!-- Snabbregistrering -->
+  <div id="quick-section" style="display:none;padding:0 18px 4px">
+    <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Snabbregistrering</div>
+    <div class="quick-card" id="quick-card" onclick="openQuickFuel()">
+      <div class="quick-ico" style="background:rgba(96,165,250,0.15)">⛽</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600" id="quick-title">Tankning</div>
+        <div style="font-size:12px;color:var(--mu)" id="quick-sub">Välj fordon nedan för att snabbregistrera</div>
+      </div>
+      <div style="color:var(--mu2);font-size:18px">›</div>
+    </div>
+  </div>
   <div id="vgrid" class="vgrid">
     <!-- Vehicle cards rendered dynamically by updHome() -->
   </div>
@@ -248,7 +275,11 @@ textarea{resize:none;height:64px}
     <div class="exp-row">
       <div class="exp-btn" onclick="exportData()">
         <div class="exp-btn-icon">💾</div>
-        <div><div class="exp-btn-text">Exportera</div><div class="exp-btn-sub">Spara JSON-fil</div></div>
+        <div><div class="exp-btn-text">Exportera</div><div class="exp-btn-sub">JSON-fil</div></div>
+      </div>
+      <div class="exp-btn" onclick="exportCSV()">
+        <div class="exp-btn-icon">📊</div>
+        <div><div class="exp-btn-text">Excel/CSV</div><div class="exp-btn-sub">Öppna i Numbers</div></div>
       </div>
       <div class="exp-btn" onclick="document.getElementById('imp-input').click()">
         <div class="exp-btn-icon">📂</div>
@@ -402,9 +433,10 @@ textarea{resize:none;height:64px}
   <!-- HISTORY -->
   <div class="cont" id="tc-hist" style="display:none">
     <div class="search-wrap"><span class="search-icon">🔍</span><input type="search" id="h-search" placeholder="Sök i historiken..." oninput="renderH()"></div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
       <select id="hf-c" onchange="renderH()" style="flex:1;font-size:13px"><option value="all">Alla kategorier</option><option value="fu">Drivmedel</option><option value="re">Reparation</option><option value="sv">Service</option><option value="in">Besiktning</option><option value="tx">Fordonsskatt</option><option value="ins2">Försäkring</option><option value="gas">Gasol</option><option value="wash">Tvätt</option></select>
-      <select id="hf-s" onchange="renderH()" style="width:128px;font-size:13px"><option value="dd">Nyast först</option><option value="da">Äldst först</option><option value="cd">Dyrast först</option></select>
+      <select id="hf-y" onchange="renderH()" style="width:90px;font-size:13px"><option value="all">Alla år</option></select>
+      <select id="hf-s" onchange="renderH()" style="width:110px;font-size:13px"><option value="dd">Nyast</option><option value="da">Äldst</option><option value="cd">Dyrast</option></select>
     </div>
     <div class="hlist" id="hlist"></div>
   </div>
@@ -592,7 +624,13 @@ function gd(){
     return {};
   }catch(e){return{}}
 }
-function sd(d){localStorage.setItem('fb3',JSON.stringify(d))}
+function sd(d){
+  localStorage.setItem('fb3',JSON.stringify(d));
+  if(typeof _dbxReady!=='undefined'&&_dbxReady){
+    const tok=getDropboxToken();
+    if(tok)dropboxBackup(tok,true);
+  }
+}
 function ents(v){const d=gd();return(d[v]||[]).slice().sort((a,b)=>b.date.localeCompare(a.date))}
 function allE(){let r=[];Object.keys(VEH).forEach(v=>ents(v).forEach(e=>r.push({...e,v})));return r.sort((a,b)=>b.date.localeCompare(a.date))}
 function getMeta(v){const d=gd();return d['meta_'+v]||{}}
@@ -816,6 +854,14 @@ function save(){
   toast('Sparat! ✓');
 }
 
+// ── SNABBREGISTRERING ──
+function openQuickFuel(){
+  // Öppna första fordonet på drivmedelsfliken
+  const vk=Object.keys(VEH)[0];
+  if(!vk)return;
+  openV(vk);sCat('fu');sTab('add');
+}
+
 function del(v,id){
   if(!confirm('Ta bort denna post?'))return;
   const d=gd();d[v]=(d[v]||[]).filter(e=>e.id!==id);sd(d);renderH();updVH();updHome();
@@ -870,6 +916,7 @@ function updHome(){
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="vc-total" style="color:${vd.c}">${fkr0(tot)}</div>
+        <div class="vc-cpm">${(()=>{const cp=cpm(a);return cp!=null?Math.round(cp).toLocaleString('sv-SE')+' kr/mil':'';})()}</div>
         <div class="vc-arr">›</div>
       </div>
       <div class="vc-warn">${warns.map(w=>`<div class="warn-badge ${w.type}">${w.text}</div>`).join('')}</div>
@@ -881,6 +928,16 @@ function updHome(){
     <div><div style="font-size:16px;font-weight:600">Lägg till fordon</div><div style="font-size:12px;color:var(--mu);margin-top:2px">Registrera ett nytt fordon</div></div>
   </div>`;
   document.getElementById('home-warnings').innerHTML='';
+  // Snabbregistrering – visa om det finns fordon
+  const qs=document.getElementById('quick-section');
+  if(qs)qs.style.display=Object.keys(VEH).length>0?'block':'none';
+  const qt=document.getElementById('quick-title');
+  const qsub=document.getElementById('quick-sub');
+  if(qt&&Object.keys(VEH).length>0){
+    const vk=Object.keys(VEH)[0];
+    qt.textContent='Snabbtankning — '+VEH[vk].i+' '+VEH[vk].n;
+    if(qsub)qsub.textContent='Tryck för att logga drivmedel direkt';
+  }
 }
 
 // ── VEHICLE HEADER ──
@@ -905,12 +962,50 @@ function updVH(){
 }
 
 // ── HISTORY ──
+function entryCard(e,consMap){
+  let main='',det='';
+  if(e.cat==='fu'){
+    main=(e.fuelType||'Drivmedel')+(e.station?' — '+e.station:'');
+    const cons=consMap[e.id];
+    det=[e.liters?e.liters.toFixed(1)+' L':'',e.ppl?e.ppl.toFixed(2)+' kr/L':'',e.odo?e.odo.toLocaleString('sv-SE')+' km':'',cons?`<span style="color:var(--sv);font-weight:700">${cons.toFixed(2)} L/10km</span>`:''].filter(Boolean).join(' · ');
+  } else if(e.cat==='re'){main=e.desc||'Reparation';det=[e.shop,e.odo?e.odo.toLocaleString('sv-SE')+' km':''].filter(Boolean).join(' · ');
+  } else if(e.cat==='sv'){main=(e.stype||'Service')+(e.shop?' — '+e.shop:'');det=[e.odo?e.odo.toLocaleString('sv-SE')+' km':'',e.nextKm?'Nästa: '+e.nextKm.toLocaleString('sv-SE')+' km':'',e.nextDate?fdt(e.nextDate):''].filter(Boolean).join(' · ');
+  } else if(e.cat==='in'){main='Besiktning '+(e.approved?'✓ Godkänd':'✗ Ej godkänd');det=[e.loc,e.nextDate?'Nästa: '+fdt(e.nextDate):''].filter(Boolean).join(' · ');
+  } else if(e.cat==='tx'){const isRefund=e.taxType==='Återbetalning';main=(isRefund?'↩ Återbetalning':'↑ Inbetalning')+' — Fordonsskatt';det=[e.periodFrom?'Från: '+fdt(e.periodFrom):'',e.periodTo?'Till: '+fdt(e.periodTo):''].filter(Boolean).join(' · ');
+  } else if(e.cat==='ins2'){main=(e.insType||'Försäkring')+(e.insurer?' — '+e.insurer:'');det=[e.insPeriod,e.periodFrom?fdt(e.periodFrom):'',e.periodTo?'→ '+fdt(e.periodTo):''].filter(Boolean).join(' · ');
+  } else if(e.cat==='gas'){main=(e.gasType||'Gasol')+(e.station?' — '+e.station:'');det=[e.kg?e.kg.toFixed(1)+' kg':'',e.cost&&e.kg?'('+((e.cost/e.kg).toFixed(2))+' kr/kg)':''].filter(Boolean).join(' · ');
+  } else if(e.cat==='wash'){main=(e.washType||'Tvätt')+(e.washPlace?' — '+e.washPlace:'');det='';}
+  const isRefundEntry=e.cat==='tx'&&e.taxType==='Återbetalning';
+  const costDisplay=isRefundEntry?`<span style="color:var(--sv)">−${fkr0(e.cost)}</span>`:fkr0(e.cost);
+  return`<div class="ec-wrap" id="wrap-${e.id}">
+    <div class="ec-delete-bg" onclick="del('${curV}',${e.id})">🗑️</div>
+    <div class="ec ${e.cat}" id="ec-${e.id}" data-id="${e.id}">
+      <div class="etop"><div><div class="ecat">${CAT[e.cat].i} ${CAT[e.cat].n}</div><div class="edate">${fdt(e.date)}</div></div><div class="ecost">${costDisplay}</div></div>
+      <div class="edesc">${main}</div>
+      ${det?`<div class="edetail">${det}</div>`:''}
+      ${e.notes?`<div class="edetail" style="font-style:italic">${e.notes}</div>`:''}
+      <div class="ecard-btns"><button class="editbtn" onclick="openEdit('${curV}',${e.id})">✏️ Redigera</button><button class="delbtn" onclick="del('${curV}',${e.id})">🗑 Ta bort</button></div>
+    </div>
+  </div>`;
+}
+
+function updYearFilter(){
+  const a=ents(curV);
+  const years=[...new Set(a.map(e=>e.date.substring(0,4)))].sort().reverse();
+  const sel=document.getElementById('hf-y');
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">Alla år</option>'+years.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y}</option>`).join('');
+}
+
 function renderH(){
+  updYearFilter();
   const fc=document.getElementById('hf-c').value;
   const fs=document.getElementById('hf-s').value;
+  const fy=document.getElementById('hf-y').value;
   const q=(document.getElementById('h-search').value||'').toLowerCase();
   let a=ents(curV);
   if(fc!=='all')a=a.filter(e=>e.cat===fc);
+  if(fy!=='all')a=a.filter(e=>e.date.startsWith(fy));
   if(q)a=a.filter(e=>{
     const blob=[e.station,e.shop,e.desc,e.stype,e.loc,e.fuelType,e.notes,e.date,e.cost].join(' ').toLowerCase();
     return blob.includes(q);
@@ -919,39 +1014,50 @@ function renderH(){
   const list=document.getElementById('hlist');
   if(!a.length){list.innerHTML='<div class="empty"><div class="empty-i">📋</div><div>Inga poster</div></div>';return}
   const consMap=calcCons(curV);
-  list.innerHTML=a.map(e=>{
-    let main='',det='';
-    if(e.cat==='fu'){
-      main=(e.fuelType||'Drivmedel')+(e.station?' — '+e.station:'');
-      const cons=consMap[e.id];
-      det=[e.liters?e.liters.toFixed(1)+' L':'',e.ppl?e.ppl.toFixed(2)+' kr/L':'',e.odo?e.odo.toLocaleString('sv-SE')+' km':'',cons?`<span style="color:var(--sv);font-weight:700">${cons.toFixed(2)} L/10km</span>`:''].filter(Boolean).join(' · ');
-    } else if(e.cat==='re'){
-      main=e.desc||'Reparation';
-      det=[e.shop,e.odo?e.odo.toLocaleString('sv-SE')+' km':''].filter(Boolean).join(' · ');
-    } else if(e.cat==='sv'){
-      main=(e.stype||'Service')+(e.shop?' — '+e.shop:'');
-      det=[e.odo?e.odo.toLocaleString('sv-SE')+' km':'',e.nextKm?'Nästa: '+e.nextKm.toLocaleString('sv-SE')+' km':'',e.nextDate?fdt(e.nextDate):''].filter(Boolean).join(' · ');
-    } else if(e.cat==='in'){
-      main='Besiktning '+(e.approved?'✓ Godkänd':'✗ Ej godkänd');
-      det=[e.loc,e.nextDate?'Nästa: '+fdt(e.nextDate):''].filter(Boolean).join(' · ');
-    } else if(e.cat==='tx'){
-      const isRefund=e.taxType==='Återbetalning';
-      main=(isRefund?'↩ Återbetalning':'↑ Inbetalning')+' — Fordonsskatt';
-      det=[e.periodFrom?'Från: '+fdt(e.periodFrom):'',e.periodTo?'Till: '+fdt(e.periodTo):''].filter(Boolean).join(' · ');
-    } else if(e.cat==='ins2'){
-      main=(e.insType||'Försäkring')+(e.insurer?' — '+e.insurer:'');
-      det=[e.insPeriod,e.periodFrom?fdt(e.periodFrom):'',e.periodTo?'→ '+fdt(e.periodTo):''].filter(Boolean).join(' · ');
-    } else if(e.cat==='gas'){
-      main=(e.gasType||'Gasol')+(e.station?' — '+e.station:'');
-      det=[e.kg?e.kg.toFixed(1)+' kg':'',e.cost&&e.kg?'('+((e.cost/e.kg).toFixed(2))+' kr/kg)':''].filter(Boolean).join(' · ');
-    } else if(e.cat==='wash'){
-      main=(e.washType||'Tvätt')+(e.washPlace?' — '+e.washPlace:'');
-      det='';
-    }
-        const isRefundEntry=e.cat==='tx'&&e.taxType==='Återbetalning';
-    const costDisplay=isRefundEntry?`<span style="color:var(--sv)">−${fkr0(e.cost)}</span>`:fkr0(e.cost);
-    return`<div class="ec ${e.cat}"><div class="etop"><div><div class="ecat">${CAT[e.cat].i} ${CAT[e.cat].n}</div><div class="edate">${fdt(e.date)}</div></div><div class="ecost">${costDisplay}</div></div><div class="edesc">${main}</div>${det?`<div class="edetail">${det}</div>`:''}${e.notes?`<div class="edetail" style="font-style:italic">${e.notes}</div>`:''}<div class="ecard-btns"><button class="editbtn" onclick="openEdit('${curV}',${e.id})">✏️ Redigera</button><button class="delbtn" onclick="del('${curV}',${e.id})">Ta bort</button></div></div>`;
-  }).join('');
+
+  // Gruppera per år om inte cd-sortering
+  if(fs!=='cd'&&fy==='all'){
+    const byYear={};
+    a.forEach(e=>{const y=e.date.substring(0,4);if(!byYear[y])byYear[y]=[];byYear[y].push(e);});
+    const years=Object.keys(byYear).sort(fs==='da'?(a,b)=>a-b:(a,b)=>b-a);
+    list.innerHTML=years.map(y=>{
+      const entries=byYear[y];
+      const yearTotal=entries.reduce((s,e)=>s+(e.cat==='tx'&&e.taxType==='Återbetalning'?-(e.cost||0):(e.cost||0)),0);
+      return`<div class="year-header" onclick="toggleYear('${y}')">
+        <span>${y}</span>
+        <span class="year-total">${entries.length} poster · ${fkr0(yearTotal)}</span>
+      </div>
+      <div class="year-entries" id="year-${y}">${entries.map(e=>entryCard(e,consMap)).join('')}</div>`;
+    }).join('');
+  } else {
+    list.innerHTML=a.map(e=>entryCard(e,consMap)).join('');
+  }
+  initSwipe();
+}
+
+function toggleYear(y){
+  const el=document.getElementById('year-'+y);
+  if(el)el.classList.toggle('collapsed');
+}
+
+// ── SWIPE TO DELETE ──
+function initSwipe(){
+  document.querySelectorAll('.ec[data-id]').forEach(el=>{
+    let startX=0,startY=0,moved=false;
+    el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;moved=false;},{passive:true});
+    el.addEventListener('touchmove',e=>{
+      const dx=startX-e.touches[0].clientX;
+      const dy=Math.abs(e.touches[0].clientY-startY);
+      if(dy>dx)return; // vertical scroll
+      if(dx>30){el.classList.add('swiped');moved=true;}
+      else if(dx<-10){el.classList.remove('swiped');moved=true;}
+    },{passive:true});
+    el.addEventListener('touchend',()=>{});
+    // Click outside to close
+    document.addEventListener('click',()=>{
+      document.querySelectorAll('.ec.swiped').forEach(e=>e.classList.remove('swiped'));
+    },{once:false});
+  });
 }
 
 // ── PERIOD BARS ──
@@ -1412,6 +1518,42 @@ function saveEdit(){
 function closeEditModal(){document.getElementById('edit-modal').classList.remove('show');editV=null;editId=null}
 
 // ── EXPORT / IMPORT ──
+// ── EXPORT CSV ──
+function exportCSV(){
+  const d=gd();
+  const rows=[['Fordon','Datum','Kategori','Beskrivning','Kostnad (kr)','Liter','Kr/L','Mätarst (km)','Station/Plats','Anteckning']];
+  Object.keys(VEH).forEach(vk=>{
+    (d[vk]||[]).forEach(e=>{
+      const vn=VEH[vk].n;
+      const cat=CAT[e.cat]?CAT[e.cat].n:e.cat;
+      let desc='',plats='';
+      if(e.cat==='fu'){desc=e.fuelType||'';plats=e.station||'';}
+      else if(e.cat==='re'){desc=e.desc||'';plats=e.shop||'';}
+      else if(e.cat==='sv'){desc=e.stype||'';plats=e.shop||'';}
+      else if(e.cat==='in'){desc=e.approved?'Godkänd':'Ej godkänd';plats=e.loc||'';}
+      else if(e.cat==='tx'){desc=e.taxType||'';plats='';}
+      else if(e.cat==='ins2'){desc=(e.insType||'')+(e.insurer?' - '+e.insurer:'');plats='';}
+      else if(e.cat==='gas'){desc=e.gasType||'';plats=e.station||'';}
+      else if(e.cat==='wash'){desc=e.washType||'';plats=e.washPlace||'';}
+      rows.push([
+        vn, e.date, cat, desc,
+        (e.cost||0).toString().replace('.',','),
+        e.liters!=null?e.liters.toString().replace('.',','):'',
+        e.ppl!=null?e.ppl.toString().replace('.',','):'',
+        e.odo||'', plats,
+        (e.notes||'').split('\n').join(' ')
+      ]);
+    });
+  });
+  const bom='﻿';
+  const csv=bom+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='fordonsbok_'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('CSV exporterad! ✓');
+}
+
 function exportData(){
   const d=gd();const total=Object.keys(VEH).reduce((s,v)=>s+(d[v]||[]).length,0);
   if(!total){toast('Inga poster att exportera');return}
@@ -1608,12 +1750,7 @@ function dropboxLoad(token){
   }).catch(err=>{console.error('Dropbox load fel:',err);return false;});
 }
 
-// Patcha sd() så varje sparning också synkas till Dropbox
-const _sdOrig=sd;
-function sd(d){
-  _sdOrig(d);
-  if(_dbxReady){const tok=getDropboxToken();if(tok)dropboxBackup(tok,true);}
-}
+// Dropbox-synk sker via original sd() nedan
 
 // ── INIT ──
 function setToday(){
