@@ -208,6 +208,13 @@ textarea{resize:none;height:64px}
 
 /* TOAST */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:11px 22px;border-radius:30px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1}
+.dbx-status{position:fixed;top:10px;right:54px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--sf2);border:1px solid var(--bd);z-index:50;transition:opacity .3s;opacity:0;pointer-events:none}
+.dbx-status.show{opacity:1}
+.ic-btn{width:100%;padding:13px 14px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--sf2);cursor:pointer;text-align:left;font-family:inherit;margin-bottom:8px;color:var(--tx)}
+.ic-btn:active{background:var(--sf)}
+.ic-btn.primary{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3)}
+.ic-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.ic-sub{font-size:12px;color:var(--mu);line-height:1.4}
 
 @media(min-width:600px){.vgrid,.cont,.tabs,.vhdr,.home-btns{padding-left:24px;padding-right:24px}}
 </style>
@@ -246,6 +253,10 @@ textarea{resize:none;height:64px}
       <div class="exp-btn" onclick="document.getElementById('imp-input').click()">
         <div class="exp-btn-icon">📂</div>
         <div><div class="exp-btn-text">Importera</div><div class="exp-btn-sub">Läs in JSON-fil</div></div>
+      </div>
+      <div class="exp-btn" onclick="openDropboxSettings()" id="dbx-home-btn">
+        <div class="exp-btn-icon">📦</div>
+        <div><div class="exp-btn-text">Dropbox</div><div class="exp-btn-sub" id="dbx-home-sub">Ej konfigurerad</div></div>
       </div>
     </div>
   </div>
@@ -514,6 +525,27 @@ textarea{resize:none;height:64px}
     <div class="modal-btns" style="margin-top:16px">
       <div class="modal-btn cancel" onclick="closeAddVehicle()">Avbryt</div>
       <div class="modal-btn" style="background:var(--sv);color:#0C0E12" onclick="confirmAddVehicle()">Lägg till</div>
+    </div>
+  </div>
+</div>
+
+<!-- DROPBOX-INSTÄLLNINGAR MODAL -->
+<div class="modal-overlay" id="dbx-modal">
+  <div class="modal">
+    <div class="modal-title">📦 Dropbox-synk</div>
+    <div style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:12px">
+      Klistra in din Dropbox Access Token. Data synkas automatiskt vid varje start och vid varje sparat inlägg.<br><br>
+      Hämta token: <strong style="color:var(--tx)">dropbox.com/developers/apps</strong> → din app → Generate access token.
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:12px;color:var(--mu);display:block;margin-bottom:5px">Access Token</label>
+      <textarea id="dbx-token-input" style="width:100%;height:80px;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px;color:var(--tx);font-size:12px;font-family:monospace;word-break:break-all;resize:none" placeholder="sl.u.ABCxyz..."></textarea>
+    </div>
+    <div id="dbx-status-text" style="font-size:13px;margin-bottom:10px;min-height:18px"></div>
+    <div class="modal-btns" style="flex-direction:column;gap:8px">
+      <div class="modal-btn" style="background:var(--golf);color:#fff" onclick="saveDropboxToken()">Spara & testa anslutning</div>
+      <div class="modal-btn cancel" id="dbx-clear-btn" style="display:none;color:var(--re)" onclick="clearDropboxToken()">Ta bort token</div>
+      <div class="modal-btn cancel" onclick="document.getElementById('dbx-modal').classList.remove('show')">Stäng</div>
     </div>
   </div>
 </div>
@@ -1465,12 +1497,149 @@ const chartScript=document.createElement('script');
 chartScript.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
 document.head.appendChild(chartScript);
 
+// ── DROPBOX ──
+const DBX_KEY='fb3_dropbox_token';
+const DBX_FILE='/fordonsbok-backup.json';
+let _dbxReady=false;
+
+function getDropboxToken(){try{return localStorage.getItem(DBX_KEY)||'';}catch(e){return '';}}
+
+function openDropboxSettings(){
+  const token=getDropboxToken();
+  document.getElementById('dbx-token-input').value=token;
+  document.getElementById('dbx-status-text').textContent='';
+  document.getElementById('dbx-clear-btn').style.display=token?'block':'none';
+  document.getElementById('dbx-modal').classList.add('show');
+}
+
+function saveDropboxToken(){
+  const token=document.getElementById('dbx-token-input').value.trim();
+  if(!token){alert('Klistra in en token först.');return;}
+  const statusEl=document.getElementById('dbx-status-text');
+  statusEl.style.color='var(--mu)';
+  statusEl.textContent='Testar anslutning…';
+  fetch('https://api.dropboxapi.com/2/users/get_current_account',{
+    method:'POST',headers:{'Authorization':'Bearer '+token}
+  }).then(r=>{
+    if(r.ok)return r.json();throw new Error('HTTP '+r.status);
+  }).then(data=>{
+    localStorage.setItem(DBX_KEY,token);
+    statusEl.style.color='#22c55e';
+    statusEl.textContent='✓ Ansluten som '+(data.name&&data.name.display_name?data.name.display_name:data.email||'okänd');
+    document.getElementById('dbx-clear-btn').style.display='block';
+    updDbxHomeBtn();
+    dropboxBackup(token,false);
+  }).catch(err=>{
+    statusEl.style.color='var(--re)';
+    statusEl.textContent='✗ Misslyckades. Kontrollera att token är korrekt och att behörigheterna files.content.write, files.content.read och account_info.read är aktiverade under fliken Permissions i Dropbox.';
+  });
+}
+
+function clearDropboxToken(){
+  if(!confirm('Ta bort Dropbox-anslutningen?'))return;
+  localStorage.removeItem(DBX_KEY);
+  document.getElementById('dbx-token-input').value='';
+  document.getElementById('dbx-status-text').textContent='';
+  document.getElementById('dbx-clear-btn').style.display='none';
+  updDbxHomeBtn();
+}
+
+function updDbxHomeBtn(){
+  const token=getDropboxToken();
+  const sub=document.getElementById('dbx-home-sub');
+  if(sub)sub.textContent=token?'Ansluten ✓':'Ej konfigurerad';
+}
+
+function showDbxStatus(msg,color='var(--mu)'){
+  let el=document.getElementById('dbx-sync-status');
+  if(!el){el=document.createElement('div');el.id='dbx-sync-status';el.className='dbx-status';document.body.appendChild(el);}
+  el.textContent=msg;el.style.color=color;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+function dropboxBackup(token,silent){
+  if(!token)return;
+  const d=gd();
+  const payload={version:3,exported:new Date().toISOString(),vehicles:VEH,data:d};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/octet-stream'});
+  fetch('https://content.dropboxapi.com/2/files/upload',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+token,
+      'Dropbox-API-Arg':JSON.stringify({path:DBX_FILE,mode:{'.tag':'overwrite'},autorename:false,mute:true}),
+      'Content-Type':'application/octet-stream'
+    },
+    body:blob
+  }).then(r=>{
+    if(r.ok){
+      localStorage.setItem('fb3_last_backup',Date.now());
+      if(!silent)showDbxStatus('✓ Dropbox: sparat!','#22c55e');
+    } else {
+      r.text().then(t=>{console.error('Dropbox upload fel:',r.status,t);});
+      if(!silent)showDbxStatus('Dropbox: fel vid sparning','var(--re)');
+    }
+  }).catch(err=>{
+    console.error('Dropbox fetch fel:',err);
+    if(!silent)showDbxStatus('Dropbox: nätverksfel','var(--warn)');
+  });
+}
+
+function dropboxLoad(token){
+  return fetch('https://content.dropboxapi.com/2/files/download',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+token,
+      'Dropbox-API-Arg':JSON.stringify({path:DBX_FILE})
+    }
+  }).then(r=>{
+    if(r.status===409)return null; // filen finns inte än
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(payload=>{
+    if(!payload||!payload.data)return false;
+    // Återställ fordon om det finns
+    if(payload.vehicles&&typeof payload.vehicles==='object'){
+      Object.keys(payload.vehicles).forEach(k=>{if(!VEH[k])VEH[k]=payload.vehicles[k];});
+      saveCustomVehicles();
+    }
+    // Spara data lokalt
+    sd(payload.data);
+    return true;
+  }).catch(err=>{console.error('Dropbox load fel:',err);return false;});
+}
+
+// Patcha sd() så varje sparning också synkas till Dropbox
+const _sdOrig=sd;
+function sd(d){
+  _sdOrig(d);
+  if(_dbxReady){const tok=getDropboxToken();if(tok)dropboxBackup(tok,true);}
+}
+
 // ── INIT ──
 function setToday(){
   const t=new Date().toISOString().split('T')[0];
   ['fu-d','re-d','sv-d','in-d','tx-d','ins2-d','gas-d','wash-d'].forEach(id=>{const e=document.getElementById(id);if(e&&!e.value)e.value=t});
 }
-initTheme();setToday();updHome();
+initTheme();setToday();
+updDbxHomeBtn();
+const _dbxTok=getDropboxToken();
+if(_dbxTok){
+  showDbxStatus('Synkar med Dropbox…');
+  dropboxLoad(_dbxTok).then(loaded=>{
+    if(loaded){showDbxStatus('✓ Synkad med Dropbox','#22c55e');}
+    else{showDbxStatus('Dropbox: skapar ny fil');}
+    _dbxReady=true;
+    updHome();
+    dropboxBackup(_dbxTok,true);
+  }).catch(()=>{
+    showDbxStatus('Dropbox ej tillgänglig','var(--warn)');
+    _dbxReady=true;
+    updHome();
+  });
+} else {
+  _dbxReady=true;
+  updHome();
+}
 </script>
 </body>
 </html>
