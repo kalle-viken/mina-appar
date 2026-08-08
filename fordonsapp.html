@@ -60,6 +60,8 @@ body.light .app-title{background:linear-gradient(135deg,#1E3A5F 30%,#3B82F6);-we
 .vc-total{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .vc.golf .vc-total{color:var(--golf)}.vc.cit .vc-total{color:var(--cit)}.vc.hub .vc-total{color:var(--hub)}
 .vc-arr{color:var(--mu2);font-size:18px}
+.vc-del{background:none;border:none;font-size:16px;cursor:pointer;color:var(--mu);opacity:.5;padding:4px 2px 4px 8px;flex-shrink:0;font-family:inherit}
+.vc-del:active{opacity:1;color:var(--re)}
 .vc-warn{position:absolute;top:10px;right:10px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .warn-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap}
 .warn-badge.red{background:rgba(248,113,113,.15);color:var(--danger);border:1px solid rgba(248,113,113,.3)}
@@ -855,6 +857,38 @@ function save(){
 }
 
 // ── SNABBREGISTRERING ──
+// ── TA BORT FORDON ──
+function confirmDeleteVehicle(vk){
+  const vd=VEH[vk];
+  if(!vd){return;}
+  const d=gd();
+  const count=(d[vk]||[]).length;
+  const isDefault=['golf','cit','hub'].includes(vk);
+  const msg='Ta bort '+vd.i+' '+vd.n+'?'+
+    (count>0?'\n\nFordonet har '+count+' poster som också raderas permanent.':'\n\nFordonet har inga poster.')+
+    (isDefault?'\n\nDetta är ett standardfordon — det kan läggas till igen via Lägg till fordon.':'');
+  if(!confirm(msg))return;
+  // Ta bort fordonets data
+  delete d[vk];
+  sd(d);
+  // Ta bort fordonsmetadata
+  try{
+    const meta=JSON.parse(localStorage.getItem('fb3_meta')||'{}');
+    delete meta[vk];
+    localStorage.setItem('fb3_meta',JSON.stringify(meta));
+  }catch(e){}
+  // Ta bort från VEH om det är ett anpassat fordon
+  if(!isDefault){
+    delete VEH[vk];
+    saveCustomVehicles();
+  } else {
+    // Standardfordon — töm bara datan, behåll definitionen
+    // (redan gjort via sd(d) ovan)
+  }
+  toast(vd.i+' '+vd.n+' borttaget');
+  updHome();
+}
+
 function openQuickFuel(){
   // Öppna första fordonet på drivmedelsfliken
   const vk=Object.keys(VEH)[0];
@@ -919,6 +953,7 @@ function updHome(){
         <div class="vc-cpm">${(()=>{const cp=cpm(a);return cp!=null?Math.round(cp).toLocaleString('sv-SE')+' kr/mil':'';})()}</div>
         <div class="vc-arr">›</div>
       </div>
+      <button class="vc-del" onclick="event.stopPropagation();confirmDeleteVehicle('${v}')" title="Ta bort fordon">🗑️</button>
       <div class="vc-warn">${warns.map(w=>`<div class="warn-badge ${w.type}">${w.text}</div>`).join('')}</div>
     </div>`;
   }).join('');
