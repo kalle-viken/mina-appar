@@ -254,13 +254,15 @@ textarea{resize:none;height:64px}
   <div id="quick-section" style="display:none;padding:0 18px 4px">
     <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Snabbregistrering</div>
     <div class="quick-card" id="quick-card" onclick="openQuickFuel()">
-      <div class="quick-ico" style="background:rgba(96,165,250,0.15)">⛽</div>
+      <div class="quick-ico" style="background:rgba(96,165,250,0.15)" id="quick-ico">⛽</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:600" id="quick-title">Tankning</div>
-        <div style="font-size:12px;color:var(--mu)" id="quick-sub">Välj fordon nedan för att snabbregistrera</div>
+        <div style="font-size:12px;color:var(--mu)" id="quick-sub">Tryck för att logga drivmedel</div>
       </div>
       <div style="color:var(--mu2);font-size:18px">›</div>
     </div>
+    <!-- Fordonsväljare -->
+    <div id="quick-picker" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px"></div>
   </div>
   <div id="vgrid" class="vgrid">
     <!-- Vehicle cards rendered dynamically by updHome() -->
@@ -889,11 +891,54 @@ function confirmDeleteVehicle(vk){
   updHome();
 }
 
+const QF_KEY='fb3_quick_vehicle';
+
+function getQuickVehicle(){
+  const saved=localStorage.getItem(QF_KEY);
+  const keys=Object.keys(VEH);
+  return (saved&&VEH[saved])?saved:keys[0];
+}
+
+function setQuickVehicle(vk){
+  localStorage.setItem(QF_KEY,vk);
+  updQuickSection();
+}
+
 function openQuickFuel(){
-  // Öppna första fordonet på drivmedelsfliken
-  const vk=Object.keys(VEH)[0];
+  const vk=getQuickVehicle();
   if(!vk)return;
   openV(vk);sCat('fu');sTab('add');
+}
+
+function updQuickSection(){
+  const keys=Object.keys(VEH);
+  const qs=document.getElementById('quick-section');
+  if(!qs)return;
+  qs.style.display=keys.length>0?'block':'none';
+
+  const qvk=getQuickVehicle();
+  const vd=VEH[qvk]||VEH[keys[0]];
+
+  // Uppdatera titel och ikon
+  const qt=document.getElementById('quick-title');
+  const qi=document.getElementById('quick-ico');
+  if(qt&&vd)qt.textContent='Snabbtankning — '+vd.i+' '+vd.n;
+  if(qi&&vd)qi.textContent='⛽';
+
+  // Bygg fordonsväljarpills
+  const picker=document.getElementById('quick-picker');
+  if(!picker)return;
+  if(keys.length<=1){picker.style.display='none';return;}
+  picker.style.display='flex';
+  picker.innerHTML=keys.map(k=>{
+    const v=VEH[k];
+    const active=k===qvk;
+    return`<button onclick="event.stopPropagation();setQuickVehicle('${k}')" style="
+      padding:6px 12px;border-radius:20px;border:1.5px solid ${active?v.c:'var(--bd2)'};
+      background:${active?v.c+'22':'var(--sf2)'};color:${active?v.c:'var(--mu)'};
+      font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s
+    ">${v.i} ${v.n}</button>`;
+  }).join('');
 }
 
 function del(v,id){
@@ -963,16 +1008,8 @@ function updHome(){
     <div><div style="font-size:16px;font-weight:600">Lägg till fordon</div><div style="font-size:12px;color:var(--mu);margin-top:2px">Registrera ett nytt fordon</div></div>
   </div>`;
   document.getElementById('home-warnings').innerHTML='';
-  // Snabbregistrering – visa om det finns fordon
-  const qs=document.getElementById('quick-section');
-  if(qs)qs.style.display=Object.keys(VEH).length>0?'block':'none';
-  const qt=document.getElementById('quick-title');
-  const qsub=document.getElementById('quick-sub');
-  if(qt&&Object.keys(VEH).length>0){
-    const vk=Object.keys(VEH)[0];
-    qt.textContent='Snabbtankning — '+VEH[vk].i+' '+VEH[vk].n;
-    if(qsub)qsub.textContent='Tryck för att logga drivmedel direkt';
-  }
+  // Snabbregistrering
+  updQuickSection();
 }
 
 // ── VEHICLE HEADER ──
