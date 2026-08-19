@@ -315,13 +315,25 @@ input[type=file]{font-size:13px;color:var(--mu)}
 <script>
 const STORAGE_KEY='husbilsdagbok_v1';
 function loadData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{trips:[],vehicle:dv()};}catch(e){return{trips:[],vehicle:dv()};}}
-function saveData(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
-  // Dropbox-synk sker via saveAndSync() för att undvika ordningsproblem
+async function saveData(){
+  db.lastModified=Date.now();
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
+  }catch(e){
+    console.error('saveData misslyckades',e);
+    alert('Kunde inte spara ändringen! Lagringsutrymmet i webbläsaren är troligen fullt (vanligast orsak: många sparade bilder). Ta bort någon bild/dag eller exportera en backup och rensa, försök sedan igen.');
+    return false;
+  }
+  // Vänta in Dropbox-uppladdningen innan vi säger att sparningen är klar,
+  // så att t.ex. en stängd flik inte hinner avbryta uppladdningen.
   if(typeof _dbxSyncReady!=='undefined'&&_dbxSyncReady){
     const tok=getDropboxToken();
-    if(tok) dropboxBackup(tok, true);
+    if(tok){
+      const ok=await dropboxBackup(tok, true);
+      if(!ok) showToast('Sparat lokalt – Dropbox-synk misslyckades, försök igen med bättre uppkoppling.');
+    }
   }
+  return true;
 }
 function dv(){return{name:'Min husbil',fuel:'Diesel',euroClass:'Euro 6',regNum:'',year:'',height:'3,0',width:'3,4',length:'7,0',lengthBikes:'7,7',totalWeight:'3 450',frontAxle:'1 445',rearAxle:'2 005'};}
 
@@ -339,7 +351,8 @@ function updateTopAction(){const btn=document.getElementById('topAction');if(cur
 
 function getTrip(){return db.trips.find(t=>t.id===currentTripId);}
 function uid(){return Math.random().toString(36).slice(2,10);}
-function tripMeta(trip){const days=(trip.days||[]).length;const lastOdo=(trip.days||[]).reduce((a,d)=>d.odo?Math.max(a,d.odo):a,0);const km=lastOdo&&trip.startOdo?lastOdo-trip.startOdo:0;return days+' dagar'+(km>0?' · '+km.toLocaleString('sv')+' km':'');}
+function tripKm(trip){const lastOdo=(trip.days||[]).reduce((a,d)=>d.odo?Math.max(a,d.odo):a,0);return lastOdo&&trip.startOdo?lastOdo-trip.startOdo:0;}
+function tripMeta(trip){const days=(trip.days||[]).length;const km=tripKm(trip);return days+' dagar'+(km>0?' · '+km.toLocaleString('sv')+' km':'');}
 function formatDate(s){if(!s)return'';return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'long',year:'numeric'});}
 function formatDateShort(s){if(!s)return'';return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'});}
 const CI={drivmedel:'⛽',gasol:'🔥',camping:'🏕️',restaurang:'🍽️',väg:'🛣️',tvätt:'🧺',inträde:'🎟️',shopping:'🛍️',övrigt:'📌'};
@@ -347,14 +360,23 @@ const CB={drivmedel:'rgba(245,158,11,.12)',gasol:'rgba(251,146,60,.12)',camping:
 const CC={drivmedel:'#D97706',gasol:'#EA580C',camping:'#8B5CF6',restaurang:'#EF4444',väg:'#0284C7',tvätt:'#16A34A',inträde:'#059669',shopping:'#C026D3',övrigt:'#64748B'};
 const CL={drivmedel:'Drivmedel',gasol:'Gasol',camping:'Camping / Ställplats',restaurang:'Restaurang / Mat',väg:'Vägtull / Färja',tvätt:'Tvätt',inträde:'Inträde / Aktivitet',shopping:'Shopping',övrigt:'Övrigt'};
 const CBAR={drivmedel:'#D97706',gasol:'#EA580C',camping:'#8B5CF6',restaurang:'#EF4444',väg:'#0EA5E9',tvätt:'#22C55E',inträde:'#10B981',shopping:'#D946EF',övrigt:'#94A3B8'};
-function rfadu(file,maxPx=1200,quality=0.65){return new Promise(r=>{const rd=new FileReader();rd.onload=e=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>maxPx||h>maxPx){if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;}}const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);r(cv.toDataURL('image/jpeg',quality));};img.src=e.target.result;};rd.readAsDataURL(file);});}
+function rfadu(file,maxPx=1000,quality=0.6){return new Promise(r=>{const rd=new FileReader();rd.onload=e=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>maxPx||h>maxPx){if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;}}const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);r(cv.toDataURL('image/jpeg',quality));};img.src=e.target.result;};rd.readAsDataURL(file);});}
 
 function renderHome(){
   updateTopAction();
-  const trips=db.trips;
+  const trips=db.trips.slice().sort((a,b)=>(a.startDate||'')<(b.startDate||'')?1:-1);
   const v=db.vehicle;
   const dateStr=new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long'});
   let html=`<div class="home-hero"><div class="hero-label">Resedagbok</div><div class="hero-title">Husbilsdagbok</div><div class="hero-date">${dateStr}</div></div>`;
+  if(trips.length>0){
+    const totalDays=trips.reduce((s,t)=>s+(t.days||[]).length,0);
+    const totalKm=trips.reduce((s,t)=>s+tripKm(t),0);
+    const allCosts=trips.reduce((arr,t)=>arr.concat(t.costs||[]),[]);
+    const totalCost=allCosts.reduce((s,c)=>s+Number(c.amount||0),0);
+    const byCat={};allCosts.forEach(c=>{byCat[c.category]=(byCat[c.category]||0)+Number(c.amount||0);});
+    html+=`<div class="section-lbl">Sammanfattning · alla resor</div><div class="krow"><div class="kpi"><div class="kv">${trips.length}</div><div class="kl">resor</div></div><div class="kpi"><div class="kv">${totalDays}</div><div class="kl">resdagar</div></div></div><div class="krow"><div class="kpi"><div class="kv">${totalKm>0?totalKm.toLocaleString('sv'):'–'}</div><div class="kl">km totalt</div></div><div class="kpi"><div class="kv">${totalCost>0?totalCost.toLocaleString('sv'):'–'}</div><div class="kl">kr totalt</div></div></div>`;
+    if(Object.keys(byCat).length>0){html+=`<div class="card">`;Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt])=>{const pct=totalCost>0?Math.round(amt/totalCost*100):0;html+=`<div class="bar-row"><div class="bar-lbl"><span class="bar-lbl-name">${CI[cat]||''} ${CL[cat]||cat}</span><span>${pct}% · ${amt.toLocaleString('sv')} kr</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${CBAR[cat]||'#94A3B8'}"></div></div></div>`;});html+=`</div>`;}
+  }
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="section-lbl" style="margin:0">Mina resor</div><button class="new-btn" onclick="openNewTripModal()">+ Ny resa</button></div>`;
   if(trips.length===0){html+=`<div class="empty"><div class="empty-i">🗺️</div><div class="empty-t">Inga resor ännu.<br>Skapa din första resa!</div></div>`;}
   else{trips.forEach(t=>{const meta=tripMeta(t);const s=t.startDate?formatDateShort(t.startDate):'';html+=`<div class="trip-card" onclick="openTrip('${t.id}')"><div class="trip-icon">${t.emoji||'🚐'}</div><div class="trip-info"><div class="trip-name">${t.name}</div><div class="trip-meta">${s}${meta?' · '+meta:''}</div></div><button class="trip-del" onclick="event.stopPropagation();confirmDeleteTrip('${t.id}')">🗑</button><div class="trip-arr">›</div></div>`;});}
@@ -424,7 +446,7 @@ function switchToVehicleEdit(){
 
 function switchToVehicleView(){ openVehicleModal(); }
 
-function saveVehicleModal(){
+async function saveVehicleModal(){
   db.vehicle={
     name:      document.getElementById('veName').value.trim()||'Min husbil',
     regNum:    document.getElementById('veReg').value.trim().toUpperCase(),
@@ -439,7 +461,7 @@ function saveVehicleModal(){
     frontAxle: document.getElementById('veFA').value.trim(),
     rearAxle:  document.getElementById('veRA').value.trim(),
   };
-  saveData();
+  await saveData();
   showToast('Fordon sparat');
   openVehicleModal(); // tillbaka till visningsläge
   renderHome();       // uppdatera kortet på startsidan
@@ -535,8 +557,8 @@ function saveVehicle(){ saveVehicleModal(); }
 
 function openNewTripModal(){document.getElementById('tripName').value='';document.getElementById('tripStart').value=new Date().toISOString().slice(0,10);document.getElementById('tripOdo').value='';selectedTripEmoji='🏔️';document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(el=>el.classList.toggle('sel',el.dataset.e===selectedTripEmoji));openModal('modalTrip');}
 document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(el=>{el.onclick=()=>{selectedTripEmoji=el.dataset.e;document.querySelectorAll('#tripEmojiPicker .pick-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');};});
-function saveTrip(){const name=document.getElementById('tripName').value.trim();if(!name){alert('Ange ett namn på resan.');return;}const trip={id:uid(),name,emoji:selectedTripEmoji,startDate:document.getElementById('tripStart').value,startOdo:Number(document.getElementById('tripOdo').value)||null,days:[],costs:[]};db.trips.unshift(trip);saveData();closeModal('modalTrip');openTrip(trip.id);}
-function confirmDeleteTrip(tripId){const trip=db.trips.find(t=>t.id===tripId);if(!trip)return;const days=(trip.days||[]).length;if(confirm(`Ta bort "${trip.name}"?${days>0?' Resan innehåller '+days+' dag'+(days>1?'ar':'')+' och all data raderas.':' Detta kan inte ångras.'}`)){db.trips=db.trips.filter(t=>t.id!==tripId);saveData();goHome();showToast('Resan togs bort');}}
+async function saveTrip(){const name=document.getElementById('tripName').value.trim();if(!name){alert('Ange ett namn på resan.');return;}const trip={id:uid(),name,emoji:selectedTripEmoji,startDate:document.getElementById('tripStart').value,startOdo:Number(document.getElementById('tripOdo').value)||null,days:[],costs:[]};db.trips.unshift(trip);await saveData();closeModal('modalTrip');openTrip(trip.id);}
+async function confirmDeleteTrip(tripId){const trip=db.trips.find(t=>t.id===tripId);if(!trip)return;const days=(trip.days||[]).length;if(confirm(`Ta bort "${trip.name}"?${days>0?' Resan innehåller '+days+' dag'+(days>1?'ar':'')+' och all data raderas.':' Detta kan inte ångras.'}`)){db.trips=db.trips.filter(t=>t.id!==tripId);await saveData();goHome();showToast('Resan togs bort');}}
 
 function openNewDayModal(){document.getElementById('editDayId').value='';document.getElementById('modalDayTitle').innerHTML='Ny dag <button class="modal-close" onclick="closeModal(\'modalDay\')">×</button>';document.getElementById('deleteDayBtn').classList.add('hidden');const trip=getTrip();const days=trip.days||[];let dd=new Date().toISOString().slice(0,10);let prevToPlace='';if(days.length>0){const last=days.reduce((a,b)=>(a.date||'')>(b.date||'')?a:b);if(last.date){const d=new Date(last.date+'T12:00:00');d.setDate(d.getDate()+1);dd=d.toISOString().slice(0,10);}prevToPlace=last.toPlace||'';}document.getElementById('dayDate').value=dd;['dayFromTime','dayToPlace','dayToTime','dayOdo','dayCost','dayNote'].forEach(id=>document.getElementById(id).value='');document.getElementById('dayFromPlace').value=prevToPlace;document.getElementById('dayPhotos').value='';document.getElementById('dayLodging').value='ställplats';selectedWeather='';selectedFacilities=[];updateWeatherPicker();updateFacilityPicker();openModal('modalDay');}
 function editDay(dayId){const trip=getTrip();const day=(trip.days||[]).find(d=>d.id===dayId);if(!day)return;document.getElementById('editDayId').value=dayId;document.getElementById('modalDayTitle').innerHTML='Redigera dag <button class="modal-close" onclick="closeModal(\'modalDay\')">×</button>';document.getElementById('deleteDayBtn').classList.remove('hidden');document.getElementById('dayDate').value=day.date||'';document.getElementById('dayFromPlace').value=day.fromPlace||'';document.getElementById('dayFromTime').value=day.fromTime||'';document.getElementById('dayToPlace').value=day.toPlace||'';document.getElementById('dayToTime').value=day.toTime||'';document.getElementById('dayOdo').value=day.odo||'';document.getElementById('dayCost').value=day.cost||'';document.getElementById('dayNote').value=day.note||'';document.getElementById('dayLodging').value=day.lodging||'ställplats';document.getElementById('dayPhotos').value='';selectedWeather=day.weather||'';selectedFacilities=day.facilities?[...day.facilities]:[];updateWeatherPicker();updateFacilityPicker();openModal('modalDay');}
@@ -544,17 +566,17 @@ function updateWeatherPicker(){document.querySelectorAll('#weatherPicker .pick-o
 function updateFacilityPicker(){document.querySelectorAll('#facilityPicker .fac-btn').forEach(el=>el.classList.toggle('sel',selectedFacilities.includes(el.dataset.f)));}
 document.querySelectorAll('#weatherPicker .pick-opt').forEach(el=>{el.onclick=()=>{selectedWeather=selectedWeather===el.dataset.w?'':el.dataset.w;updateWeatherPicker();};});
 document.querySelectorAll('#facilityPicker .fac-btn').forEach(el=>{el.onclick=()=>{const f=el.dataset.f;if(selectedFacilities.includes(f))selectedFacilities=selectedFacilities.filter(x=>x!==f);else selectedFacilities.push(f);updateFacilityPicker();};});
-async function saveDay(){const trip=getTrip();if(!trip.days)trip.days=[];const fi=document.getElementById('dayPhotos');let np=[];if(fi.files.length>0){const files=Array.from(fi.files).slice(0,3);np=await Promise.all(files.map(rfadu));}const dayData={date:document.getElementById('dayDate').value,fromPlace:document.getElementById('dayFromPlace').value.trim(),fromTime:document.getElementById('dayFromTime').value,toPlace:document.getElementById('dayToPlace').value.trim(),toTime:document.getElementById('dayToTime').value,odo:Number(document.getElementById('dayOdo').value)||null,cost:Number(document.getElementById('dayCost').value)||null,note:document.getElementById('dayNote').value.trim(),lodging:document.getElementById('dayLodging').value,weather:selectedWeather,facilities:[...selectedFacilities]};const eid=document.getElementById('editDayId').value;if(eid){const idx=trip.days.findIndex(d=>d.id===eid);if(idx>=0){const ex=trip.days[idx];dayData.id=eid;dayData.photos=ex.photos?[...ex.photos,...np].slice(0,3):np.slice(0,3);trip.days[idx]=dayData;}}else{dayData.id=uid();dayData.photos=np.slice(0,3);trip.days.push(dayData);if(dayData.cost&&dayData.cost>0){if(!trip.costs)trip.costs=[];trip.costs.push({id:uid(),category:'camping',amount:dayData.cost,date:dayData.date,note:dayData.toPlace||'Övernattning'});}}saveData();closeModal('modalDay');renderDagbok();}
-function confirmDeleteDay(dayId){if(confirm('Ta bort denna dag?')){const trip=getTrip();trip.days=(trip.days||[]).filter(d=>d.id!==dayId);saveData();renderDagbok();}}
-function deleteDay(){const id=document.getElementById('editDayId').value;if(confirm('Ta bort denna dag?')){const trip=getTrip();trip.days=(trip.days||[]).filter(d=>d.id!==id);saveData();closeModal('modalDay');renderDagbok();}}
-async function addPhotoToDay(dayId){const trip=getTrip();const day=(trip.days||[]).find(d=>d.id===dayId);if(!day)return;if((day.photos||[]).length>=3){alert('Max 3 bilder per dag.');return;}const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{if(inp.files.length>0){const data=await rfadu(inp.files[0]);if(!day.photos)day.photos=[];day.photos.push(data);saveData();renderDagbok();}};inp.click();}
-function removePhoto(dayId,pi,event){event.stopPropagation();const trip=getTrip();const day=(trip.days||[]).find(d=>d.id===dayId);if(day&&day.photos){day.photos.splice(pi,1);saveData();renderDagbok();}}
+async function saveDay(){const trip=getTrip();if(!trip.days)trip.days=[];const fi=document.getElementById('dayPhotos');let np=[];if(fi.files.length>0){const files=Array.from(fi.files).slice(0,3);np=await Promise.all(files.map(rfadu));}const dayData={date:document.getElementById('dayDate').value,fromPlace:document.getElementById('dayFromPlace').value.trim(),fromTime:document.getElementById('dayFromTime').value,toPlace:document.getElementById('dayToPlace').value.trim(),toTime:document.getElementById('dayToTime').value,odo:Number(document.getElementById('dayOdo').value)||null,cost:Number(document.getElementById('dayCost').value)||null,note:document.getElementById('dayNote').value.trim(),lodging:document.getElementById('dayLodging').value,weather:selectedWeather,facilities:[...selectedFacilities]};const eid=document.getElementById('editDayId').value;if(eid){const idx=trip.days.findIndex(d=>d.id===eid);if(idx>=0){const ex=trip.days[idx];dayData.id=eid;dayData.photos=ex.photos?[...ex.photos,...np].slice(0,3):np.slice(0,3);trip.days[idx]=dayData;}}else{dayData.id=uid();dayData.photos=np.slice(0,3);trip.days.push(dayData);if(dayData.cost&&dayData.cost>0){if(!trip.costs)trip.costs=[];trip.costs.push({id:uid(),category:'camping',amount:dayData.cost,date:dayData.date,note:dayData.toPlace||'Övernattning'});}}if(!(await saveData()))return;closeModal('modalDay');renderDagbok();}
+async function confirmDeleteDay(dayId){if(confirm('Ta bort denna dag?')){const trip=getTrip();trip.days=(trip.days||[]).filter(d=>d.id!==dayId);await saveData();renderDagbok();}}
+async function deleteDay(){const id=document.getElementById('editDayId').value;if(confirm('Ta bort denna dag?')){const trip=getTrip();trip.days=(trip.days||[]).filter(d=>d.id!==id);await saveData();closeModal('modalDay');renderDagbok();}}
+async function addPhotoToDay(dayId){const trip=getTrip();const day=(trip.days||[]).find(d=>d.id===dayId);if(!day)return;if((day.photos||[]).length>=3){alert('Max 3 bilder per dag.');return;}const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{if(inp.files.length>0){const data=await rfadu(inp.files[0]);if(!day.photos)day.photos=[];day.photos.push(data);if(!(await saveData())){day.photos.pop();renderDagbok();return;}renderDagbok();}};inp.click();}
+async function removePhoto(dayId,pi,event){event.stopPropagation();const trip=getTrip();const day=(trip.days||[]).find(d=>d.id===dayId);if(day&&day.photos){day.photos.splice(pi,1);await saveData();renderDagbok();}}
 function toggleDay(dayId){const card=document.getElementById('daycard-'+dayId);if(card)card.classList.toggle('expanded');}
 
 function openNewCostModal(){document.getElementById('editCostId').value='';document.getElementById('deleteCostBtn').classList.add('hidden');document.getElementById('costCat').value='drivmedel';document.getElementById('costAmt').value='';document.getElementById('costDate').value=new Date().toISOString().slice(0,10);document.getElementById('costNote').value='';openModal('modalCost');}
 function editCost(costId){const trip=getTrip();const cost=(trip.costs||[]).find(c=>c.id===costId);if(!cost)return;document.getElementById('editCostId').value=costId;document.getElementById('deleteCostBtn').classList.remove('hidden');document.getElementById('costCat').value=cost.category;document.getElementById('costAmt').value=cost.amount;document.getElementById('costDate').value=cost.date;document.getElementById('costNote').value=cost.note||'';openModal('modalCost');}
-function saveCost(){const trip=getTrip();if(!trip.costs)trip.costs=[];const amt=Number(document.getElementById('costAmt').value);if(!amt||amt<=0){alert('Ange ett belopp.');return;}const data={category:document.getElementById('costCat').value,amount:amt,date:document.getElementById('costDate').value,note:document.getElementById('costNote').value.trim()};const eid=document.getElementById('editCostId').value;if(eid){const idx=trip.costs.findIndex(c=>c.id===eid);if(idx>=0){data.id=eid;trip.costs[idx]=data;}}else{data.id=uid();trip.costs.push(data);}saveData();closeModal('modalCost');renderKostnader();}
-function deleteCost(){const id=document.getElementById('editCostId').value;if(confirm('Ta bort denna kostnad?')){const trip=getTrip();trip.costs=(trip.costs||[]).filter(c=>c.id!==id);saveData();closeModal('modalCost');renderKostnader();}}
+async function saveCost(){const trip=getTrip();if(!trip.costs)trip.costs=[];const amt=Number(document.getElementById('costAmt').value);if(!amt||amt<=0){alert('Ange ett belopp.');return;}const data={category:document.getElementById('costCat').value,amount:amt,date:document.getElementById('costDate').value,note:document.getElementById('costNote').value.trim()};const eid=document.getElementById('editCostId').value;if(eid){const idx=trip.costs.findIndex(c=>c.id===eid);if(idx>=0){data.id=eid;trip.costs[idx]=data;}}else{data.id=uid();trip.costs.push(data);}await saveData();closeModal('modalCost');renderKostnader();}
+async function deleteCost(){const id=document.getElementById('editCostId').value;if(confirm('Ta bort denna kostnad?')){const trip=getTrip();trip.costs=(trip.costs||[]).filter(c=>c.id!==id);await saveData();closeModal('modalCost');renderKostnader();}}
 
 function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
@@ -562,7 +584,7 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 
 function exportBackup(silent){try{const json=JSON.stringify(db,null,2);const blob=new Blob([json],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='husbilsdagbok-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);localStorage.setItem('hbd_last_backup',Date.now());if(!silent)showToast('Backup exporterad!');}catch(e){alert('Kunde inte exportera: '+e.message);}}
 function importBackup(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const parsed=JSON.parse(e.target.result);if(!parsed.trips){alert('Ogiltig backupfil.');return;}_pending=parsed;const tc=parsed.trips.length;const dc=parsed.trips.reduce((s,t)=>s+(t.days||[]).length,0);const cc=parsed.trips.reduce((s,t)=>s+(t.costs||[]).length,0);document.getElementById('importInfo').innerHTML=`<strong>Fil:</strong> ${file.name}<br><strong>Innehåller:</strong> ${tc} resa${tc!==1?'r':''}, ${dc} dag${dc!==1?'ar':''}, ${cc} kostnadsposter<br><strong>Just nu:</strong> ${db.trips.length} resa${db.trips.length!==1?'r':''}`;openModal('modalImport');}catch(err){alert('Kunde inte läsa filen: '+err.message);}};reader.readAsText(file);event.target.value='';}
-function doImport(mode){if(!_pending)return;closeModal('modalImport');if(mode==='replace'){db=_pending;if(!db.vehicle)db.vehicle=dv();saveData();goHome();showToast('Data återställd från backup');}else{const ex=new Set(db.trips.map(t=>t.id));const added=_pending.trips.filter(t=>!ex.has(t.id));db.trips=[...db.trips,...added];saveData();goHome();showToast(added.length+' ny'+(added.length!==1?'a resor':' resa')+' lades till');}_pending=null;}
+async function doImport(mode){if(!_pending)return;closeModal('modalImport');if(mode==='replace'){db=_pending;if(!db.vehicle)db.vehicle=dv();await saveData();goHome();showToast('Data återställd från backup');}else{const ex=new Set(db.trips.map(t=>t.id));const added=_pending.trips.filter(t=>!ex.has(t.id));db.trips=[...db.trips,...added];await saveData();goHome();showToast(added.length+' ny'+(added.length!==1?'a resor':' resa')+' lades till');}_pending=null;}
 
 // ════════════════════════════════════════════
 // DROPBOX
@@ -616,10 +638,10 @@ function clearDropboxToken(){
 
 // Spara till Dropbox
 function dropboxBackup(token, silent){
-  if(!token) return;
+  if(!token) return Promise.resolve(false);
   const json = JSON.stringify(db, null, 2);
   const blob = new Blob([json], {type:'application/octet-stream'});
-  fetch('https://content.dropboxapi.com/2/files/upload', {
+  return fetch('https://content.dropboxapi.com/2/files/upload', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer '+token,
@@ -628,12 +650,12 @@ function dropboxBackup(token, silent){
     },
     body: blob
   }).then(r=>{
-    if(r.ok){ localStorage.setItem('hbd_last_backup', Date.now()); if(!silent) showToast('Dropbox: data sparad!'); }
-    else { if(!silent) showToast('Dropbox: fel vid sparning'); }
-  }).catch(()=>{ if(!silent) showToast('Dropbox: kunde inte spara'); });
+    if(r.ok){ localStorage.setItem('hbd_last_backup', Date.now()); if(!silent) showToast('Dropbox: data sparad!'); return true; }
+    else { if(!silent) showToast('Dropbox: fel vid sparning'); return false; }
+  }).catch(()=>{ if(!silent) showToast('Dropbox: kunde inte spara'); return false; });
 }
 
-// Ladda från Dropbox — returnerar Promise<bool>
+// Ladda från Dropbox — returnerar Promise<'remote'|'local'|'same'|false>
 function dropboxLoad(token){
   return fetch('https://content.dropboxapi.com/2/files/download', {
     method: 'POST',
@@ -648,14 +670,20 @@ function dropboxLoad(token){
   }).then(data=>{
     if(!data) return false;
     if(!data.trips) return false;
-    // Jämför: använd Dropbox-data om den är nyare eller har fler resor
-    const dbxTrips = data.trips.length;
-    const localTrips = db.trips.length;
-    // Alltid lita på Dropbox som källa om Dropbox har data
-    db = data;
-    if(!db.vehicle) db.vehicle = dv();
-    saveData();
-    return true;
+    // Jämför tidsstämplar: den senast ändrade versionen vinner, ingen skrivs
+    // över blint. Gammal data utan tidsstämpel räknas som äldst (0).
+    const remoteTs = data.lastModified||0;
+    const localTs = db.lastModified||0;
+    if(remoteTs > localTs){
+      db = data;
+      if(!db.vehicle) db.vehicle = dv();
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}catch(e){}
+      return 'remote';
+    } else if(localTs > remoteTs){
+      return 'local'; // lokal data är nyare, ska laddas upp istället
+    } else {
+      return 'same';
+    }
   }).catch(()=>false);
 }
 
@@ -691,16 +719,29 @@ function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
   if(token){
     // Visa laddningsstatus
     showSyncStatus('Synkar med Dropbox…');
-    dropboxLoad(token).then(loaded=>{
-      if(loaded){
+    dropboxLoad(token).then(result=>{
+      _dbxSyncReady=true;
+      if(result==='remote'){
+        showSyncStatus('✓ Synkad – hämtade senaste från Dropbox', '#4ADE80');
+        goHome();
+        checkBackupReminder();
+      } else if(result==='local'){
+        showSyncStatus('Laddar upp lokala ändringar…');
+        goHome();
+        dropboxBackup(token, true).then(ok=>{
+          showSyncStatus(ok?'✓ Lokala ändringar uppladdade':'Dropbox: uppladdning misslyckades', ok?'#4ADE80':'var(--warn)');
+        });
+        checkBackupReminder();
+      } else if(result==='same'){
         showSyncStatus('✓ Synkad med Dropbox', '#4ADE80');
+        goHome();
+        checkBackupReminder();
       } else {
         showSyncStatus('Dropbox: ny fil skapas');
+        goHome();
+        dropboxBackup(token, true);
+        checkBackupReminder();
       }
-      _dbxSyncReady=true;
-      goHome();
-      dropboxBackup(token, true);
-      checkBackupReminder();
     }).catch(()=>{
       showSyncStatus('Dropbox ej tillgänglig – kör lokalt', 'var(--warn)');
       _dbxSyncReady=true;
