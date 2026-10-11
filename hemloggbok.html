@@ -3855,13 +3855,10 @@ const archivedHtml =
         ${
   daysLeft === 0
     ? `
-      <button
+    <button
   class="btn btn-sm"
-  style="
-    color:white;
-    background:#c94a4a;
-    border-color:#c94a4a;
-  "
+  style="color:white;background:#c94a4a;border-color:#c94a4a;"
+  onclick="deleteProperty('${p.id}')"
 >
   🗑 Ta bort
 </button>
@@ -4053,16 +4050,6 @@ function archiveProperty(id){
     properties.find(
       p => p.id === id
     );
-
-  if(
-    id === 'villa' ||
-    id === 'stuga'
-  ){
-    alert(
-      'Arkivering av standardfastigheter är tillfälligt spärrad under test.'
-    );
-    return;
-  }
 
   if(!property) return;
 
