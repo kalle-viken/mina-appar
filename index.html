@@ -119,6 +119,13 @@
       background:var(--icon-bg,#F5F0E8);
       display:flex;align-items:center;justify-content:center;
       font-size:26px;
+      flex-shrink:0;
+      overflow:hidden;
+    }
+    .card-icon img{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:block;
     }
     .card-label{
       font-size:11px;letter-spacing:1.5px;
@@ -248,7 +255,7 @@
   <!-- HEMLOGGBOK -->
   <div class="card" style="--card-accent:#059669;--icon-bg:#ECFDF5">
     <div class="card-top">
-      <div class="card-icon">hemlogg_ikon.png</div>
+      <div class="card-icon"><img src="hemlogg_ikon.png" alt="Hemloggbok"></div>
       <div>
         <div class="card-label">Boende</div>
         <div class="card-name">Hemloggbok</div>
