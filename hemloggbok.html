@@ -6019,11 +6019,42 @@ propertyEntries.forEach(e => {
       reader.readAsText(file);
     }
 
-    function dl(content, type, filename) {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([content], { type }));
-      a.download = filename; a.click();
+    async function dl(content, type, filename) {
+
+  const blob = new Blob([content], { type });
+
+  // iPhone/iPad moderna webbläsare
+  if (navigator.share && navigator.canShare) {
+
+    const file = new File(
+      [blob],
+      filename,
+      { type }
+    );
+
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: filename
+        });
+        return;
+      } catch (err) {
+        console.log('Delning avbruten');
+      }
     }
+  }
+
+  // Fallback för datorer
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+  }, 1000);
+}
     function ds() { return new Date().toISOString().slice(0, 10); }
 
     // ══════════════════════════════════════════════════════════════════
