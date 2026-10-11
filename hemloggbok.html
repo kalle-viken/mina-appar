@@ -1942,7 +1942,7 @@
   </header>
 
   <nav class="nav">
-    <button class="btn">📋 Logg</button>
+    <button class="nav-btn active" onclick="switchTab('logg',this)">📋 Logg</button>
     <button class="nav-btn" onclick="switchTab('rum',this)">🚪 Rum</button>
     <button class="nav-btn" onclick="switchTab('inventering',this)">🔍 Åtgärder</button>
     <button class="nav-btn" onclick="switchTab('inventarier',this)">📦 Inventarier</button>
@@ -1966,6 +1966,16 @@
       </p>
     </div>
   </div>
+
+  <div id="homeBackupStatus"
+     class="info-card"
+     style="margin-bottom:20px">
+</div>
+
+<div id="firstStartBox"
+     class="info-card"
+     style="display:none;margin-bottom:20px">
+</div>
 
   <div id="propertyCards"
        class="room-grid">
@@ -3968,8 +3978,6 @@ const results =
 if (results) {
   results.innerHTML =
     '<div class="info-card">Börja skriva för att söka...</div>';
-}
-``
 
   const property =
     properties.find(
@@ -3980,6 +3988,8 @@ if (results) {
     'Vald fastighet: ' +
     property.name
   );
+
+  }
 
   }
 
@@ -5847,6 +5857,137 @@ const years =
     // ══════════════════════════════════════════════════════════════════
     // HEADER
     // ══════════════════════════════════════════════════════════════════
+    function renderBackupStatus(){
+
+  const box =
+    document.getElementById(
+      'homeBackupStatus'
+    );
+
+  if(!box) return;
+
+  const hasData =
+    entries.length > 0;
+
+  if(!lastBackup){
+
+    box.innerHTML = `
+      <h3>☁️ Backupstatus</h3>
+
+      <p>
+        Ingen backup har skapats ännu.
+      </p>
+
+      <p>
+        Data lagras lokalt på denna enhet.
+      </p>
+
+      <label class="btn">
+        📥 Importera backup
+        <input
+          type="file"
+          accept=".json"
+          style="display:none"
+          onchange="importJSON(this)">
+      </label>
+    `;
+
+    return;
+  }
+
+  const backupDate =
+    new Date(lastBackup);
+
+  const days =
+    Math.floor(
+      (Date.now() - backupDate)
+      / 86400000
+    );
+
+  box.innerHTML = `
+    <h3>☁️ Backupstatus</h3>
+
+    <p>
+      Senaste backup:
+      ${backupDate.toLocaleString('sv-SE')}
+    </p>
+
+    ${
+      days > 14
+      ? `<p>⚠️ Det har gått ${days} dagar sedan senaste backup</p>`
+      : `<p>✅ Backup aktuell</p>`
+    }
+
+    <p>
+      Data lagras lokalt på denna enhet.
+    </p>
+
+    <label class="btn">
+      📥 Importera backup
+      <input
+        type="file"
+        accept=".json"
+        style="display:none"
+        onchange="importJSON(this)">
+    </label>
+  `;
+}
+    
+function renderFirstStart(){
+
+  const box =
+    document.getElementById(
+      'firstStartBox'
+    );
+
+  if(!box) return;
+
+  if(entries.length > 0){
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+
+  box.innerHTML = `
+    <h2>
+      👋 Välkommen till Hemloggbok
+    </h2>
+
+    <p>
+      Ingen lokal data hittades.
+    </p>
+
+    <p>
+      Om du tidigare använt
+      Hemloggbok på en annan enhet
+      kan du återställa från backup.
+    </p>
+
+    <button
+      class="btn btn-primary"
+      onclick="newProperty()">
+
+      ➕ Skapa ny
+
+    </button>
+
+    <label
+      class="btn"
+      style="margin-left:8px;cursor:pointer">
+
+      📥 Importera backup
+
+      <input
+        type="file"
+        accept=".json"
+        style="display:none"
+        onchange="importJSON(this)">
+
+    </label>
+  `;
+}
+
     function renderHeader() {
       const today = new Date().toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' });
       const addr =
@@ -6079,7 +6220,7 @@ propertyEntries.forEach(e => {
     // ══════════════════════════════════════════════════════════════════
     // RENDER ALL
     // ══════════════════════════════════════════════════════════════════
-   function renderAll() {
+function renderAll() {
 
   renderProperties();
   renderQuickStats();
@@ -6088,12 +6229,14 @@ propertyEntries.forEach(e => {
   renderTable();
   renderReminders();
   renderHeader();
+  renderBackupStatus();
+  renderFirstStart();
   renderSuggestions();
   renderDocumentStats();
   renderDocumentCategoryCounts();
   renderPropertyCards();
-
   initSeasonal();
+
 }
 
 
@@ -7297,12 +7440,16 @@ function saveAndExit() {
   setTimeout(() => {
 
     alert(
-`✅ Hemloggboken är sparad
+`✅ All data sparad
 
-📥 Backup skapad
+📥 Backup skapad:
+${new Date().toLocaleString('sv-SE')}
 
-Du kan nu stänga programmet.`
-    );
+Ladda gärna upp backupen till
+OneDrive för extra säkerhet.
+
+Du kan nu stänga Hemloggbok.`
+);
 
   }, 500);
 
