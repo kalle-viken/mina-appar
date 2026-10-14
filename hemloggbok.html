@@ -5522,6 +5522,12 @@ function renderAssets() {
 
   if (!grid) return;
 
+  alert(
+  "CurrentProperty: " + currentProperty +
+  "\n\nPropertyIds:\n" +
+  assets.map(a => a.propertyId).join("\n")
+);
+
   console.log("Current property:", currentProperty);
 console.log("All assets:", assets);
 console.log(
@@ -5529,7 +5535,10 @@ console.log(
   assets.filter(a => a.propertyId === currentProperty)
 );
 
-  const propertyAssets = assets;
+  const propertyAssets =
+  assets.filter(
+    a => a.propertyId === currentProperty
+  );
 
   const totalValue =
     propertyAssets.reduce(
