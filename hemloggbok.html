@@ -5522,10 +5522,14 @@ function renderAssets() {
 
   if (!grid) return;
 
-  const propertyAssets =
-    assets.filter(
-      a => a.propertyId === currentProperty
-    );
+  console.log("Current property:", currentProperty);
+console.log("All assets:", assets);
+console.log(
+  "Filtered assets:",
+  assets.filter(a => a.propertyId === currentProperty)
+);
+
+  const propertyAssets = assets;
 
   const totalValue =
     propertyAssets.reduce(
