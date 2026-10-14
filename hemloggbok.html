@@ -5522,11 +5522,13 @@ function renderAssets() {
 
   if (!grid) return;
 
-  alert(
-  "CurrentProperty: " + currentProperty +
-  "\n\nPropertyIds:\n" +
-  assets.map(a => a.propertyId).join("\n")
+ alert(
+  "currentProperty:\n" +
+  currentProperty +
+  "\n\nAlla inventarier:\n\n" +
+  JSON.stringify(assets, null, 2)
 );
+
 
   console.log("Current property:", currentProperty);
 console.log("All assets:", assets);
