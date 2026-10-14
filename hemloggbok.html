@@ -2168,19 +2168,20 @@
       </div>
     </div>
 
-    <!-- ════════ FÖRSÄKRINGAR ════════ -->
+    <!-- DRIFT & TJÄNSTER -->
+
     <div class="tab-content" id="tab-forsakringar">
       <div class="page-header">
         <div>
-          <h2>Drift & Avtal</h2>
-<p>Försäkringar, elavtal, bredband, larm och övriga tjänster.</p>
+          <h2>Drift & Tjänster</h2>
+<p>Avtal, abonnemang, leverantörer och tjänster för fastigheten.</p>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openInsForm()">＋ Ny tjänst</button>
       </div>
       <div class="insurance-grid" id="insuranceGrid"></div>
       <div class="empty" id="emptyIns" style="display:none">
         <div class="icon">🛡</div>
-        <p>Inga försäkringar registrerade ännu.</p>
+        <p>Inga avtal registrerade ännu.</p>
       </div>
     </div>
 
@@ -2559,7 +2560,12 @@
 
     <div class="room-card"
      onclick="switchTab('forsakringar')">
-  💰 Drift & Avtal
+  📋 Avtal & Tjänster
+</div>
+
+<div class="room-card"
+     onclick="switchTab('drift')">
+  💰 Drift
 </div>
 
 <div class="room-card"
@@ -2583,13 +2589,6 @@
      onclick="switchTab('search')">
   🔍 Sök
 </div>
-
-<!--
-<div class="room-card" onclick="switchTab('drift')">
-    <div class="room-icon">💰</div>
-    <div class="room-name">Drift</div>
-</div>
--->
 
 
   </div>
@@ -3033,34 +3032,44 @@
     </div>
   </div>
 
-  <!-- ════ INSURANCE MODAL ════ -->
+  <!-- DRIFT OCH TJÄNSTER MODAL -->
   <div class="modal-overlay" id="insModal">
     <div class="modal modal-sm">
-      <h2 id="insModalTitle">Ny försäkring</h2>
+      <h2 id="insModalTitle">Nytt avtal</h2>
       <div class="form-grid">
         <label>Typ *</label>
 
 <select id="iType">
-  <option value="Försäkring">Försäkring</option>
+  <option value="">Välj typ</option>
   <option value="Elhandel">Elhandel</option>
   <option value="Elnät">Elnät</option>
   <option value="Fiber">Fiber</option>
   <option value="TV">TV</option>
   <option value="Larm">Larm</option>
+  <option value="Värmepump">Värmepump</option>
+  <option value="Ventilation">Ventilation</option>
+  <option value="Solceller">Solceller</option>
+  <option value="Batterilager">Batterilager</option>
+  <option value="Serviceavtal">Serviceavtal</option>
   <option value="Samfällighet">Samfällighet</option>
   <option value="Sophämtning">Sophämtning</option>
   <option value="Vatten">Vatten</option>
   <option value="Övrigt">Övrigt</option>
 </select>
+
         <div class="field full"><label>Leverantör *</label><input type="text" id="iCompany"
-            placeholder="If, Folksam, Trygg-Hansa…"></div>
-        <div class="field"><label>Försäkringsnummer</label><input type="text" id="iPolicyNo"></div>
-        <div class="field"><label>Premie / år (kr)</label><input type="number" id="iPremium" min="0"></div>
+            placeholder="Folksam, Telia, E.ON..."></div>
+        <div class="field"><label>Referensnummer</label><input type="text" id="iPolicyNo"></div>
+        <div class="field"><label>Kundnummer</label><input type="text" id="iCustomerNo"></div>
+        <div class="field"><label>Avtalsnummer</label><input type="text" id="iContractNo"></div>
+        <div class="field"><label>Kundservice</label><input type="text" id="iPhone"></div>
+        <div class="field"><label>Portal / Webbplats</label><input type="text" id="iWebsite"></div>
+        <div class="field"><label>Kostnad / år (kr)</label><input type="number" id="iPremium" min="0"></div>
         <div class="field"><label>Förnyas / förfaller</label><input type="date" id="iRenewal"></div>
-        <div class="field full"><label>Vad täcker den?</label><textarea id="iCoverage"
-            placeholder="Kortfattad beskrivning av täckning och undantag…"></textarea></div>
+        <div class="field full"><label>Omfattning</label><textarea id="iCoverage"
+            placeholder="Kortfattad beskrivning av tjänsten eller avtalet..."></textarea></div>
         <div class="field full"><label>Anteckning</label><input type="text" id="iNote"
-            placeholder="Kontaktperson, telefon, webbportal…"></div>
+            placeholder="Kontaktperson, portal, övrig information..."></div>
       </div>
       <div class="form-footer">
         <button class="btn btn-cancel" onclick="closeModal('insModal')">Avbryt</button>
@@ -3215,9 +3224,9 @@
 
           <option>Masterbedroom</option>
           <option>Gästrum</option>
-          <option>Extrarum</option>
+          <option>Lilla rummet</option>
 
-          <option>Teknikrum</option>
+          <option>Teknik- och elrum</option>
 
           <option>Veranda</option>
           <option>Uteplats</option>
@@ -3695,6 +3704,7 @@ async function save() {
 }
       document.getElementById('tab-' + name).classList.add('active');
       if (name === 'statistik') renderStatTab();
+      if (name === 'drift') renderDrift();
       if (name === 'rum') renderRooms();
       if (name === 'kontakter') renderContacts();
       if (name==='historik') renderHistory();
@@ -4646,29 +4656,51 @@ function openContactForm(id) {
     // INSURANCE
     // ══════════════════════════════════════════════════════════════════
     function openInsForm(id) {
-      insEditId = id || null;
-      document.getElementById('insModalTitle').textContent = id ? 'Redigera försäkring' : 'Ny försäkring';
+  insEditId = id || null;
+  document.getElementById('insModalTitle').textContent =
+    id ? 'Redigera avtal' : 'Nytt avtal';
       const ins = id ? insurances.find(x => x.id === id) : {};
       document.getElementById('iType').value = ins.type || '';
       document.getElementById('iCompany').value = ins.company || '';
-      document.getElementById('iPolicyNo').value = ins.policyNo || '';
-      document.getElementById('iPremium').value = ins.premium || '';
-      document.getElementById('iRenewal').value = ins.renewal || '';
-      document.getElementById('iCoverage').value = ins.coverage || '';
-      document.getElementById('iNote').value = ins.note || '';
+     document.getElementById('iPolicyNo').value = ins.policyNo || '';
+document.getElementById('iCustomerNo').value = ins.customerNo || '';
+document.getElementById('iContractNo').value = ins.contractNo || '';
+document.getElementById('iPhone').value = ins.phone || '';
+document.getElementById('iWebsite').value = ins.website || '';
+
+document.getElementById('iPremium').value = ins.premium || '';
+document.getElementById('iRenewal').value = ins.renewal || '';
+document.getElementById('iCoverage').value = ins.coverage || '';
+document.getElementById('iNote').value = ins.note || '';
       document.getElementById('insModal').classList.add('open');
     }
     function saveIns() {
       const type = document.getElementById('iType').value.trim();
       const company = document.getElementById('iCompany').value.trim();
       if (!type || !company) { alert('Fyll i typ och bolag.'); return; }
-      const obj = {
-  id: insEditId || uid(), propertyId: currentProperty, type, company, policyNo: document.getElementById('iPolicyNo').value.trim(), premium: parseFloat(document.getElementById('iPremium').value) || 0, renewal: document.getElementById('iRenewal').value, coverage: document.getElementById('iCoverage').value.trim(), note: document.getElementById('iNote').value.trim() };
+     const obj = {
+  id: (insEditId || uid()),
+  propertyId: currentProperty,
+  type,
+  company,
+
+  policyNo: document.getElementById('iPolicyNo').value,
+  customerNo: document.getElementById('iCustomerNo').value,
+  contractNo: document.getElementById('iContractNo').value,
+  phone: document.getElementById('iPhone').value,
+  website: document.getElementById('iWebsite').value,
+
+  premium: parseFloat(document.getElementById('iPremium').value) || 0,
+  renewal: document.getElementById('iRenewal').value,
+  coverage: document.getElementById('iCoverage').value,
+  note: document.getElementById('iNote').value
+};
       if (insEditId) { const i = insurances.findIndex(x => x.id === insEditId); insurances[i] = obj; }
       else insurances.push(obj);
       save(); closeModal('insModal'); renderInsurances(); showToast('✓ Försäkring sparad');
     }
-    function delIns(id) { if (!confirm('Ta bort försäkring?')) return; insurances = insurances.filter(i => i.id !== id); save(); renderInsurances(); }
+   function delIns(id) {
+  if (!confirm('Ta bort avtal?')) return; insurances = insurances.filter(i => i.id !== id); save(); renderInsurances(); }
     function insRenewalBadge(renewal) {
       if (!renewal) return '';
       const days = Math.round((new Date(renewal) - new Date()) / 86400000);
@@ -4690,13 +4722,16 @@ function openContactForm(id) {
       ${insRenewalBadge(ins.renewal)}
       <div class="ins-type">${x(ins.type)}</div>
       <div class="ins-company">${x(ins.company)}</div>
-      ${ins.policyNo ? `<div class="ins-row"><span>Pol.nr</span>${x(ins.policyNo)}</div>` : ''}
-      ${ins.premium ? `<div class="ins-row">
-<span>Kostna*</span>>${fmt(ins.premium)} kr/år</div>` : ''}
-      ${ins.coverage ? `<div class="ins-row"><span>Täcker</span>${x(ins.coverage)}</div>` : ''}
-      ${ins.note ? `<div class="ins-row"><span>Not</span>${x(ins.note)}</div>` : ''}
+     ${ins.policyNo ? `<div class="ins-row"><span>Ref.nr</span>${x(ins.policyNo)}</div>` : ''}
+${ins.customerNo ? `<div class="ins-row"><span>Kundnr</span>${x(ins.customerNo)}</div>` : ''}
+${ins.contractNo ? `<div class="ins-row"><span>Avtal</span>${x(ins.contractNo)}</div>` : ''}
+${ins.phone ? `<div class="ins-row"><span>Telefon</span>${x(ins.phone)}</div>` : ''}
+${ins.website ? `<div class="ins-row"><span>Webb</span>${x(ins.website)}</div>` : ''}
+${ins.premium ? `<div class="ins-row"><span>Kostnad</span>${fmt(ins.premium)} kr/år</div>` : ''}
+${ins.coverage ? `<div class="ins-row"><span>Omfattning</span>${x(ins.coverage)}</div>` : ''}
+${ins.note ? `<div class="ins-row"><span>Not</span>${x(ins.note)}</div>` : ''}
       <div class="ins-actions">
-        <button class="btn-icon" onclick="openInsForm('${ins.id}')">✏ Redigera</button>
+        <button class="btn-icon" onclick="openInsForm('${ins.id}')">📄 Öppna</button>
         <button class="btn btn-danger" onclick="delIns('${ins.id}')">✕</button>
       </div>
     </div>`).join('');
@@ -6115,7 +6150,23 @@ propertyEntries.forEach(e => {
     function exportJSON() {
       lastBackup = new Date().toISOString();
       save();
-      const payload = JSON.stringify({ entries, contacts, insurances, rooms, houseInfo, budgets, driftCosts, seasonal, lastBackup, exportedAt: lastBackup }, null, 2);
+      const payload = JSON.stringify({
+  entries,
+  contacts,
+  insurances,
+  rooms,
+  houseInfo,
+  budgets,
+  driftCosts,
+  inventory,
+  assets,
+  documents,
+  properties,
+  currentProperty,
+  seasonal,
+  lastBackup,
+  exportedAt: lastBackup
+}, null, 2);
       dl(payload, 'application/json', 'hemloggbok_backup_' + ds() + '.json');
       showToast('✓ Backup sparad');
       checkBackupWarning();
@@ -6137,9 +6188,36 @@ propertyEntries.forEach(e => {
           if (d.insurances) insurances = [...insurances, ...(d.insurances || []).filter(i => !insurances.find(x => x.id === i.id))];
           if (d.rooms) rooms = [...rooms, ...(d.rooms || []).filter(r => !rooms.find(x => x.id === r.id))];
           if (d.driftCosts) driftCosts = [...driftCosts, ...(d.driftCosts || []).filter(dc => !driftCosts.find(x => x.id === dc.id))];
+          if (d.inventory)
+  inventory = [
+    ...inventory,
+    ...(d.inventory || []).filter(
+      i => !inventory.find(x => x.id === i.id)
+    )
+  ];
+
+if (d.assets)
+  assets = [
+    ...assets,
+    ...(d.assets || []).filter(
+      a => !assets.find(x => x.id === a.id)
+    )
+  ];
+
+if (d.documents)
+  documents = [
+    ...documents,
+    ...(d.documents || []).filter(
+      doc => !documents.find(x => x.id === doc.id)
+    )
+  ];
           if (d.seasonal) Object.keys(d.seasonal).forEach(s => { if (!seasonal[s]) seasonal[s] = d.seasonal[s]; });
           if (d.houseInfo && Object.keys(d.houseInfo).length && !Object.keys(houseInfo).length) houseInfo = d.houseInfo;
           if (d.budgets) Object.assign(budgets, d.budgets);
+          if (d.properties)  properties = d.properties;
+
+if (d.currentProperty)
+  currentProperty = d.currentProperty;
           save(); renderAll(); showToast(`✓ ${newEntries.length} nya poster importerade`);
         } catch (err) { alert('Kunde inte läsa backup-filen: ' + err.message); }
         input.value = '';
