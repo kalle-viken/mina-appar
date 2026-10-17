@@ -5522,21 +5522,6 @@ function renderAssets() {
 
   if (!grid) return;
 
- alert(
-  "currentProperty:\n" +
-  currentProperty +
-  "\n\nAlla inventarier:\n\n" +
-  JSON.stringify(assets, null, 2)
-);
-
-
-  console.log("Current property:", currentProperty);
-console.log("All assets:", assets);
-console.log(
-  "Filtered assets:",
-  assets.filter(a => a.propertyId === currentProperty)
-);
-
   const propertyAssets =
   assets.filter(
     a => a.propertyId === currentProperty
@@ -6162,79 +6147,102 @@ propertyEntries.forEach(e => {
       dl('\uFEFF' + [h, ...rows].map(r => r.join(';')).join('\r\n'), 'text/csv', 'hemloggbok_' + ds() + '.csv');
     }
 
-    function exportJSON() {
-      lastBackup = new Date().toISOString();
-      save();
-      const payload = JSON.stringify({
-  entries,
-  contacts,
-  insurances,
-  rooms,
-  houseInfo,
-  budgets,
-  driftCosts,
-  inventory,
-  assets,
-  documents,
-  properties,
-  currentProperty,
-  seasonal,
-  lastBackup,
-  exportedAt: lastBackup
-}, null, 2);
-      dl(payload, 'application/json', 'hemloggbok_backup_' + ds() + '.json');
-      showToast('✓ Backup sparad');
-      checkBackupWarning();
+    async function exportJSON() {
+      try {
+        lastBackup = new Date().toISOString();
+        // Vänta tills backup-tidpunkten och aktuell data har sparats innan filen skapas.
+        await save();
+        const payload = JSON.stringify({
+          entries,
+          contacts,
+          insurances,
+          rooms,
+          houseInfo,
+          budgets,
+          driftCosts,
+          inventory,
+          assets,
+          documents,
+          properties,
+          currentProperty,
+          seasonal,
+          lastBackup,
+          exportedAt: lastBackup
+        }, null, 2);
+        await dl(payload, 'application/json', 'hemloggbok_backup_' + ds() + '.json');
+        showToast('✓ Backup sparad');
+        checkBackupWarning();
+      } catch (err) {
+        console.error(err);
+        alert('Kunde inte skapa backup: ' + err.message);
+      }
+    }
+
+    // Poster med samma ID uppdateras från backupen. Lokala poster som saknas
+    // i backupen behålls. Poster utan ID behandlas som separata poster.
+    function mergeById(localItems, backupItems) {
+      const local = Array.isArray(localItems) ? localItems : [];
+      const incoming = Array.isArray(backupItems) ? backupItems : [];
+      const incomingIds = new Set(incoming.filter(x => x && x.id != null).map(x => x.id));
+      const keptLocal = local.filter(x => !x || x.id == null || !incomingIds.has(x.id));
+      return [...keptLocal, ...incoming];
     }
 
     function importJSON(input) {
-      const file = input.files[0]; if (!file) return;
+      const file = input.files && input.files[0];
+      if (!file) return;
       const reader = new FileReader();
-      reader.onload = ev => {
+      reader.onload = async ev => {
         try {
           const d = JSON.parse(ev.target.result);
-          if (!d.entries) throw new Error('Ogiltig backup-fil.');
-          if (!confirm(`Importera ${d.entries.length} poster? Befintlig data skrivs INTE över — poster läggs till.`)) return;
-          // merge: add entries not already present (by id)
-          const existIds = new Set(entries.map(e => e.id));
-          const newEntries = d.entries.filter(e => !existIds.has(e.id));
-          entries = [...entries, ...newEntries];
-          if (d.contacts) contacts = [...contacts, ...(d.contacts || []).filter(c => !contacts.find(x => x.id === c.id))];
-          if (d.insurances) insurances = [...insurances, ...(d.insurances || []).filter(i => !insurances.find(x => x.id === i.id))];
-          if (d.rooms) rooms = [...rooms, ...(d.rooms || []).filter(r => !rooms.find(x => x.id === r.id))];
-          if (d.driftCosts) driftCosts = [...driftCosts, ...(d.driftCosts || []).filter(dc => !driftCosts.find(x => x.id === dc.id))];
-          if (d.inventory)
-  inventory = [
-    ...inventory,
-    ...(d.inventory || []).filter(
-      i => !inventory.find(x => x.id === i.id)
-    )
-  ];
+          if (!d || typeof d !== 'object' || !Array.isArray(d.entries)) {
+            throw new Error('Ogiltig backup-fil: poster saknas eller har fel format.');
+          }
+          const itemCount = d.entries.length;
+          if (!confirm(`Importera backup med ${itemCount} loggposter? Poster med samma ID uppdateras från backupen. Lokal data som inte finns i backupen behålls.`)) return;
 
-if (d.assets)
-  assets = [
-    ...assets,
-    ...(d.assets || []).filter(
-      a => !assets.find(x => x.id === a.id)
-    )
-  ];
+          entries = mergeById(entries, d.entries);
+          contacts = mergeById(contacts, d.contacts);
+          insurances = mergeById(insurances, d.insurances);
+          rooms = mergeById(rooms, d.rooms);
+          driftCosts = mergeById(driftCosts, d.driftCosts);
+          inventory = mergeById(inventory, d.inventory);
+          assets = mergeById(assets, d.assets);
+          documents = mergeById(documents, d.documents);
 
-if (d.documents)
-  documents = [
-    ...documents,
-    ...(d.documents || []).filter(
-      doc => !documents.find(x => x.id === doc.id)
-    )
-  ];
-          if (d.seasonal) Object.keys(d.seasonal).forEach(s => { if (!seasonal[s]) seasonal[s] = d.seasonal[s]; });
-          if (d.houseInfo && Object.keys(d.houseInfo).length && !Object.keys(houseInfo).length) houseInfo = d.houseInfo;
-          if (d.budgets) Object.assign(budgets, d.budgets);
-          if (d.properties)  properties = d.properties;
+          // Husinfo har alltid nycklarna villa/stuga i grundläget. Slå därför
+          // ihop innehållet per fastighet i stället för att kontrollera antal nycklar.
+          if (d.houseInfo && typeof d.houseInfo === 'object') {
+            const mergedHouseInfo = { ...(houseInfo || {}) };
+            Object.keys(d.houseInfo).forEach(propertyId => {
+              const localInfo = mergedHouseInfo[propertyId] || {};
+              const backupInfo = d.houseInfo[propertyId];
+              mergedHouseInfo[propertyId] = backupInfo && typeof backupInfo === 'object'
+                ? { ...localInfo, ...backupInfo }
+                : backupInfo;
+            });
+            houseInfo = mergedHouseInfo;
+          }
+          if (d.budgets && typeof d.budgets === 'object') budgets = { ...budgets, ...d.budgets };
+          if (d.seasonal && typeof d.seasonal === 'object') seasonal = { ...seasonal, ...d.seasonal };
+          if (Array.isArray(d.properties) && d.properties.length) properties = d.properties;
+          if (d.currentProperty && (Array.isArray(properties) ? properties.some(p => p.id === d.currentProperty) : true)) {
+            currentProperty = d.currentProperty;
+          }
+          if (d.lastBackup) lastBackup = d.lastBackup;
 
-if (d.currentProperty)
-  currentProperty = d.currentProperty;
-          save(); renderAll(); showToast(`✓ ${newEntries.length} nya poster importerade`);
-        } catch (err) { alert('Kunde inte läsa backup-filen: ' + err.message); }
+          await save();
+          renderAll();
+          showToast('✓ Backup importerad');
+        } catch (err) {
+          console.error(err);
+          alert('Kunde inte läsa backup-filen: ' + err.message);
+        } finally {
+          input.value = '';
+        }
+      };
+      reader.onerror = () => {
+        alert('Kunde inte läsa filen. Försök igen.');
         input.value = '';
       };
       reader.readAsText(file);
