@@ -67,6 +67,14 @@ body.light .app-title{background:linear-gradient(135deg,#1E3A5F 30%,#3B82F6);-we
 .vc-arr{color:var(--mu2);font-size:18px}
 .vc-del{background:none;border:none;font-size:16px;cursor:pointer;color:var(--mu);opacity:.5;padding:4px 2px 4px 8px;flex-shrink:0;font-family:inherit}
 .vc-del:active{opacity:1;color:var(--re)}
+.archive-panel{grid-column:1/-1;margin-top:8px;padding:14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--r)}
+.archive-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.archive-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--bd2);font-size:13px}
+.archive-row button{border:1px solid var(--bd2);border-radius:8px;background:var(--sf);color:var(--tx);padding:7px 9px;font:inherit;white-space:nowrap}
+.archive-row .archive-delete{color:var(--re)}
+.archive-sub{font-size:11px;color:var(--mu);margin-top:3px}
+.bk-explain{font-size:12px;line-height:1.5;color:var(--mu);background:var(--sf2);border-radius:10px;padding:10px;margin:9px 0 12px}
+.bk-explain b{color:var(--tx)}
 .vc-warn{position:absolute;top:10px;right:10px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .warn-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap}
 .warn-badge.red{background:rgba(248,113,113,.15);color:var(--danger);border:1px solid rgba(248,113,113,.3)}
@@ -342,9 +350,10 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
     <div class="bk-card">
       <div class="bk-title">💾 Säkerhetskopia</div>
       <div class="bk-status" id="bk-status"></div>
+      <div class="bk-explain"><b>Vad sparas?</b><br>• Vanlig kopia: fordon, fordonsinformation och alla registrerade poster – men inte bifogade kvitton eller PDF-filer.<br>• Fullständig kopia: samma uppgifter samt alla bilagor. Välj denna för att kunna återställa även kvitton och dokument.</div>
       <div class="bk-btns">
-        <button class="bk-btn primary" onclick="exportData(false)">Säkerhetskopiera (JSON)</button>
-        <button class="bk-btn primary" id="bk-full" onclick="exportData(true)" style="display:none"></button>
+        <button class="bk-btn primary" onclick="exportData(false)">Vanlig säkerhetskopia (utan bilagor)</button>
+        <button class="bk-btn primary" id="bk-full" onclick="exportData(true)">Fullständig säkerhetskopia (med bilagor)</button>
         <button class="bk-btn" onclick="pickImport('import')">📂 Återställ / importera</button>
         <button class="bk-btn" onclick="pickImport('verify')">🔍 Verifiera fil</button>
         <button class="bk-btn" onclick="exportCSV()" style="grid-column:1/-1">📊 Exportera Excel/CSV</button>
@@ -718,6 +727,14 @@ function saveCustomVehicles(){
 const VEH_COLORS=['#6366F1','#EC4899','#14B8A6','#F97316','#84CC16','#8B5CF6','#06B6D4','#EF4444'];
 const VEH_ICONS=['🚗','🚙','🚐','🏍️','🚕','🚌','🚛','🛻','⚡','🏎️'];
 loadCustomVehicles();
+function loadArchivedVehicles(){
+  try{const a=JSON.parse(localStorage.getItem('fb3_archived_veh')||'{}');Object.keys(VEH).forEach(function(k){VEH[k].archived=!!a[k]})}catch(e){}
+}
+function saveArchivedVehicles(){
+  const a={};Object.keys(VEH).forEach(function(k){if(VEH[k].archived)a[k]=true});
+  try{localStorage.setItem('fb3_archived_veh',JSON.stringify(a))}catch(e){console.error('Kunde inte spara fordonsarkiv:',e);toast('Kunde inte spara fordonsstatus. Gör en säkerhetskopia.')}
+}
+loadArchivedVehicles();
 const CAT={fu:{n:'Drivmedel',i:'⛽',c:'var(--fu)'},re:{n:'Reparation',i:'🔧',c:'var(--re)'},sv:{n:'Service',i:'🛠️',c:'var(--sv)'},in:{n:'Besiktning',i:'✅',c:'var(--in)'},tx:{n:'Fordonsskatt',i:'🏛️',c:'var(--tx2)'},ins2:{n:'Försäkring',i:'🛡️',c:'var(--ins)'},gas:{n:'Gasol',i:'🔥',c:'var(--gas)'},wash:{n:'Tvätt',i:'🚿',c:'var(--wash)'}};
 let curV=null,curC='fu',vtPt='m',sumPt='m',cmpSel=['golf','cit'],editV=null,editId=null,vinfoV=null;
 
@@ -732,6 +749,8 @@ function fkm(n){return Math.round(n).toLocaleString('sv-SE')+' km'}
 function fnv(str){let h=0x811c9dc5;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,'0')}
 function countEntries(d){let n=0;Object.keys(d||{}).forEach(function(k){if(k.indexOf('meta_')!==0&&Array.isArray(d[k]))n+=d[k].length});return n}
 function customVehOnly(){const o={};Object.keys(VEH).forEach(function(k){if(DEFAULT_KEYS.indexOf(k)<0)o[k]=VEH[k]});return o}
+function activeVehicleKeys(){return Object.keys(VEH).filter(function(k){return !VEH[k].archived})}
+function archivedVehicleKeys(){return Object.keys(VEH).filter(function(k){return !!VEH[k].archived})}
 function setVehicles(custom){
   Object.keys(VEH).forEach(function(k){if(DEFAULT_KEYS.indexOf(k)<0)delete VEH[k]});
   Object.keys(custom||{}).forEach(function(k){if(DEFAULT_KEYS.indexOf(k)<0)VEH[k]=custom[k]});
@@ -787,7 +806,7 @@ function nextId(d){let m=0;Object.keys(d).forEach(function(k){if(Array.isArray(d
 // Skyddskopia: en enda kopia av tidigare läge, tas innan import/borttagning av fordon.
 function snapshotNow(reason){
   try{
-    localStorage.setItem('fb3_snapshot',JSON.stringify({ts:new Date().toISOString(),reason:reason,data:gd(),vehicles:customVehOnly()}));
+    localStorage.setItem('fb3_snapshot',JSON.stringify({ts:new Date().toISOString(),reason:reason,data:gd(),vehicles:customVehOnly(),archived:archivedVehicleKeys()}));
     return true;
   }catch(e){return false}
 }
@@ -798,10 +817,12 @@ function restoreSnapshot(skipConfirm){
   const n=countEntries(s.data);
   const when=new Date(s.ts).toLocaleString('sv-SE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   if(!skipConfirm&&!confirm('Återställ skyddskopian?\n\n'+s.reason+' ('+when+', '+n+' poster)\n\nNuvarande data sparas som ny skyddskopia så att du kan ångra.'))return;
-  const cur=gd(),curVeh=customVehOnly();
+  const cur=gd(),curVeh=customVehOnly(),curArchived=archivedVehicleKeys();
   if(!sd(s.data))return;
   setVehicles(s.vehicles||{});
-  try{localStorage.setItem('fb3_snapshot',JSON.stringify({ts:new Date().toISOString(),reason:'Före återställning av skyddskopia',data:cur,vehicles:curVeh}))}catch(e){}
+  Object.keys(VEH).forEach(function(k){VEH[k].archived=(s.archived||[]).includes(k)});
+  saveCustomVehicles();saveArchivedVehicles();
+  try{localStorage.setItem('fb3_snapshot',JSON.stringify({ts:new Date().toISOString(),reason:'Före återställning av skyddskopia',data:cur,vehicles:curVeh,archived:curArchived}))}catch(e){}
   updHome();
   toast('Skyddskopian återställd ✓ ('+n+' poster)');
 }
@@ -1565,6 +1586,22 @@ function save(){
 }
 
 // ── SNABBREGISTRERING ──
+// ── ARKIVERA / ÅTERAKTIVERA FORDON ──
+function confirmArchiveVehicle(vk){
+  const vd=VEH[vk];if(!vd||vd.archived)return;
+  const count=(gd()[vk]||[]).length;
+  if(!confirm('Arkivera '+vd.i+' '+vd.n+'?\n\nFordonet tas bort från listan över aktiva fordon men alla '+count+' poster, kostnader och bilagor sparas. Det finns kvar i historik och jämförelser.'))return;
+  if(!snapshotNow('Före arkivering av '+vd.n)&&!confirm('Kunde inte skapa skyddskopia. Arkivera ändå?'))return;
+  vd.archived=true;saveCustomVehicles();saveArchivedVehicles();
+  if(curV===vk){curV=null;goHome() }else updHome();
+  toast(vd.n+' arkiverat. Historiken finns kvar.');
+}
+function restoreArchivedVehicle(vk){
+  const vd=VEH[vk];if(!vd)return;
+  vd.archived=false;saveCustomVehicles();saveArchivedVehicles();updHome();
+  toast(vd.n+' återaktiverat! ✓');
+}
+
 // ── TA BORT FORDON ──
 let vehAttTimer=null;
 function confirmDeleteVehicle(vk){
@@ -1584,6 +1621,7 @@ function confirmDeleteVehicle(vk){
   delete d['meta_'+vk];
   if(!sd(d))return;
   if(!isDefault){delete VEH[vk];saveCustomVehicles()}
+  saveArchivedVehicles();
   updHome();
   // Bilagorna raderas först när ångra-tiden gått ut.
   clearTimeout(vehAttTimer);
@@ -1633,7 +1671,7 @@ function updHome(){
   document.getElementById('hd').textContent=today.toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   // Rebuild vehicle grid dynamically
   const grid=document.getElementById('vgrid');
-  grid.innerHTML=Object.keys(VEH).map(v=>{
+  grid.innerHTML=activeVehicleKeys().map(v=>{
     const vd=VEH[v];
     const a=ents(v);const tot=totV(a);const m=getMeta(v);
     const warns=getWarnings(v);
@@ -1651,7 +1689,7 @@ function updHome(){
         <div class="vc-cpm">${(()=>{const cp=cpm(a);return cp!=null?Math.round(cp).toLocaleString('sv-SE')+' kr/mil':'';})()}</div>
         <div class="vc-arr">›</div>
       </div>
-      <button class="vc-del" onclick="event.stopPropagation();confirmDeleteVehicle('${v}')" title="Ta bort fordon">🗑️</button>
+      <button class="vc-del" onclick="event.stopPropagation();confirmArchiveVehicle('${v}')" title="Arkivera fordon">📦</button>
     </div>`;
   }).join('');
   // Add vehicle button
@@ -1659,6 +1697,8 @@ function updHome(){
     <div style="width:46px;height:46px;border-radius:12px;background:rgba(148,163,184,.12);display:flex;align-items:center;justify-content:center;font-size:22px">➕</div>
     <div><div style="font-size:16px;font-weight:600">Lägg till fordon</div><div style="font-size:12px;color:var(--mu);margin-top:2px">Registrera ett nytt fordon</div></div>
   </div>`;
+  const archived=archivedVehicleKeys();
+  grid.innerHTML+=archived.length?'<div class="archive-panel"><div class="archive-title">📦 Tidigare fordon ('+archived.length+')</div>'+archived.map(function(v){const vd=VEH[v],a=ents(v),m=getMeta(v);return'<div class="archive-row"><div style="flex:1;min-width:0" onclick="openV(\''+v+'\')"><b>'+vd.i+' '+esc(vd.n)+'</b><div class="archive-sub">'+esc(m.reg||'')+' · '+a.length+' poster</div></div><button onclick="restoreArchivedVehicle(\''+v+'\')">Återaktivera</button><button class="archive-delete" onclick="confirmDeleteVehicle(\''+v+'\')" title="Radera permanent">🗑️</button></div>'}).join('')+'</div>':'';
   document.getElementById('home-warnings').innerHTML='';
   renderBackupCard();
 }
@@ -2640,12 +2680,12 @@ function exportCSV(){
 }
 
 // ── SÄKERHETSKOPIA ──
-const BACKUP_VERSION=4;
+const BACKUP_VERSION=5;
 let impMode='import',pendingImport=null,impDiff=null;
 function stamp(){const t=new Date();return t.getFullYear()+'-'+pad2(t.getMonth()+1)+'-'+pad2(t.getDate())+'_'+pad2(t.getHours())+pad2(t.getMinutes())}
 function fdtm(iso){const d=new Date(iso);return isNaN(d)?'okänt datum':d.toLocaleString('sv-SE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function fsize(b){return b<1024?b+' B':(b/1024).toFixed(1)+' kB'}
-function curHash(withAtt){return fnv(JSON.stringify(gd())+(withAtt?'#'+Object.keys(attMeta).sort().join(','):''))}
+function curHash(withAtt){return fnv(JSON.stringify(gd())+'#VEH:'+JSON.stringify(VEH)+(withAtt?'#ATT:'+Object.keys(attMeta).sort().join(','):''))}
 async function buildBackup(withAtt){
   const d=gd();
   const p={
@@ -2758,7 +2798,7 @@ function renderBackupCard(){
   if(at.n&&(!lb||!lb.withAtt)){html+='<br>📎 '+at.n+' bilagor ('+fsize(at.size)+') ingår inte i någon fullständig kopia ännu';cls='warn'}
   st.className='bk-status '+cls;st.innerHTML=html;
   const full=document.getElementById('bk-full');
-  if(full){full.style.display=at.n?'':'none';full.textContent='📎 Fullständig kopia med '+at.n+' bilagor ('+fsize(at.size)+')'}
+  if(full){full.style.display='';full.textContent='📎 Fullständig säkerhetskopia ('+at.n+' bilagor · '+fsize(at.size)+')'}
   const snap=getSnapshot(),sn=document.getElementById('bk-snap');
   sn.innerHTML=snap?'<span>🛟 Skyddskopia: '+esc(snap.reason)+' · '+esc(fdtm(snap.ts))+' · '+countEntries(snap.data)+' poster</span><button class="bk-link" onclick="restoreSnapshot()">Återställ</button>':'';
   const orph=attOrphanIds(),ob=document.getElementById('bk-orph');
@@ -2808,7 +2848,7 @@ function parseBackup(text){
     Object.keys(payload.vehicles).forEach(function(k){
       const v=payload.vehicles[k];
       if(!KEY_RE.test(k)||!v||typeof v!=='object')return;
-      vdefs[k]={n:cleanText(v.n,40)||k,i:cleanText(v.i,8)||'🚗',c:/^#[0-9a-fA-F]{6}$/.test(v.c)?v.c:'#6366F1',cls:k};
+      vdefs[k]={n:cleanText(v.n,40)||k,i:cleanText(v.i,8)||'🚗',c:/^#[0-9a-fA-F]{6}$/.test(v.c)?v.c:'#6366F1',cls:k,archived:!!v.archived};
     });
   }
   const data={},skipped=[],ignored=[];let renumbered=0,rawCount=0;
@@ -2980,6 +3020,9 @@ async function confirmImport(mode){
   const prevCustom=customVehOnly();
   if(!sd(nextData)){toastErr('Importen sparades inte. Dina tidigare data är kvar.');return}
   setVehicles(nextCustom);
+  if(mode==='replace')Object.keys(VEH).forEach(function(k){VEH[k].archived=false});
+  Object.keys(p.vdefs||{}).forEach(function(k){if(VEH[k]&&(mode==='replace'||p.vdefs[k].archived))VEH[k].archived=!!p.vdefs[k].archived});
+  saveCustomVehicles();saveArchivedVehicles();
   // Verifiera att det som sparades är exakt det som skulle sparas
   const after=gd();
   if(countEntries(after)!==countEntries(nextData)||fnv(JSON.stringify(after))!==fnv(JSON.stringify(nextData))){
