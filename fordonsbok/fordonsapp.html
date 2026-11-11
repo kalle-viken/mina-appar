@@ -353,11 +353,11 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
       <div class="bk-status" id="bk-status"></div>
       <div class="bk-explain"><b>Vad sparas?</b><br>• Vanlig kopia: fordon, fordonsinformation och alla registrerade poster – men inte bifogade kvitton eller PDF-filer.<br>• Fullständig kopia: samma uppgifter samt alla bilagor. Välj denna för att kunna återställa även kvitton och dokument.</div>
       <div class="bk-btns">
-        <button class="bk-btn primary" onclick="exportData(false)">Vanlig säkerhetskopia (utan bilagor)</button>
+        <button class="bk-btn primary" onclick="exportData(false)">Säkerhetskopia som JSON-fil (utan bilagor)</button>
         <button class="bk-btn primary" id="bk-full" onclick="exportData(true)">Fullständig säkerhetskopia (med bilagor)</button>
         <button class="bk-btn" onclick="pickImport('import')">📂 Återställ / importera</button>
         <button class="bk-btn" onclick="pickImport('verify')">🔍 Verifiera fil</button>
-        <button class="bk-btn" onclick="exportCSV()" style="grid-column:1/-1">📊 Exportera Excel/CSV</button>
+        <button class="bk-btn" onclick="exportCSV()" style="grid-column:1/-1">📊 Exportera Excel/CSV (endast för läsning)</button>
       </div>
       <div class="bk-snap" id="bk-snap"></div>
       <div class="bk-snap" id="bk-orph"></div>
@@ -514,6 +514,13 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
       <select id="hf-s" onchange="renderH()" style="width:110px;font-size:13px"><option value="dd">Nyast</option><option value="da">Äldst</option><option value="cd">Dyrast</option></select>
     </div>
     <div style="margin-bottom:10px"><select id="hf-v" onchange="renderH()" style="font-size:13px"><option value="cur">Sök i detta fordon</option><option value="all">Sök i alla fordon</option></select></div>
+    <div id="h-adv" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <label style="font-size:11px;color:var(--mu)">Från datum<input type="date" id="hf-d1" onchange="renderH()" style="width:100%;font-size:13px"></label>
+      <label style="font-size:11px;color:var(--mu)">Till datum<input type="date" id="hf-d2" onchange="renderH()" style="width:100%;font-size:13px"></label>
+      <label style="font-size:11px;color:var(--mu)">Belopp från (kr)<input type="number" inputmode="decimal" id="hf-a1" oninput="hSearchInput()" placeholder="0" style="width:100%;font-size:13px"></label>
+      <label style="font-size:11px;color:var(--mu)">Belopp till (kr)<input type="number" inputmode="decimal" id="hf-a2" oninput="hSearchInput()" placeholder="∞" style="width:100%;font-size:13px"></label>
+      <button class="sbtn" style="grid-column:1/-1;margin:0;padding:8px;font-size:13px;background:var(--sf2);color:var(--tx);border:1px solid var(--bd2)" onclick="resetHist();renderH()">Rensa alla filter</button>
+    </div>
     <div id="h-check"></div>
     <div class="hsum" id="h-summary"></div>
     <div class="hlist" id="hlist"></div>
@@ -584,7 +591,9 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
     <div class="ssec"><div class="slbl">Senaste 10 händelser</div><div id="sg-rec"></div></div>
   </div>
   <div class="cont" id="stc-cmp" style="display:none">
-    <div style="font-size:13px;color:var(--mu);margin-bottom:12px">Välj fordon att jämföra (2–3 st)</div>
+    <div id="cmp-top"></div>
+    <div id="cmp-yoy" style="display:none"></div>
+    <div id="cmp-lead" style="font-size:13px;color:var(--mu);margin-bottom:12px">Välj fordon att jämföra (2–3 st)</div>
     <div class="cmp-hdr" id="cmp-btns"></div>
     <div id="cmp-mode"></div>
     <div id="cmp-sum"></div>
@@ -702,6 +711,364 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
 
 <div id="rep-modal"><div class="rep-bar"><button onclick="closeReport()">‹ Stäng</button><button onclick="printReport()">🖨 Skriv ut / PDF</button><button class="pri" onclick="shareReport()">Dela / spara</button></div><iframe id="rep-frame" title="Rapport"></iframe></div>
 <script>
+/* pi-sync.js - automatisk backup/synk mot Webappar Backup (Raspberry Pi över Tailscale).
+ *
+ * Användning i en app:
+ *   PiSync.init({
+ *     app: 'husbil',                      // a-z0-9_-
+ *     label: 'Husbilsdagbok',
+ *     getSnapshot: async () => ({...}),   // hela appens data som JSON-objekt
+ *     restoreSnapshot: async (obj) => {}, // ersätt lokal data med obj
+ *     hasData: async () => true/false     // finns det lokal data värd att skydda?
+ *   });
+ *   PiSync.markDirty();   // anropas efter varje lokal sparning
+ *   PiSync.start();       // anropas när appen är uppstartad
+ *   PiSync.saveAndExit(); // "Spara och avsluta"
+ */
+(function () {
+  'use strict';
+  var ready = false, A = null, cfg = null, st = null, timer = null, busy = false, started = false, remoteNewer = null;
+  var DEBOUNCE_MS = 30000;
+  var CFG_KEY = 'pisync_cfg';
+  var ui = {};
+
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function stKey() { return 'pisync_state_' + A.app; }
+  function loadAll() {
+    cfg = lsGet(CFG_KEY) || { url: '', token: '', device: '' };
+    st = lsGet(stKey()) || { baseRev: '', dirty: false, lastSync: '' };
+  }
+  function saveCfg() { lsSet(CFG_KEY, cfg); }
+  function saveSt() { lsSet(stKey(), st); }
+  function configured() { return !!(cfg.url && cfg.token); }
+  function base() { return cfg.url.replace(/\/+$/, ''); }
+  function deviceName() {
+    if (cfg.device) return cfg.device.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20) || 'enhet';
+    return /iPad/.test(navigator.userAgent) ? 'iPad' : /iPhone/.test(navigator.userAgent) ? 'iPhone' : 'enhet';
+  }
+  function hdr(extra) {
+    var h = { 'Authorization': 'Bearer ' + cfg.token, 'X-Device': deviceName() };
+    for (var k in (extra || {})) h[k] = extra[k];
+    return h;
+  }
+  function url(what) { return base() + '/v1/' + A.app + '/' + what; }
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { return iso || ''; }
+  }
+
+  /* ---------- nätverk ---------- */
+  function fetchT(u, opt, ms) {
+    var ctl = ('AbortController' in window) ? new AbortController() : null;
+    var t = ctl ? setTimeout(function () { ctl.abort(); }, ms || 20000) : null;
+    if (ctl) opt.signal = ctl.signal;
+    return fetch(u, opt).then(function (r) { if (t) clearTimeout(t); return r; },
+      function (e) { if (t) clearTimeout(t); throw e; });
+  }
+  function getMeta() {
+    return fetchT(url('meta'), { headers: hdr(), cache: 'no-store' }, 10000).then(function (r) {
+      if (r.status === 401) throw new Error('Fel token (401)');
+      if (!r.ok) throw new Error('Serverfel ' + r.status);
+      return r.json();
+    });
+  }
+
+  /* ---------- status / UI ---------- */
+  var status = { kind: 'idle', text: '' };
+  function setStatus(kind, text) {
+    status = { kind: kind, text: text || '' };
+    renderChip();
+    if (ui.msg) ui.msg.textContent = text || '';
+  }
+  function renderChip() {
+    if (!ui.chip) return;
+    var t, c;
+    if (!configured()) { t = '☁︎ Ställ in backup'; c = '#8e8e93'; }
+    else if (status.kind === 'busy') { t = '☁︎ Synkar…'; c = '#0a84ff'; }
+    else if (status.kind === 'error') { t = '☁︎ ⚠ Ej synkad'; c = '#ff453a'; }
+    else if (remoteNewer) { t = '☁︎ Ny version på Pi'; c = '#ff9f0a'; }
+    else if (st.dirty) { t = '☁︎ ● Osparat'; c = '#ff9f0a'; }
+    else { t = '☁︎ ✓ Säkrad'; c = '#30d158'; }
+    ui.chip.textContent = t;
+    ui.chip.style.background = c;
+  }
+  function el(tag, css, text) {
+    var e = document.createElement(tag);
+    if (css) e.style.cssText = css;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function btn(text, fn, primary) {
+    var b = el('button', 'display:block;width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:10px;border:0;' +
+      (primary ? 'background:#0a84ff;color:#fff;' : 'background:#e5e5ea;color:#000;'), text);
+    b.type = 'button';
+    b.onclick = fn;
+    return b;
+  }
+  function buildChip() {
+    if (ui.chip) return;
+    ui.chip = el('button', 'position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:99998;' +
+      'color:#fff;border:0;border-radius:16px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3);opacity:.92');
+    ui.chip.type = 'button';
+    ui.chip.onclick = openPanel;
+    document.body.appendChild(ui.chip);
+    renderChip();
+  }
+  function overlay() {
+    closeOverlay();
+    var o = el('div', 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;');
+    var card = el('div', 'background:#fff;color:#000;border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:90vh;overflow:auto;font:16px -apple-system,system-ui,sans-serif;');
+    o.appendChild(card);
+    document.body.appendChild(o);
+    ui.overlay = o;
+    return card;
+  }
+  function closeOverlay() { if (ui.overlay) { ui.overlay.remove(); ui.overlay = null; ui.msg = null; } }
+  function field(card, label, val, ph, type) {
+    card.appendChild(el('div', 'font-size:13px;color:#555;margin-top:10px', label));
+    var i = el('input', 'width:100%;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid #ccc;border-radius:8px;');
+    i.value = val || ''; i.placeholder = ph || ''; i.type = type || 'text';
+    i.autocapitalize = 'off'; i.autocorrect = 'off'; i.spellcheck = false;
+    card.appendChild(i);
+    return i;
+  }
+
+  function openPanel() {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Backup till Pi – ' + (A.label || A.app)));
+    var inUrl = field(card, 'Adress (https://…ts.net)', cfg.url, 'https://webappar-backup.xxxx.ts.net', 'url');
+    var inTok = field(card, 'Token', cfg.token, 'Samma som i add-onen', 'password');
+    var inDev = field(card, 'Enhetens namn (valfritt)', cfg.device, 'iPad / iPhone');
+    card.appendChild(btn('Spara inställningar och synka', function () {
+      cfg.url = inUrl.value.trim(); cfg.token = inTok.value.trim(); cfg.device = inDev.value.trim();
+      saveCfg(); renderChip();
+      closeOverlay();
+      syncOnStart(true);
+    }, true));
+    ui.msg = el('div', 'font-size:14px;color:#333;margin:8px 0;min-height:18px', status.text);
+    card.appendChild(ui.msg);
+    var last = st.lastSync ? 'Senast synkad: ' + fmtTime(st.lastSync) : 'Inte synkad än';
+    card.appendChild(el('div', 'font-size:13px;color:#777', last + (st.dirty ? ' · osparade ändringar' : '')));
+    if (configured()) {
+      card.appendChild(btn('Skicka till Pi nu', function () { closeOverlay(); push(false, true); }));
+      card.appendChild(btn('Hämta från Pi (ersätter detta)', function () { closeOverlay(); confirmPull(); }));
+      card.appendChild(btn('Spara och avsluta', function () { closeOverlay(); saveAndExit(); }));
+    }
+    card.appendChild(btn('Exportera fil (iCloud Drive / Filer)', function () { exportFile(); }));
+    card.appendChild(btn('Stäng', closeOverlay));
+  }
+
+  function exportFile() {
+    A.getSnapshot().then(function (snap) {
+      var blob = new Blob([JSON.stringify(snap)], { type: 'application/json' });
+      var name = A.app + '-' + new Date().toISOString().slice(0, 10) + '.json';
+      var file = null;
+      try { file = new File([blob], name, { type: 'application/json' }); } catch (e) {}
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        return navigator.share({ files: [file], title: name }).catch(function () {});
+      }
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+    }).catch(function (e) { setStatus('error', 'Export misslyckades: ' + e.message); });
+  }
+
+  /* ---------- kärnlogik ---------- */
+  function serialize() {
+    return A.getSnapshot().then(function (snap) {
+      if (!snap || typeof snap !== 'object') throw new Error('Tom data');
+      return JSON.stringify(snap);
+    });
+  }
+
+  function push(force, userInitiated) {
+    if (!configured()) { if (userInitiated) openPanel(); return Promise.resolve(false); }
+    if (busy) return Promise.resolve(false);
+    busy = true; clearTimeout(timer);
+    setStatus('busy', 'Skickar till Pi…');
+    return serialize().then(function (body) {
+      var h = hdr({ 'Content-Type': 'application/json', 'X-Base-Rev': st.baseRev || '' });
+      if (force) h['X-Force'] = '1';
+      return fetchT(url('latest'), { method: 'PUT', headers: h, body: body }, 120000).then(function (r) {
+        if (r.status === 409) return r.json().then(function (j) { busy = false; showConflict(j.current); return false; });
+        if (r.status === 401) throw new Error('Fel token (401)');
+        if (!r.ok) throw new Error('Serverfel ' + r.status);
+        return r.json().then(function (j) {
+          st.baseRev = j.rev; st.dirty = false; st.lastSync = new Date().toISOString();
+          saveSt(); remoteNewer = null; busy = false;
+          setStatus('ok', 'Säkrad på Pi ' + fmtTime(st.lastSync));
+          return true;
+        });
+      });
+    }).catch(function (e) {
+      busy = false;
+      setStatus('error', 'Kunde inte nå Pi: ' + (e && e.message ? e.message : e));
+      if (st.dirty) schedule(DEBOUNCE_MS * 2);
+      return false;
+    });
+  }
+
+  function pull() {
+    setStatus('busy', 'Hämtar från Pi…');
+    return fetchT(url('latest'), { headers: hdr(), cache: 'no-store' }, 120000).then(function (r) {
+      if (!r.ok) throw new Error('Serverfel ' + r.status);
+      var rev = r.headers.get('X-Rev') || '';
+      return r.json().then(function (obj) { return { obj: obj, rev: rev }; });
+    }).then(function (res) {
+      if (!res.obj || typeof res.obj !== 'object') throw new Error('Ogiltig backup');
+      return A.restoreSnapshot(res.obj).then(function () {
+        st.baseRev = res.rev; st.dirty = false; st.lastSync = new Date().toISOString();
+        saveSt();
+        location.reload();
+      });
+    }).catch(function (e) {
+      setStatus('error', 'Hämtning misslyckades: ' + (e && e.message ? e.message : e) + ' (lokal data orörd)');
+    });
+  }
+
+  function safetyUpload() {
+    return serialize().then(function (body) {
+      return fetchT(url('safety'), { method: 'PUT', headers: hdr({ 'Content-Type': 'application/json' }), body: body }, 120000)
+        .then(function (r) { if (!r.ok) throw new Error('Skyddskopia misslyckades (' + r.status + ')'); });
+    });
+  }
+
+  function confirmPull() {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Hämta från Pi?'));
+    card.appendChild(el('div', 'margin:10px 0', 'Data på den här enheten ersätts med senaste backupen. En skyddskopia av nuvarande data sparas först på Pi.'));
+    card.appendChild(btn('Hämta', function () {
+      closeOverlay();
+      setStatus('busy', 'Sparar skyddskopia…');
+      safetyUpload().then(pull).catch(function (e) { setStatus('error', e.message + ' – ingenting ändrat'); });
+    }, true));
+    card.appendChild(btn('Avbryt', closeOverlay));
+  }
+
+  function showConflict(cur) {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Olika versioner'));
+    card.appendChild(el('div', 'margin:10px 0',
+      'Pi har en annan version' + (cur && cur.device ? ' (från ' + cur.device + ', ' + fmtTime(cur.savedAt) + ')' : '') +
+      ' än den här enheten byggde på. Välj vilken som ska gälla – den andra sparas som säkerhetskopia.'));
+    card.appendChild(btn('Behåll den här enhetens data', function () {
+      closeOverlay(); push(true, true);   // gamla versionen finns kvar i Pi:ns versionshistorik
+    }, true));
+    card.appendChild(btn('Använd Pi:ns version', function () {
+      closeOverlay();
+      setStatus('busy', 'Sparar skyddskopia…');
+      safetyUpload().then(pull).catch(function (e) { setStatus('error', e.message + ' – ingenting ändrat'); });
+    }));
+    card.appendChild(btn('Avgör senare', function () { closeOverlay(); setStatus('error', 'Osynkade skillnader – tryck på ☁︎'); }));
+  }
+
+  function schedule(ms) {
+    clearTimeout(timer);
+    if (!configured()) return;
+    timer = setTimeout(function () { if (st.dirty) push(false); }, ms || DEBOUNCE_MS);
+  }
+
+  /* Körs vid start och när appen kommer tillbaka i förgrunden. */
+  function syncOnStart(interactive) {
+    if (!configured() || busy) return Promise.resolve();
+    setStatus('busy', 'Kollar mot Pi…');
+    return getMeta().then(function (m) {
+      if (!m.exists) {
+        // Första gången: skicka upp om det finns data
+        return A.hasData().then(function (has) {
+          if (has) return push(false);
+          setStatus('ok', 'Pi saknar backup – inget att skicka');
+        });
+      }
+      if (st.baseRev === m.rev) {
+        remoteNewer = null;
+        if (st.dirty) return push(false);
+        setStatus('ok', 'Synkad ' + (st.lastSync ? fmtTime(st.lastSync) : ''));
+        renderChip();
+        return;
+      }
+      // Pi har en annan version än den vi byggde på
+      return A.hasData().then(function (has) {
+        if (!has) return pull();                                  // tom enhet: hämta direkt
+        if (st.baseRev && !st.dirty && !started) return pull();   // kallstart, inga lokala ändringar: hämta
+        if (st.baseRev && !st.dirty) {                            // appen öppen: bara visa banner
+          remoteNewer = m; setStatus('ok', 'Ny version på Pi'); showBanner(m); return;
+        }
+        showConflict(m);                                          // lokala ändringar eller okänd historik
+      });
+    }).catch(function (e) {
+      setStatus('error', 'Kunde inte nå Pi: ' + (e && e.message ? e.message : e));
+    });
+  }
+
+  function showBanner(m) {
+    var old = document.getElementById('pisync-banner'); if (old) old.remove();
+    var b = el('div', 'position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:99997;background:#ff9f0a;color:#000;' +
+      'border-radius:12px;padding:10px 12px;font:14px -apple-system,system-ui,sans-serif;display:flex;gap:10px;align-items:center;');
+    b.id = 'pisync-banner';
+    b.appendChild(el('div', 'flex:1', 'Ny version på Pi' + (m && m.device ? ' (från ' + m.device + ')' : '') + '.'));
+    var go = el('button', 'padding:8px 12px;border:0;border-radius:8px;background:#000;color:#fff;font-size:14px', 'Hämta');
+    go.onclick = function () { b.remove(); confirmPull(); };
+    var no = el('button', 'padding:8px 10px;border:0;border-radius:8px;background:transparent;font-size:14px', 'Senare');
+    no.onclick = function () { b.remove(); };
+    b.appendChild(go); b.appendChild(no);
+    document.body.appendChild(b);
+  }
+
+  function saveAndExit() {
+    if (!configured()) { openPanel(); return Promise.resolve(); }
+    return push(false, true).then(function (ok) {
+      if (!ok) return;
+      var card = overlay();
+      card.appendChild(el('div', 'font-weight:700;font-size:18px;color:#1c8c3c', '✓ Säkrad på Pi'));
+      card.appendChild(el('div', 'margin:10px 0', 'Allt är sparat ' + fmtTime(st.lastSync) + '. Du kan stänga appen (svep upp).'));
+      card.appendChild(btn('OK', closeOverlay, true));
+    });
+  }
+
+  /* ---------- publikt API ---------- */
+  window.__piDirty = function () { if (window.PiSync) window.PiSync.markDirty(); };
+  window.PiSync = {
+    init: function (adapter) {
+      A = adapter;
+      if (!A.hasData) A.hasData = function () { return Promise.resolve(true); };
+      var hd = A.hasData;
+      A.hasData = function () { try { return Promise.resolve(hd()); } catch (e) { return Promise.resolve(true); } };
+      loadAll();
+    },
+    isConfigured: function () { return !!A && configured(); },
+    markDirty: function () {
+      if (!A || !ready) return;
+      st.dirty = true; saveSt(); renderChip();
+      schedule(DEBOUNCE_MS);
+    },
+    start: function () {
+      if (!A) return;
+      ready = true;
+      var go = function () {
+        buildChip();
+        if (!configured()) return;
+        syncOnStart(false).then(function () { started = true; });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') {
+            if (st.dirty && configured() && !busy) push(false);
+          } else if (configured() && !busy) {
+            started = true; syncOnStart(false);
+          }
+        });
+        window.addEventListener('online', function () { if (st.dirty) push(false); });
+      };
+      if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+    },
+    saveAndExit: saveAndExit,
+    syncNow: function () { return push(false, true); },
+    openPanel: openPanel
+  };
+})();
+
+</script>
+<script type="text/plain" id="chartjs-src">
 /*!
  * Chart.js v4.4.0
  * https://www.chartjs.org
@@ -726,7 +1093,7 @@ function loadCustomVehicles(){
 }
 function saveCustomVehicles(){
   const custom={};Object.keys(VEH).forEach(k=>{if(!['golf','cit','hub'].includes(k))custom[k]=VEH[k];});
-  try{localStorage.setItem('fb3_custom_veh',JSON.stringify(custom));}catch(e){console.error('Kunde inte spara egna fordon lokalt:',e);if(typeof toast==='function')toast('Kunde inte spara egna fordon. Exportera en säkerhetskopia.');}
+  try{localStorage.setItem('fb3_custom_veh',JSON.stringify(custom));if(window.__piDirty)__piDirty();}catch(e){console.error('Kunde inte spara egna fordon lokalt:',e);if(typeof toast==='function')toast('Kunde inte spara egna fordon. Exportera en säkerhetskopia.');}
 }
 const VEH_COLORS=['#6366F1','#EC4899','#14B8A6','#F97316','#84CC16','#8B5CF6','#06B6D4','#EF4444'];
 const VEH_ICONS=['🚗','🚙','🚐','🏍️','🚕','🚌','🚛','🛻','⚡','🏎️'];
@@ -736,7 +1103,7 @@ function loadArchivedVehicles(){
 }
 function saveArchivedVehicles(){
   const a={};Object.keys(VEH).forEach(function(k){if(VEH[k].archived)a[k]=true});
-  try{localStorage.setItem('fb3_archived_veh',JSON.stringify(a))}catch(e){console.error('Kunde inte spara fordonsarkiv:',e);toast('Kunde inte spara fordonsstatus. Gör en säkerhetskopia.')}
+  try{localStorage.setItem('fb3_archived_veh',JSON.stringify(a));if(window.__piDirty)__piDirty();}catch(e){console.error('Kunde inte spara fordonsarkiv:',e);toast('Kunde inte spara fordonsstatus. Gör en säkerhetskopia.')}
 }
 loadArchivedVehicles();
 const CAT={fu:{n:'Drivmedel',i:'⛽',c:'var(--fu)'},re:{n:'Reparation',i:'🔧',c:'var(--re)'},sv:{n:'Service',i:'🛠️',c:'var(--sv)'},in:{n:'Besiktning',i:'✅',c:'var(--in)'},tx:{n:'Fordonsskatt',i:'🏛️',c:'var(--tx2)'},ins2:{n:'Försäkring',i:'🛡️',c:'var(--ins)'},gas:{n:'Gasol',i:'🔥',c:'var(--gas)'},wash:{n:'Tvätt',i:'🚿',c:'var(--wash)'}};
@@ -798,6 +1165,7 @@ function gd(){
 function sd(d){
   try{
     localStorage.setItem('fb3',JSON.stringify(d));
+    if(window.__piDirty)__piDirty();
     return true;
   }catch(e){
     console.error('Kunde inte spara fordonsdata lokalt:',e);
@@ -1100,9 +1468,9 @@ function attLoadMeta(){
     rq.onerror=function(){rej(rq.error)};
   });
 }
-async function attPut(rec){const tx=attDb.transaction('att','readwrite');tx.objectStore('att').put(rec);await txDone(tx);attMeta[rec.id]=metaOf(rec);attRebuild()}
+async function attPut(rec){const tx=attDb.transaction('att','readwrite');tx.objectStore('att').put(rec);await txDone(tx);attMeta[rec.id]=metaOf(rec);attRebuild();if(window.__piDirty)__piDirty()}
 async function attGetRec(id){return reqP(attDb.transaction('att','readonly').objectStore('att').get(id))}
-async function attDel(id){const tx=attDb.transaction('att','readwrite');tx.objectStore('att').delete(id);await txDone(tx);delete attMeta[id];attRebuild()}
+async function attDel(id){const tx=attDb.transaction('att','readwrite');tx.objectStore('att').delete(id);await txDone(tx);delete attMeta[id];attRebuild();if(window.__piDirty)__piDirty()}
 function attIds(v,entryId){return attIdx[v+':'+entryId]||[]}
 function attCount(v,entryId){return attIds(v,entryId).length}
 function attTotal(){const ids=Object.keys(attMeta);return{n:ids.length,size:ids.reduce(function(s,i){return s+(attMeta[i].size||0)},0)}}
@@ -1703,8 +2071,39 @@ function updHome(){
   </div>`;
   const archived=archivedVehicleKeys();
   grid.innerHTML+=archived.length?'<div class="archive-panel"><div class="archive-title">📦 Tidigare fordon ('+archived.length+')</div>'+archived.map(function(v){const vd=VEH[v],a=ents(v),m=getMeta(v);return'<div class="archive-row"><div style="flex:1;min-width:0" onclick="openV(\''+v+'\')"><b>'+vd.i+' '+esc(vd.n)+'</b><div class="archive-sub">'+esc(m.reg||'')+' · '+a.length+' poster</div></div><button onclick="restoreArchivedVehicle(\''+v+'\')">Återaktivera</button><button class="archive-delete" onclick="confirmDeleteVehicle(\''+v+'\')" title="Radera permanent">🗑️</button></div>'}).join('')+'</div>':'';
-  document.getElementById('home-warnings').innerHTML='';
+  renderHomeOverview();
   renderBackupCard();
+}
+
+function renderHomeOverview(){
+  const el=document.getElementById('home-warnings');if(!el)return;
+  const today=isoToday(),lo=dn(addDays(today,-365))+1,hi=dn(today);
+  let total=0;const by={},rows=[];
+  activeVehicleKeys().forEach(function(v){
+    const a=ents(v);if(!a.length)return;
+    sumCosts(a,lo,hi,function(cat,c){total+=c;by[cat]=(by[cat]||0)+c});
+    const pts=odoPoints(a);let cp=null,cons=null,stale=null;
+    if(pts.length)stale=dn(today)-dn(pts[pts.length-1].d);
+    if(pts.length>=2){
+      const end=pts[pts.length-1].d,r=costWindow(a,pts,addDays(end,-365),end);
+      if(r.km>0&&r.coverage>=0.5)cp=r.perMil;
+      const fs=fuelStats(a,r.cs,r.ce);cons=fs.cons;
+    }
+    rows.push({v:v,cp:cp,cons:cons,stale:stale});
+  });
+  if(!rows.length||total<=0){el.innerHTML='';return}
+  const topCat=Object.keys(by).sort(function(x,y){return by[y]-by[x]})[0];
+  let h='<div class="ssec" style="margin:8px 0 4px"><div class="slbl">Senaste 12 månaderna</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-size:22px;font-weight:700">'+fkr0(total)+'</div>'+
+    '<div style="font-size:12px;color:var(--mu)">Störst: '+CAT[topCat].i+' '+esc(CAT[topCat].n)+' '+fkr0(by[topCat])+'</div></div>';
+  rows.forEach(function(r){
+    const bits=[];
+    if(r.cp!=null)bits.push(Math.round(r.cp).toLocaleString('sv-SE')+' kr/mil');
+    if(r.cons!=null)bits.push(r.cons.toFixed(2).replace('.',',')+' L/mil');
+    h+='<div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:13px"><span>'+VEH[r.v].i+' '+esc(VEH[r.v].n)+'</span><span style="color:var(--mu)">'+(bits.join(' · ')||'—')+'</span></div>';
+    if(r.stale!=null&&r.stale>45)h+='<div class="warn-badge amber" style="margin-top:4px">Mätarställning är '+r.stale+' dagar gammal – registrera en ny</div>';
+  });
+  el.innerHTML=h+'</div>';
 }
 
 // ── VEHICLE HEADER ──
@@ -1762,7 +2161,7 @@ function toggleFlagged(){hOnlyFlagged=!hOnlyFlagged;renderH()}
 function resetHist(){
   const s=document.getElementById('h-search');if(s)s.value='';
   const ds=document.getElementById('d-search');if(ds)ds.value='';
-  [['hf-c','all'],['hf-y','all'],['hf-s','dd'],['hf-v','cur']].forEach(function(x){const el=document.getElementById(x[0]);if(el)el.value=x[1]});
+  [['hf-c','all'],['hf-y','all'],['hf-s','dd'],['hf-v','cur'],['hf-d1',''],['hf-d2',''],['hf-a1',''],['hf-a2','']].forEach(function(x){const el=document.getElementById(x[0]);if(el)el.value=x[1]});
   hOnlyFlagged=false;
 }
 
@@ -1823,6 +2222,12 @@ function renderH(){
   let a=base;
   if(fc!=='all')a=a.filter(function(e){return e.cat===fc});
   if(fy!=='all')a=a.filter(function(e){return String(e.date).startsWith(fy)});
+  const fd1=(document.getElementById('hf-d1')||{}).value||'',fd2=(document.getElementById('hf-d2')||{}).value||'';
+  const fa1=parseFloat((document.getElementById('hf-a1')||{}).value),fa2=parseFloat((document.getElementById('hf-a2')||{}).value);
+  if(fd1)a=a.filter(function(e){return e.date>=fd1});
+  if(fd2)a=a.filter(function(e){return e.date<=fd2});
+  if(!isNaN(fa1))a=a.filter(function(e){return(e.cost||0)>=fa1});
+  if(!isNaN(fa2))a=a.filter(function(e){return(e.cost||0)<=fa2});
   if(tokens.length)a=a.filter(function(e){const b=entryBlob(e);return matchTokens(b,tokens)});
   if(hOnlyFlagged)a=a.filter(function(e){return issOf(e).length>0});
   if(fs==='da')a=[...a].reverse();else if(fs==='cd')a=[...a].sort(function(x,y){return(y.cost||0)-(x.cost||0)});
@@ -1836,7 +2241,7 @@ function renderH(){
   } else chk.innerHTML='';
 
   // Antal träffar och summa
-  const filtered=!!(tokens.length||fc!=='all'||fy!=='all'||hOnlyFlagged);
+  const filtered=!!(tokens.length||fc!=='all'||fy!=='all'||hOnlyFlagged||fd1||fd2||!isNaN(fa1)||!isNaN(fa2));
   const fu=a.filter(function(e){return e.cat==='fu'&&e.liters>0&&e.cost>0});
   let sub='';
   if(fu.length){
@@ -2084,7 +2489,14 @@ function drawChart(id,labels,datasets,type='line'){
   });
   canvas.style.width='100%';canvas.style.height='220px';
 }
+function ensureChart(){
+  if(typeof Chart!=='undefined')return true;
+  const s=document.getElementById('chartjs-src');if(!s)return false;
+  try{const el=document.createElement('script');el.text=s.textContent;document.head.appendChild(el);s.remove()}catch(e){console.error(e)}
+  return typeof Chart!=='undefined';
+}
 function renderGraf(){
+  ensureChart();
   if(typeof Chart==='undefined'){toastErr('Diagrambiblioteket kunde inte startas.');return}
   const a=ents(curV);
   const color=VEH[curV].c;
@@ -2205,7 +2617,65 @@ function cmpCalc(vd){
   });
   return{rows:out,start:start,end:end};
 }
+let cmpView='veh',yoyV=null;
+function setCmpView(m){cmpView=m;renderCmp()}
+function setYoyV(v){yoyV=v;renderCmp()}
+function pctTxt(n,o){if(!o)return null;const p=(n-o)/o*100;return(p>0?'+':'')+Math.round(p)+' %'}
+function renderYoy(){
+  const box=document.getElementById('cmp-yoy');if(!box)return;
+  const vs=Object.keys(VEH);
+  if(!yoyV||!VEH[yoyV])yoyV=cmpSel[0]||vs[0];
+  const a=ents(yoyV),pts=odoPoints(a),thisY=String(new Date().getFullYear());
+  const ys=yearsOf(a).slice(0,6).reverse();
+  let h='<div class="cmp-hdr" style="flex-wrap:wrap;margin-bottom:10px">'+vs.map(function(v){return'<div class="cmp-vb'+(v===yoyV?' sel':'')+'" style="'+(v===yoyV?'border-color:'+VEH[v].c+';color:'+VEH[v].c:'')+'" onclick="setYoyV(\''+v+'\')">'+VEH[v].i+' '+esc(VEH[v].n)+'</div>'}).join('')+'</div>';
+  if(ys.length<2){box.innerHTML=h+'<div style="color:var(--mu2);font-size:13px;padding-top:8px">Minst två år med poster behövs för att jämföra år mot år.</div>';return}
+  const cols=ys.map(function(y){
+    const t=yearTotals(a,y),lo=(+y-1)+'-12-31',hi=y+'-12-31';
+    const r=pts.length>=2?costWindow(a,pts,lo,hi):null,ok=!!(r&&r.km>0);
+    return{y:y,total:t.total,by:t.by,km:ok?r.km/10:null,perMil:ok?r.perMil:null,cov:r?r.coverage:0,fs:fuelStats(a,lo,hi),part:y===thisY||(r&&r.coverage<0.9)};
+  });
+  const num=function(v,d){return v==null?'—':Math.round(v).toLocaleString('sv-SE')};
+  const defs=[
+    ['Total kostnad',function(c){return c.total?num(c.total)+' kr':'—'}],
+    ['Mil körda',function(c){return c.km!=null?num(c.km):'—'}],
+    ['Kr/mil',function(c){return c.perMil!=null?num(c.perMil)+' kr':'—'}],
+    ['Drivmedel',function(c){return c.by.fu?num(c.by.fu)+' kr':'—'}],
+    ['Service + rep.',function(c){const x=(c.by.sv||0)+(c.by.re||0);return x?num(x)+' kr':'—'}],
+    ['Skatt + försäkr.',function(c){const x=(c.by.tx||0)+(c.by.ins2||0);return x?num(x)+' kr':'—'}],
+    ['Förbrukning',function(c){return c.fs.cons!=null?c.fs.cons.toFixed(2).replace('.',',')+' L/mil':'—'}],
+    ['Snitt kr/L',function(c){return c.fs.avgPrice!=null?c.fs.avgPrice.toFixed(2).replace('.',',')+' kr':'—'}],
+    ['Tankningar',function(c){return c.fs.fills?String(c.fs.fills):'—'}]
+  ];
+  h+='<div style="overflow-x:auto"><table class="cmpt"><thead><tr><th>Rad</th>'+cols.map(function(c){return'<th style="text-align:right">'+c.y+(c.part?'*':'')+'</th>'}).join('')+'</tr></thead><tbody>'+
+    defs.map(function(d){return'<tr><td style="color:var(--mu);font-size:12px">'+d[0]+'</td>'+cols.map(function(c){return'<td style="text-align:right">'+d[1](c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>';
+  // staplar: kr/mil
+  const mx=Math.max.apply(null,cols.map(function(c){return c.perMil||0}));
+  if(mx>0)h+='<div class="slbl" style="margin-top:14px">Kr/mil per år</div>'+cols.filter(function(c){return c.perMil!=null}).map(function(c){return'<div class="br"><div class="bl">'+c.y+(c.part?'*':'')+'</div><div class="bt"><div class="bf" style="width:'+(c.perMil/mx*100).toFixed(1)+'%;background:'+VEH[yoyV].c+'"></div></div><div class="bv">'+num(c.perMil)+' kr</div></div>'}).join('');
+  // iakttagelser
+  const notes=[];
+  for(let i=cols.length-1;i>0;i--){
+    const n=cols[i],o=cols[i-1];
+    if(n.perMil!=null&&o.perMil!=null&&n.cov>=0.5&&o.cov>=0.5){const p=pctTxt(n.perMil,o.perMil);if(Math.abs(n.perMil/o.perMil-1)>=0.15)notes.push('Kr/mil '+n.y+' är '+p+' mot '+o.y+' ('+num(o.perMil)+' → '+num(n.perMil)+' kr).')}
+    if(n.fs.cons!=null&&o.fs.cons!=null&&Math.abs(n.fs.cons/o.fs.cons-1)>=0.1)notes.push('Förbrukningen '+n.y+' är '+pctTxt(n.fs.cons,o.fs.cons)+' mot '+o.y+' ('+o.fs.cons.toFixed(2).replace('.',',')+' → '+n.fs.cons.toFixed(2).replace('.',',')+' L/mil).');
+    const sr=function(c){return(c.by.sv||0)+(c.by.re||0)};
+    if(sr(o)>0&&sr(n)>1.5*sr(o)&&sr(n)-sr(o)>1000)notes.push('Service + reparationer ökade '+n.y+' ('+num(sr(o))+' → '+num(sr(n))+' kr).');
+  }
+  h+=notes.slice(-6).map(function(t){return'<div class="ewarn amber" style="margin-top:6px">⚠ '+esc(t)+'</div>'}).join('');
+  if(cols.some(function(c){return c.part}))h+='<div style="font-size:12px;color:var(--mu2);margin-top:10px">* Pågående år eller ofullständigt underlag (mindre än 90 % av året har mätarställningar). Kr/mil och förbrukning gäller bara den delen.</div>';
+  box.innerHTML=h;
+}
 function renderCmp(){
+  const top=document.getElementById('cmp-top');
+  if(top)top.innerHTML='<div class="ptog" style="margin-bottom:12px"><div class="pt'+(cmpView==='veh'?' active':'')+'" onclick="setCmpView(\'veh\')">Fordon mot fordon</div><div class="pt'+(cmpView==='yoy'?' active':'')+'" onclick="setCmpView(\'yoy\')">År mot år</div></div>';
+  const yb=document.getElementById('cmp-yoy'),lead=document.getElementById('cmp-lead');
+  if(cmpView==='yoy'){
+    ['cmp-btns','cmp-mode','cmp-sum','cmp-tbl','cmp-notes'].forEach(function(i){const e=document.getElementById(i);if(e)e.innerHTML=''});
+    if(lead)lead.style.display='none';
+    if(yb){yb.style.display='';renderYoy()}
+    return;
+  }
+  if(yb){yb.style.display='none';yb.innerHTML=''}
+  if(lead)lead.style.display='';
   document.getElementById('cmp-btns').innerHTML=Object.keys(VEH).map(function(v){return'<div class="cmp-vb'+(cmpSel.includes(v)?' sel':'')+'" style="'+(cmpSel.includes(v)?'border-color:'+VEH[v].c+';color:'+VEH[v].c:'')+'" onclick="togCmp(\''+v+'\')">'+VEH[v].i+' '+esc(VEH[v].n)+'</div>'}).join('');
   const tbl=document.getElementById('cmp-tbl'),mode=document.getElementById('cmp-mode'),sum=document.getElementById('cmp-sum'),nt=document.getElementById('cmp-notes');
   if(cmpSel.length<2){tbl.innerHTML='<div style="color:var(--mu2);font-size:13px;padding-top:8px">Välj minst 2 fordon</div>';mode.innerHTML=sum.innerHTML=nt.innerHTML='';return}
@@ -2465,9 +2935,44 @@ function renderRepForm(){
     '<label class="rep-chk"><input type="checkbox" id="rep-imgs"> Ta med bilder av kvitton (större fil)</label>'+
     '<button class="sbtn" style="margin-top:8px" onclick="makeReport(\'sale\')">Skapa försäljningsunderlag</button>'+
     '<div style="font-size:12px;color:var(--mu2);margin-top:6px">Samlad service- och reparationshistorik, kostnader per år och förbrukning. Bra att visa en köpare.</div></div>'+
-    '<div class="ssec"><div class="slbl">Hela historiken</div><button class="sbtn" style="background:var(--sf2);color:var(--tx);border:1px solid var(--bd2)" onclick="exportCsv(\'hist\')">Alla poster som CSV (Excel)</button></div>';
+    '<div class="ssec"><div class="slbl">Hela historiken</div><button class="sbtn" style="background:var(--sf2);color:var(--tx);border:1px solid var(--bd2)" onclick="exportCsv(\'hist\')">Alla poster som CSV (Excel)</button></div>'+
+    (function(){const ay=yearsOf(allE());return ay.length?'<div class="ssec"><div class="slbl">Alla fordon – årssammanställning</div><div style="display:flex;gap:8px"><select id="rep-allyear" style="flex:1">'+ay.map(function(y){return'<option>'+y+'</option>'}).join('')+'</select><button class="sbtn" style="flex:1;margin:0" onclick="makeReport(\'allyear\')">Visa rapport</button></div><div style="font-size:12px;color:var(--mu2);margin-top:6px">Kostnader per fordon och kategori samt förändring mot föregående år. Skriv ut / PDF via rapportvyn.</div></div>':''})()+
+    '<div class="ssec"><div class="slbl">Säkerhetskopia (JSON)</div>'+
+    '<button class="sbtn" onclick="exportData(false)">Spara JSON-backup (utan bilagor)</button>'+
+    '<button class="sbtn" style="margin-top:8px" onclick="exportData(true)">Spara JSON-backup med bilagor</button>'+
+    '<div style="font-size:12px;color:var(--mu2);margin-top:6px">JSON-filen kan återställas i appen (Startsidan → Säkerhetskopia → Återställ). Excel/CSV är bara för läsning.</div></div>';
+}
+function buildAllYearReport(y){
+  const pi=String(+y-1);let h='<h1>Årssammanställning '+y+'</h1><div class="sub">Alla fordon · skapad '+esc(fdt(isoToday()))+'</div>';
+  const rows=[],cats={};let grand=0;
+  Object.keys(VEH).forEach(function(v){
+    const a=ents(v),t=yearTotals(a,y);if(!t.items.length)return;
+    const pts=odoPoints(a),r=pts.length>=2?costWindow(a,pts,pi+'-12-31',y+'-12-31'):null;
+    const p=yearTotals(a,pi);
+    rows.push({v:v,t:t,prev:p.total,km:r&&r.km>0?r.km/10:null,perMil:r&&r.perMil!=null&&r.coverage>=0.5?r.perMil:null});
+    Object.keys(t.by).forEach(function(c){cats[c]=(cats[c]||0)+t.by[c]});grand+=t.total;
+  });
+  if(!rows.length)return rdoc('Årssammanställning '+y,h+repNote('Inga poster för '+esc(y)+'.'));
+  h+=kpis([['Total kostnad '+y,rkr(grand)],['Fordon med poster',String(rows.length)]]);
+  const usedCats=REP_CATS.filter(function(c){return cats[c]});
+  h+='<h2>Per fordon och kategori</h2><table><thead><tr><th>Fordon</th>'+usedCats.map(function(c){return'<th class="r">'+esc(CAT[c].n)+'</th>'}).join('')+'<th class="r">Totalt</th><th class="r">Kr/mil</th></tr></thead><tbody>';
+  rows.forEach(function(r){h+='<tr><td>'+esc(VEH[r.v].n)+'</td>'+usedCats.map(function(c){return'<td class="r">'+(r.t.by[c]?rfm(r.t.by[c]):'')+'</td>'}).join('')+'<td class="r">'+rkr(r.t.total)+'</td><td class="r">'+(r.perMil!=null?rfm(r.perMil):'—')+'</td></tr>'});
+  h+='<tr class="tot"><td>Totalt</td>'+usedCats.map(function(c){return'<td class="r">'+rfm(cats[c])+'</td>'}).join('')+'<td class="r">'+rkr(grand)+'</td><td></td></tr></tbody></table>';
+  h+='<h2>Mot föregående år ('+pi+')</h2><table><thead><tr><th>Fordon</th><th class="r">'+y+'</th><th class="r">'+pi+'</th><th class="r">Förändring</th></tr></thead><tbody>';
+  rows.forEach(function(r){const d=r.t.total-r.prev;h+='<tr><td>'+esc(VEH[r.v].n)+'</td><td class="r">'+rkr(r.t.total)+'</td><td class="r">'+(r.prev?rkr(r.prev):'—')+'</td><td class="r">'+(r.prev?(d>0?'+':'')+rfm(d)+' kr':'')+'</td></tr>'});
+  h+='</tbody></table>'+repNote('Kr/mil visas bara där mätarställningar täcker minst hälften av året. Skatt visas netto efter återbetalningar.');
+  return rdoc('Årssammanställning '+y,h);
 }
 async function makeReport(kind){
+  if(kind==='allyear'){
+    try{
+      const y=document.getElementById('rep-allyear').value;
+      repHtml=buildAllYearReport(y);repName='arssammanstallning_'+y+'.html';
+      document.getElementById('rep-frame').srcdoc=repHtml;
+      document.getElementById('rep-modal').classList.add('show');
+    }catch(err){toastErr('Rapporten kunde inte skapas: '+(err.message||err))}
+    return;
+  }
   const v=repV;if(!v)return;
   try{
     if(kind==='year'){
@@ -2802,7 +3307,7 @@ function renderBackupCard(){
   if(at.n&&(!lb||!lb.withAtt)){html+='<br>📎 '+at.n+' bilagor ('+fsize(at.size)+') ingår inte i någon fullständig kopia ännu';cls='warn'}
   st.className='bk-status '+cls;st.innerHTML=html;
   const full=document.getElementById('bk-full');
-  if(full){full.style.display='';full.textContent='📎 Fullständig säkerhetskopia ('+at.n+' bilagor · '+fsize(at.size)+')'}
+  if(full){full.style.display='';full.textContent='📎 Fullständig JSON-säkerhetskopia ('+at.n+' bilagor · '+fsize(at.size)+')'}
   const snap=getSnapshot(),sn=document.getElementById('bk-snap');
   sn.innerHTML=snap?'<span>🛟 Skyddskopia: '+esc(snap.reason)+' · '+esc(fdtm(snap.ts))+' · '+countEntries(snap.data)+' poster</span><button class="bk-link" onclick="restoreSnapshot()">Återställ</button>':'';
   const orph=attOrphanIds(),ob=document.getElementById('bk-orph');
@@ -3094,6 +3599,37 @@ updHome();
 initStorageGuard();
 document.querySelectorAll('#tc-add .sbtn').forEach(b=>b.insertAdjacentHTML('beforebegin',ATT_BOX));
 attInit().then(function(ok){if(!ok)document.querySelectorAll('.att-box').forEach(function(el){el.style.display='none'});renderBackupCard();attRefreshViews()});
+
+// ── PI-SYNK ──
+PiSync.init({
+  app:'fordon', label:'Fordonsapp',
+  hasData:function(){return Promise.resolve(countEntries(gd())>0||attTotal().n>0);},
+  getSnapshot:function(){return attReadyP.then(function(){return buildBackup(true)});},
+  restoreSnapshot:async function(obj){
+    const p=parseBackup(JSON.stringify(obj));
+    if(p.info.checksumOk===false||p.info.countsOk===false||p.skipped.length||p.attBad)
+      throw new Error('Backupen på Pi kunde inte verifieras – lokal data orörd');
+    const cur=gd(),prevCustom=customVehOnly();
+    snapshotNow('Före hämtning från Pi');
+    const nextData={};Object.keys(p.data).forEach(function(k){nextData[k]=p.data[k]});
+    const nextCustom={};Object.keys(p.vdefs).forEach(function(k){if(DEFAULT_KEYS.indexOf(k)<0)nextCustom[k]=p.vdefs[k]});
+    if(!sd(nextData))throw new Error('Kunde inte spara lokalt');
+    setVehicles(nextCustom);
+    Object.keys(VEH).forEach(function(k){VEH[k].archived=false});
+    Object.keys(p.vdefs).forEach(function(k){if(VEH[k])VEH[k].archived=!!p.vdefs[k].archived});
+    saveCustomVehicles();saveArchivedVehicles();
+    const after=gd();
+    if(fnv(JSON.stringify(after))!==fnv(JSON.stringify(nextData))){
+      sd(cur);setVehicles(prevCustom);
+      throw new Error('Verifieringen misslyckades – tidigare data återställdes');
+    }
+    await attReadyP;
+    if(p.atts&&p.atts.length&&attOk()){
+      for(const a of p.atts){if(!attMeta[a.id])await restoreAtt(a);}
+    }
+  }
+});
+attReadyP.then(function(){PiSync.start();});
 </script>
 </body>
 </html>
