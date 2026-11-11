@@ -318,6 +318,364 @@ input[type=file]{font-size:13px;color:var(--mu)}
 </div>
 
 <script>
+/* pi-sync.js - automatisk backup/synk mot Webappar Backup (Raspberry Pi över Tailscale).
+ *
+ * Användning i en app:
+ *   PiSync.init({
+ *     app: 'husbil',                      // a-z0-9_-
+ *     label: 'Husbilsdagbok',
+ *     getSnapshot: async () => ({...}),   // hela appens data som JSON-objekt
+ *     restoreSnapshot: async (obj) => {}, // ersätt lokal data med obj
+ *     hasData: async () => true/false     // finns det lokal data värd att skydda?
+ *   });
+ *   PiSync.markDirty();   // anropas efter varje lokal sparning
+ *   PiSync.start();       // anropas när appen är uppstartad
+ *   PiSync.saveAndExit(); // "Spara och avsluta"
+ */
+(function () {
+  'use strict';
+  var ready = false, A = null, cfg = null, st = null, timer = null, busy = false, started = false, remoteNewer = null;
+  var DEBOUNCE_MS = 30000;
+  var CFG_KEY = 'pisync_cfg';
+  var ui = {};
+
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function stKey() { return 'pisync_state_' + A.app; }
+  function loadAll() {
+    cfg = lsGet(CFG_KEY) || { url: '', token: '', device: '' };
+    st = lsGet(stKey()) || { baseRev: '', dirty: false, lastSync: '' };
+  }
+  function saveCfg() { lsSet(CFG_KEY, cfg); }
+  function saveSt() { lsSet(stKey(), st); }
+  function configured() { return !!(cfg.url && cfg.token); }
+  function base() { return cfg.url.replace(/\/+$/, ''); }
+  function deviceName() {
+    if (cfg.device) return cfg.device.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 20) || 'enhet';
+    return /iPad/.test(navigator.userAgent) ? 'iPad' : /iPhone/.test(navigator.userAgent) ? 'iPhone' : 'enhet';
+  }
+  function hdr(extra) {
+    var h = { 'Authorization': 'Bearer ' + cfg.token, 'X-Device': deviceName() };
+    for (var k in (extra || {})) h[k] = extra[k];
+    return h;
+  }
+  function url(what) { return base() + '/v1/' + A.app + '/' + what; }
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { return iso || ''; }
+  }
+
+  /* ---------- nätverk ---------- */
+  function fetchT(u, opt, ms) {
+    var ctl = ('AbortController' in window) ? new AbortController() : null;
+    var t = ctl ? setTimeout(function () { ctl.abort(); }, ms || 20000) : null;
+    if (ctl) opt.signal = ctl.signal;
+    return fetch(u, opt).then(function (r) { if (t) clearTimeout(t); return r; },
+      function (e) { if (t) clearTimeout(t); throw e; });
+  }
+  function getMeta() {
+    return fetchT(url('meta'), { headers: hdr(), cache: 'no-store' }, 10000).then(function (r) {
+      if (r.status === 401) throw new Error('Fel token (401)');
+      if (!r.ok) throw new Error('Serverfel ' + r.status);
+      return r.json();
+    });
+  }
+
+  /* ---------- status / UI ---------- */
+  var status = { kind: 'idle', text: '' };
+  function setStatus(kind, text) {
+    status = { kind: kind, text: text || '' };
+    renderChip();
+    if (ui.msg) ui.msg.textContent = text || '';
+  }
+  function renderChip() {
+    if (!ui.chip) return;
+    var t, c;
+    if (!configured()) { t = '☁︎ Ställ in backup'; c = '#8e8e93'; }
+    else if (status.kind === 'busy') { t = '☁︎ Synkar…'; c = '#0a84ff'; }
+    else if (status.kind === 'error') { t = '☁︎ ⚠ Ej synkad'; c = '#ff453a'; }
+    else if (remoteNewer) { t = '☁︎ Ny version på Pi'; c = '#ff9f0a'; }
+    else if (st.dirty) { t = '☁︎ ● Osparat'; c = '#ff9f0a'; }
+    else { t = '☁︎ ✓ Säkrad'; c = '#30d158'; }
+    ui.chip.textContent = t;
+    ui.chip.style.background = c;
+  }
+  function el(tag, css, text) {
+    var e = document.createElement(tag);
+    if (css) e.style.cssText = css;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function btn(text, fn, primary) {
+    var b = el('button', 'display:block;width:100%;margin:6px 0;padding:12px;font-size:16px;border-radius:10px;border:0;' +
+      (primary ? 'background:#0a84ff;color:#fff;' : 'background:#e5e5ea;color:#000;'), text);
+    b.type = 'button';
+    b.onclick = fn;
+    return b;
+  }
+  function buildChip() {
+    if (ui.chip) return;
+    ui.chip = el('button', 'position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:99998;' +
+      'color:#fff;border:0;border-radius:16px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3);opacity:.92');
+    ui.chip.type = 'button';
+    ui.chip.onclick = openPanel;
+    document.body.appendChild(ui.chip);
+    renderChip();
+  }
+  function overlay() {
+    closeOverlay();
+    var o = el('div', 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;');
+    var card = el('div', 'background:#fff;color:#000;border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:90vh;overflow:auto;font:16px -apple-system,system-ui,sans-serif;');
+    o.appendChild(card);
+    document.body.appendChild(o);
+    ui.overlay = o;
+    return card;
+  }
+  function closeOverlay() { if (ui.overlay) { ui.overlay.remove(); ui.overlay = null; ui.msg = null; } }
+  function field(card, label, val, ph, type) {
+    card.appendChild(el('div', 'font-size:13px;color:#555;margin-top:10px', label));
+    var i = el('input', 'width:100%;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid #ccc;border-radius:8px;');
+    i.value = val || ''; i.placeholder = ph || ''; i.type = type || 'text';
+    i.autocapitalize = 'off'; i.autocorrect = 'off'; i.spellcheck = false;
+    card.appendChild(i);
+    return i;
+  }
+
+  function openPanel() {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Backup till Pi – ' + (A.label || A.app)));
+    var inUrl = field(card, 'Adress (https://…ts.net)', cfg.url, 'https://webappar-backup.xxxx.ts.net', 'url');
+    var inTok = field(card, 'Token', cfg.token, 'Samma som i add-onen', 'password');
+    var inDev = field(card, 'Enhetens namn (valfritt)', cfg.device, 'iPad / iPhone');
+    card.appendChild(btn('Spara inställningar och synka', function () {
+      cfg.url = inUrl.value.trim(); cfg.token = inTok.value.trim(); cfg.device = inDev.value.trim();
+      saveCfg(); renderChip();
+      closeOverlay();
+      syncOnStart(true);
+    }, true));
+    ui.msg = el('div', 'font-size:14px;color:#333;margin:8px 0;min-height:18px', status.text);
+    card.appendChild(ui.msg);
+    var last = st.lastSync ? 'Senast synkad: ' + fmtTime(st.lastSync) : 'Inte synkad än';
+    card.appendChild(el('div', 'font-size:13px;color:#777', last + (st.dirty ? ' · osparade ändringar' : '')));
+    if (configured()) {
+      card.appendChild(btn('Skicka till Pi nu', function () { closeOverlay(); push(false, true); }));
+      card.appendChild(btn('Hämta från Pi (ersätter detta)', function () { closeOverlay(); confirmPull(); }));
+      card.appendChild(btn('Spara och avsluta', function () { closeOverlay(); saveAndExit(); }));
+    }
+    card.appendChild(btn('Exportera fil (iCloud Drive / Filer)', function () { exportFile(); }));
+    card.appendChild(btn('Stäng', closeOverlay));
+  }
+
+  function exportFile() {
+    A.getSnapshot().then(function (snap) {
+      var blob = new Blob([JSON.stringify(snap)], { type: 'application/json' });
+      var name = A.app + '-' + new Date().toISOString().slice(0, 10) + '.json';
+      var file = null;
+      try { file = new File([blob], name, { type: 'application/json' }); } catch (e) {}
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        return navigator.share({ files: [file], title: name }).catch(function () {});
+      }
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+    }).catch(function (e) { setStatus('error', 'Export misslyckades: ' + e.message); });
+  }
+
+  /* ---------- kärnlogik ---------- */
+  function serialize() {
+    return A.getSnapshot().then(function (snap) {
+      if (!snap || typeof snap !== 'object') throw new Error('Tom data');
+      return JSON.stringify(snap);
+    });
+  }
+
+  function push(force, userInitiated) {
+    if (!configured()) { if (userInitiated) openPanel(); return Promise.resolve(false); }
+    if (busy) return Promise.resolve(false);
+    busy = true; clearTimeout(timer);
+    setStatus('busy', 'Skickar till Pi…');
+    return serialize().then(function (body) {
+      var h = hdr({ 'Content-Type': 'application/json', 'X-Base-Rev': st.baseRev || '' });
+      if (force) h['X-Force'] = '1';
+      return fetchT(url('latest'), { method: 'PUT', headers: h, body: body }, 120000).then(function (r) {
+        if (r.status === 409) return r.json().then(function (j) { busy = false; showConflict(j.current); return false; });
+        if (r.status === 401) throw new Error('Fel token (401)');
+        if (!r.ok) throw new Error('Serverfel ' + r.status);
+        return r.json().then(function (j) {
+          st.baseRev = j.rev; st.dirty = false; st.lastSync = new Date().toISOString();
+          saveSt(); remoteNewer = null; busy = false;
+          setStatus('ok', 'Säkrad på Pi ' + fmtTime(st.lastSync));
+          return true;
+        });
+      });
+    }).catch(function (e) {
+      busy = false;
+      setStatus('error', 'Kunde inte nå Pi: ' + (e && e.message ? e.message : e));
+      if (st.dirty) schedule(DEBOUNCE_MS * 2);
+      return false;
+    });
+  }
+
+  function pull() {
+    setStatus('busy', 'Hämtar från Pi…');
+    return fetchT(url('latest'), { headers: hdr(), cache: 'no-store' }, 120000).then(function (r) {
+      if (!r.ok) throw new Error('Serverfel ' + r.status);
+      var rev = r.headers.get('X-Rev') || '';
+      return r.json().then(function (obj) { return { obj: obj, rev: rev }; });
+    }).then(function (res) {
+      if (!res.obj || typeof res.obj !== 'object') throw new Error('Ogiltig backup');
+      return A.restoreSnapshot(res.obj).then(function () {
+        st.baseRev = res.rev; st.dirty = false; st.lastSync = new Date().toISOString();
+        saveSt();
+        location.reload();
+      });
+    }).catch(function (e) {
+      setStatus('error', 'Hämtning misslyckades: ' + (e && e.message ? e.message : e) + ' (lokal data orörd)');
+    });
+  }
+
+  function safetyUpload() {
+    return serialize().then(function (body) {
+      return fetchT(url('safety'), { method: 'PUT', headers: hdr({ 'Content-Type': 'application/json' }), body: body }, 120000)
+        .then(function (r) { if (!r.ok) throw new Error('Skyddskopia misslyckades (' + r.status + ')'); });
+    });
+  }
+
+  function confirmPull() {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Hämta från Pi?'));
+    card.appendChild(el('div', 'margin:10px 0', 'Data på den här enheten ersätts med senaste backupen. En skyddskopia av nuvarande data sparas först på Pi.'));
+    card.appendChild(btn('Hämta', function () {
+      closeOverlay();
+      setStatus('busy', 'Sparar skyddskopia…');
+      safetyUpload().then(pull).catch(function (e) { setStatus('error', e.message + ' – ingenting ändrat'); });
+    }, true));
+    card.appendChild(btn('Avbryt', closeOverlay));
+  }
+
+  function showConflict(cur) {
+    var card = overlay();
+    card.appendChild(el('div', 'font-weight:700;font-size:18px', 'Olika versioner'));
+    card.appendChild(el('div', 'margin:10px 0',
+      'Pi har en annan version' + (cur && cur.device ? ' (från ' + cur.device + ', ' + fmtTime(cur.savedAt) + ')' : '') +
+      ' än den här enheten byggde på. Välj vilken som ska gälla – den andra sparas som säkerhetskopia.'));
+    card.appendChild(btn('Behåll den här enhetens data', function () {
+      closeOverlay(); push(true, true);   // gamla versionen finns kvar i Pi:ns versionshistorik
+    }, true));
+    card.appendChild(btn('Använd Pi:ns version', function () {
+      closeOverlay();
+      setStatus('busy', 'Sparar skyddskopia…');
+      safetyUpload().then(pull).catch(function (e) { setStatus('error', e.message + ' – ingenting ändrat'); });
+    }));
+    card.appendChild(btn('Avgör senare', function () { closeOverlay(); setStatus('error', 'Osynkade skillnader – tryck på ☁︎'); }));
+  }
+
+  function schedule(ms) {
+    clearTimeout(timer);
+    if (!configured()) return;
+    timer = setTimeout(function () { if (st.dirty) push(false); }, ms || DEBOUNCE_MS);
+  }
+
+  /* Körs vid start och när appen kommer tillbaka i förgrunden. */
+  function syncOnStart(interactive) {
+    if (!configured() || busy) return Promise.resolve();
+    setStatus('busy', 'Kollar mot Pi…');
+    return getMeta().then(function (m) {
+      if (!m.exists) {
+        // Första gången: skicka upp om det finns data
+        return A.hasData().then(function (has) {
+          if (has) return push(false);
+          setStatus('ok', 'Pi saknar backup – inget att skicka');
+        });
+      }
+      if (st.baseRev === m.rev) {
+        remoteNewer = null;
+        if (st.dirty) return push(false);
+        setStatus('ok', 'Synkad ' + (st.lastSync ? fmtTime(st.lastSync) : ''));
+        renderChip();
+        return;
+      }
+      // Pi har en annan version än den vi byggde på
+      return A.hasData().then(function (has) {
+        if (!has) return pull();                                  // tom enhet: hämta direkt
+        if (st.baseRev && !st.dirty && !started) return pull();   // kallstart, inga lokala ändringar: hämta
+        if (st.baseRev && !st.dirty) {                            // appen öppen: bara visa banner
+          remoteNewer = m; setStatus('ok', 'Ny version på Pi'); showBanner(m); return;
+        }
+        showConflict(m);                                          // lokala ändringar eller okänd historik
+      });
+    }).catch(function (e) {
+      setStatus('error', 'Kunde inte nå Pi: ' + (e && e.message ? e.message : e));
+    });
+  }
+
+  function showBanner(m) {
+    var old = document.getElementById('pisync-banner'); if (old) old.remove();
+    var b = el('div', 'position:fixed;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));z-index:99997;background:#ff9f0a;color:#000;' +
+      'border-radius:12px;padding:10px 12px;font:14px -apple-system,system-ui,sans-serif;display:flex;gap:10px;align-items:center;');
+    b.id = 'pisync-banner';
+    b.appendChild(el('div', 'flex:1', 'Ny version på Pi' + (m && m.device ? ' (från ' + m.device + ')' : '') + '.'));
+    var go = el('button', 'padding:8px 12px;border:0;border-radius:8px;background:#000;color:#fff;font-size:14px', 'Hämta');
+    go.onclick = function () { b.remove(); confirmPull(); };
+    var no = el('button', 'padding:8px 10px;border:0;border-radius:8px;background:transparent;font-size:14px', 'Senare');
+    no.onclick = function () { b.remove(); };
+    b.appendChild(go); b.appendChild(no);
+    document.body.appendChild(b);
+  }
+
+  function saveAndExit() {
+    if (!configured()) { openPanel(); return Promise.resolve(); }
+    return push(false, true).then(function (ok) {
+      if (!ok) return;
+      var card = overlay();
+      card.appendChild(el('div', 'font-weight:700;font-size:18px;color:#1c8c3c', '✓ Säkrad på Pi'));
+      card.appendChild(el('div', 'margin:10px 0', 'Allt är sparat ' + fmtTime(st.lastSync) + '. Du kan stänga appen (svep upp).'));
+      card.appendChild(btn('OK', closeOverlay, true));
+    });
+  }
+
+  /* ---------- publikt API ---------- */
+  window.__piDirty = function () { if (window.PiSync) window.PiSync.markDirty(); };
+  window.PiSync = {
+    init: function (adapter) {
+      A = adapter;
+      if (!A.hasData) A.hasData = function () { return Promise.resolve(true); };
+      var hd = A.hasData;
+      A.hasData = function () { try { return Promise.resolve(hd()); } catch (e) { return Promise.resolve(true); } };
+      loadAll();
+    },
+    isConfigured: function () { return !!A && configured(); },
+    markDirty: function () {
+      if (!A || !ready) return;
+      st.dirty = true; saveSt(); renderChip();
+      schedule(DEBOUNCE_MS);
+    },
+    start: function () {
+      if (!A) return;
+      ready = true;
+      var go = function () {
+        buildChip();
+        if (!configured()) return;
+        syncOnStart(false).then(function () { started = true; });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') {
+            if (st.dirty && configured() && !busy) push(false);
+          } else if (configured() && !busy) {
+            started = true; syncOnStart(false);
+          }
+        });
+        window.addEventListener('online', function () { if (st.dirty) push(false); });
+      };
+      if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+    },
+    saveAndExit: saveAndExit,
+    syncNow: function () { return push(false, true); },
+    openPanel: openPanel
+  };
+})();
+
+</script>
+<script>
 const STORAGE_KEY='husbilsdagbok_v1_3';
 const PHOTO_DB_NAME='husbilsdagbok_bilder_v1_3';
 let photoDb=null;
@@ -329,7 +687,7 @@ function idbWritePhotos(){return new Promise((resolve,reject)=>{const tx=photoDb
 function stripPhotosForLocal(){const copy={...db,trips:(db.trips||[]).map(t=>({...t,days:(t.days||[]).map(d=>{const day={...d};delete day.photos;return day;})}))};return copy;}
 async function saveData(){
   db.lastModified=Date.now();
-  try{if(!photoDb)throw new Error('Bildlagringen är inte klar.');await idbWritePhotos();localStorage.setItem(STORAGE_KEY,JSON.stringify(stripPhotosForLocal()));return true;}
+  try{if(!photoDb)throw new Error('Bildlagringen är inte klar.');await idbWritePhotos();localStorage.setItem(STORAGE_KEY,JSON.stringify(stripPhotosForLocal()));if(window.__piDirty)__piDirty();return true;}
   catch(e){console.error('saveData misslyckades',e);alert('Kunde inte spara ändringen. Kontrollera enhetens lediga lagringsutrymme och försök igen. Dina bilder ligger kvar i appen så länge sidan är öppen. Exportera en backup om det går.');return false;}
 }
 async function initPhotoStorage(){
@@ -355,7 +713,7 @@ function updateTopAction(){const btn=document.getElementById('topAction');if(cur
 
 function getTrip(){return db.trips.find(t=>t.id===currentTripId);}
 function uid(){return Math.random().toString(36).slice(2,10);}
-function tripKm(trip){const lastOdo=(trip.days||[]).reduce((a,d)=>d.odo?Math.max(a,d.odo):a,0);return lastOdo&&trip.startOdo?lastOdo-trip.startOdo:0;}
+function tripKm(trip){const days=(trip.days||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));return dayDistanceSeries(trip,days).reduce((s,k)=>s+(k||0),0);}
 function tripMeta(trip){const days=(trip.days||[]).length;const km=tripKm(trip);return days+' dagar'+(km>0?' · '+km.toLocaleString('sv')+' km':'');}
 function formatDate(s){if(!s)return'';return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'long',year:'numeric'});}
 function formatDateShort(s){if(!s)return'';return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'});}
@@ -379,7 +737,7 @@ function renderHome(){
     const allCosts=trips.reduce((arr,t)=>arr.concat(t.costs||[]),[]);
     const totalCost=allCosts.reduce((s,c)=>s+Number(c.amount||0),0);
     const byCat={};allCosts.forEach(c=>{byCat[c.category]=(byCat[c.category]||0)+Number(c.amount||0);});
-    html+=`<div class="section-lbl">Sammanfattning · alla resor</div><div class="krow"><div class="kpi"><div class="kv">${trips.length}</div><div class="kl">resor</div></div><div class="kpi"><div class="kv">${totalDays}</div><div class="kl">resdagar</div></div></div><div class="krow"><div class="kpi"><div class="kv">${totalKm>0?totalKm.toLocaleString('sv'):'–'}</div><div class="kl">km totalt</div></div><div class="kpi"><div class="kv">${totalCost>0?totalCost.toLocaleString('sv'):'–'}</div><div class="kl">kr totalt</div></div></div>`;
+    html+=latestTripCard(trips[0])+compareTripsCard(trips);html+=`<div class="section-lbl">Sammanfattning · alla resor</div><div class="krow"><div class="kpi"><div class="kv">${trips.length}</div><div class="kl">resor</div></div><div class="kpi"><div class="kv">${totalDays}</div><div class="kl">resdagar</div></div></div><div class="krow"><div class="kpi"><div class="kv">${totalKm>0?totalKm.toLocaleString('sv'):'–'}</div><div class="kl">km totalt</div></div><div class="kpi"><div class="kv">${totalCost>0?totalCost.toLocaleString('sv'):'–'}</div><div class="kl">kr totalt</div></div></div>`;
     if(Object.keys(byCat).length>0){html+=`<div class="card">`;Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt])=>{const pct=totalCost>0?Math.round(amt/totalCost*100):0;html+=`<div class="bar-row"><div class="bar-lbl"><span class="bar-lbl-name">${CI[cat]||''} ${CL[cat]||cat}</span><span>${pct}% · ${amt.toLocaleString('sv')} kr</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${CBAR[cat]||'#94A3B8'}"></div></div></div>`;});html+=`</div>`;}
   }
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="section-lbl" style="margin:0">Mina resor</div><button class="new-btn" onclick="openNewTripModal()">+ Ny resa</button></div>`;
@@ -405,6 +763,7 @@ function renderHome(){
     </div>
     <div style="color:var(--mu2);font-size:16px;margin-top:2px">›</div>
   </div>`;
+  html+=`<div style="text-align:center;color:var(--mu2);font-size:11px;margin:18px 0 6px">Husbilsdagbok v${APP_VERSION} · ${APP_VERSION_DATE}</div>`;
   document.getElementById('mainContent').innerHTML=html;
   updatePhotoStorageInfo();
 }
@@ -503,7 +862,7 @@ function renderDagbok(){
     const km=dayDistances[idx];
     const facTags=(day.facilities||[]).map(f=>`<span class="tag ${f==='el'?'tag-el':f==='vatten'?'tag-vatten':''}">${fi[f]||''} ${f[0].toUpperCase()+f.slice(1)}</span>`).join('');
     let photos='';
-    if(day.photos&&day.photos.length>0){photos='<div class="photo-grid">';day.photos.forEach((p,pi)=>{photos+=`<div class="photo-thumb"><img src="${p}" loading="lazy"><button class="photo-del" onclick="removePhoto('${day.id}',${pi},event)">×</button></div>`;});if(day.photos.length<3)photos+=`<div class="photo-add" onclick="addPhotoToDay('${day.id}')">+</div>`;photos+='</div>';}
+    if(day.photos&&day.photos.length>0){photos='<div class="photo-grid">';day.photos.forEach((p,pi)=>{photos+=`<div class="photo-thumb" onclick="openPhotoViewer('${day.id}',${pi})"><img src="${p}" loading="lazy"><button class="photo-del" onclick="removePhoto('${day.id}',${pi},event)">×</button></div>`;});if(day.photos.length<3)photos+=`<div class="photo-add" onclick="addPhotoToDay('${day.id}')">+</div>`;photos+='</div>';}
     else photos=`<div class="photo-grid"><div class="photo-add" onclick="addPhotoToDay('${day.id}')">+</div></div>`;
     html+=`<div class="day-card${expandedDays.has(day.id)?' expanded':''}" id="daycard-${day.id}">`+`<div class="day-hdr" onclick="toggleDay('${day.id}')"><div><div class="day-num">Dag ${idx+1}</div><div class="day-date-lbl">${formatDate(day.date)}</div></div><div class="day-hdr-right"><span style="font-size:22px">${day.weather||''}</span><span class="day-chevron">▼</span></div></div><div class="day-body"><div class="day-inner"><div class="route-row"><div class="route-dot dot-s"></div><div><div class="route-lbl">Start${day.fromTime?' · '+day.fromTime:''}</div><div class="route-val">${day.fromPlace||'–'}</div></div></div><div class="route-line"></div><div class="route-row"><div class="route-dot dot-e"></div><div><div class="route-lbl">Stopp${day.toTime?' · '+day.toTime:''}</div><div class="route-val">${day.toPlace||'–'}</div></div></div>${day.note?`<div class="day-note">${day.note}</div>`:''}<div class="tags">${day.lodging?`<span class="tag">${li[day.lodging]||'📍'} ${day.lodging[0].toUpperCase()+day.lodging.slice(1)}</span>`:''}${facTags}</div><div class="day-footer"><span>${day.odo?'🔢 '+Number(day.odo).toLocaleString('sv')+' km'+(km!==null?' (+'+km.toLocaleString('sv')+' km)':''):''}</span><span class="day-footer-cost">${day.cost?Number(day.cost).toLocaleString('sv')+' kr':''}</span></div>${photos}<div class="day-acts"><button class="day-act" onclick="editDay('${day.id}')">✏️ Redigera</button><button class="day-act del" onclick="confirmDeleteDay('${day.id}')">🗑️ Ta bort</button></div></div></div></div>`;
   });
@@ -674,9 +1033,91 @@ function checkBackupReminder(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function applyTheme(dark){document.body.classList.toggle('light',!dark);document.getElementById('themeBtn').textContent=dark?'☀️':'🌙';try{localStorage.setItem('hbd_theme',dark?'dark':'light');}catch(e){}}
 function toggleTheme(){applyTheme(document.body.classList.contains('light'));}
+
+// ── v1.4: version, skydd mot dubbeltryck, senaste resa, jämförelse, bildvisare ──
+const APP_VERSION='1.4',APP_VERSION_DATE='2026-11-11';
+(function(){
+  ['saveCost','saveDay','saveTrip','saveVehicleModal','doImport'].forEach(function(n){
+    const f=window[n];if(typeof f!=='function')return;
+    let busy=false;
+    window[n]=async function(){if(busy)return;busy=true;try{return await f.apply(this,arguments);}finally{busy=false;}};
+  });
+})();
+function hEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function tripStats(t){
+  const days=(t.days||[]).length,km=tripKm(t),cost=(t.costs||[]).reduce((s,c)=>s+Number(c.amount||0),0);
+  return{days,km,cost,perDay:days>0&&cost>0?cost/days:null,perKm:km>0&&cost>0?cost/km:null};
+}
+function latestTripCard(t){
+  if(!t)return '';
+  const s=tripStats(t),fmt=n=>Math.round(n).toLocaleString('sv');
+  const dates=(t.startDate?formatDateShort(t.startDate):'')+(t.endDate?' – '+formatDateShort(t.endDate):'');
+  const bits=[s.days+' dagar'];if(s.km>0)bits.push(fmt(s.km)+' km');if(s.cost>0)bits.push(fmt(s.cost)+' kr');if(s.perKm!=null)bits.push(s.perKm.toFixed(2).replace('.',',')+' kr/km');
+  return `<div class="section-lbl">Senaste resan</div><div class="trip-card" onclick="openTrip('${hEsc(t.id)}')"><div class="trip-icon">${t.emoji||'🚐'}</div><div class="trip-info"><div class="trip-name">${hEsc(t.name)}</div><div class="trip-meta">${hEsc(dates)}</div><div class="trip-meta" style="margin-top:3px">${bits.join(' · ')}</div></div></div>`;
+}
+function compareTripsCard(trips){
+  const list=trips.slice(0,6).map(t=>({t,s:tripStats(t)})).filter(x=>x.s.days>0);
+  if(list.length<2)return '';
+  const fmt=n=>n==null?'–':Math.round(n).toLocaleString('sv');
+  const perKm=list.map(x=>x.s.perKm).filter(v=>v!=null),best=perKm.length>1?Math.min(...perKm):null;
+  let h=`<div class="section-lbl">Jämför resor</div><div class="card" style="overflow-x:auto;padding:10px"><table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"><thead><tr style="color:var(--mu);text-align:right"><th style="text-align:left;padding:4px 4px">Resa</th><th style="padding:4px">Dagar</th><th style="padding:4px">Km</th><th style="padding:4px">Kr</th><th style="padding:4px">Kr/dag</th><th style="padding:4px">Kr/km</th></tr></thead><tbody>`;
+  list.forEach(({t,s})=>{
+    const isBest=best!=null&&s.perKm===best;
+    h+=`<tr onclick="openTrip('${hEsc(t.id)}')" style="cursor:pointer;border-top:1px solid var(--bd);text-align:right"><td style="text-align:left;padding:7px 4px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.emoji||'🚐'} ${hEsc(t.name)}</td><td style="padding:7px 4px">${s.days}</td><td style="padding:7px 4px">${s.km>0?fmt(s.km):'–'}</td><td style="padding:7px 4px">${fmt(s.cost||null)}</td><td style="padding:7px 4px">${fmt(s.perDay)}</td><td style="padding:7px 4px${isBest?';color:var(--sage);font-weight:700':''}">${s.perKm!=null?s.perKm.toFixed(2).replace('.',','):'–'}</td></tr>`;
+  });
+  return h+`</tbody></table><div style="font-size:11px;color:var(--mu2);margin-top:6px">Senaste ${list.length} resorna. Grön kr/km = billigast per km. Kr/km kräver mätarställningar.</div></div>`;
+}
+let pv=null;
+function openPhotoViewer(dayId,idx){
+  const trip=getTrip();const day=trip&&(trip.days||[]).find(d=>d.id===dayId);
+  if(!day||!day.photos||!day.photos.length)return;
+  pv={photos:day.photos.slice(),i:Math.min(idx,day.photos.length-1),zoom:false,x0:null};
+  let o=document.getElementById('photoViewer');if(o)o.remove();
+  o=document.createElement('div');o.id='photoViewer';
+  o.style.cssText='position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column;';
+  o.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;color:#fff;font-size:14px"><span id="pvCount"></span><button type="button" id="pvClose" style="background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:20px">×</button></div>'+
+    '<div id="pvBox" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch"><img id="pvImg" style="max-width:100%;max-height:100%;object-fit:contain"></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:10px 18px calc(14px + env(safe-area-inset-bottom))"><button type="button" id="pvPrev" style="background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:20px;padding:10px 22px;font-size:18px">‹</button><span style="color:#aaa;font-size:12px;align-self:center">Tryck på bilden för att zooma</span><button type="button" id="pvNext" style="background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:20px;padding:10px 22px;font-size:18px">›</button></div>';
+  document.body.appendChild(o);
+  const img=o.querySelector('#pvImg'),box=o.querySelector('#pvBox');
+  o.querySelector('#pvClose').onclick=closePhotoViewer;
+  o.querySelector('#pvPrev').onclick=()=>pvGo(-1);o.querySelector('#pvNext').onclick=()=>pvGo(1);
+  img.onclick=()=>{pv.zoom=!pv.zoom;pvRender();};
+  box.addEventListener('touchstart',e=>{pv.x0=e.touches.length===1?e.touches[0].clientX:null;},{passive:true});
+  box.addEventListener('touchend',e=>{if(pv.x0==null||pv.zoom)return;const dx=e.changedTouches[0].clientX-pv.x0;pv.x0=null;if(Math.abs(dx)>60)pvGo(dx<0?1:-1);},{passive:true});
+  pvRender();
+}
+function pvGo(d){if(!pv)return;pv.i=(pv.i+d+pv.photos.length)%pv.photos.length;pv.zoom=false;pvRender();}
+function pvRender(){
+  const img=document.getElementById('pvImg');if(!img||!pv)return;
+  img.src=pv.photos[pv.i];
+  img.style.cssText=pv.zoom?'width:250%;max-width:none;max-height:none;':'max-width:100%;max-height:100%;object-fit:contain;';
+  document.getElementById('pvBox').style.justifyContent=pv.zoom?'flex-start':'center';
+  document.getElementById('pvBox').style.alignItems=pv.zoom?'flex-start':'center';
+  document.getElementById('pvCount').textContent=(pv.i+1)+' / '+pv.photos.length;
+}
+function closePhotoViewer(){const o=document.getElementById('photoViewer');if(o)o.remove();pv=null;}
+
+function __piStart(){
+  PiSync.init({
+    app:'husbil', label:'Husbilsdagbok',
+    hasData:function(){return Promise.resolve((db.trips||[]).length>0);},
+    getSnapshot:function(){
+      if(!photoDb)return Promise.reject(new Error('Bildlagringen är inte klar'));
+      return Promise.resolve({...db,backupFormat:'husbilsdagbok-json',backupVersion:2,photoStorage:'included',exportedAt:new Date().toISOString()});
+    },
+    restoreSnapshot:async function(obj){
+      const problem=validateBackup(obj);if(problem)throw new Error(problem);
+      const previous=db;
+      db={...obj,trips:obj.trips.map(t=>({...t,days:Array.isArray(t.days)?t.days:[],costs:Array.isArray(t.costs)?t.costs:[]})),vehicle:obj.vehicle||dv()};
+      if(!(await saveData())){db=previous;throw new Error('Kunde inte spara lokalt');}
+    }
+  });
+  PiSync.start();
+}
 (async function(){
   try{const s=localStorage.getItem('hbd_theme');applyTheme(s!=='light');}catch(e){applyTheme(true);}
-  try{await initPhotoStorage();goHome();setTimeout(checkBackupReminder,0);}
+  try{await initPhotoStorage();goHome();__piStart();setTimeout(checkBackupReminder,0);}
   catch(e){console.error('Kunde inte starta bildlagringen',e);alert('Husbilsdagboken kunde inte öppna sin bildlagring. Prova att öppna appen i Safari igen. Ändra eller radera inte appens data.');goHome();}
 })();
 </script>
