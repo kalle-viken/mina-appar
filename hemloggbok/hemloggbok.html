@@ -2144,10 +2144,6 @@
     🖨 Utskriftscentral
   </button>
 
-  <button class="btn btn-hdr-primary"
-          onclick="saveAndExit()">
-    💾 Spara & Avsluta
-  </button>
 
 </div>
   </header>
@@ -2177,11 +2173,6 @@
       </p>
     </div>
   </div>
-
-  <div id="homeBackupStatus"
-     class="info-card"
-     style="margin-bottom:20px">
-</div>
 
 <div id="firstStartBox"
      class="info-card"
@@ -2845,6 +2836,15 @@
     accept=".json"
     style="display:none"
     onchange="importJSON(this, 'restore')">
+</label>
+
+<label class="room-card" style="cursor:pointer">
+  📥 Sammanfoga backup
+  <input
+    type="file"
+    accept=".json,application/json"
+    style="display:none"
+    onchange="importJSON(this, 'merge')">
 </label>
 
 <div style="grid-column:1/-1;">
