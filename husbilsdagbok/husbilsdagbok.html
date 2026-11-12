@@ -1117,7 +1117,7 @@ function __piStart(){
 }
 (async function(){
   try{const s=localStorage.getItem('hbd_theme');applyTheme(s!=='light');}catch(e){applyTheme(true);}
-  try{await initPhotoStorage();goHome();__piStart();setTimeout(checkBackupReminder,0);}
+  try{await initPhotoStorage();goHome();__piStart();}
   catch(e){console.error('Kunde inte starta bildlagringen',e);alert('Husbilsdagboken kunde inte öppna sin bildlagring. Prova att öppna appen i Safari igen. Ändra eller radera inte appens data.');goHome();}
 })();
 </script>
