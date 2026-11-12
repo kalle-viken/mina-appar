@@ -3293,18 +3293,17 @@ function renderBackupCard(){
   const d=gd(),n=countEntries(d),lb=getLastBackup(),at=attTotal();
   let html,cls='';
   if(!lb){
-    html=n>0?'Ingen säkerhetskopia gjord ännu':'Inget att säkerhetskopiera ännu';
-    cls=n>0?'warn':'';
+    html=n>0?'Ingen JSON-fil sparad ännu':'Inget att säkerhetskopiera ännu';
+    cls='';
   } else {
     const dirty=curHash(!!lb.withAtt)!==lb.hash;
     const days=Math.floor((Date.now()-new Date(lb.ts).getTime())/864e5);
     const ago=days<=0?'idag':days===1?'igår':'för '+days+' dagar sedan';
     html='Senaste: <b>'+esc(fdtm(lb.ts))+'</b> ('+ago+') · '+lb.entries+' poster'+(lb.withAtt?' + '+lb.att+' bilagor':'')+'<br>';
     if(!dirty){html+='✓ Inga ändringar sedan dess';cls='ok'}
-    else if(days>=7){html+='⚠ Ändrad sedan dess – gör en ny säkerhetskopia';cls='warn'}
     else html+='Ändrad sedan dess';
   }
-  if(at.n&&(!lb||!lb.withAtt)){html+='<br>📎 '+at.n+' bilagor ('+fsize(at.size)+') ingår inte i någon fullständig kopia ännu';cls='warn'}
+  if(at.n&&(!lb||!lb.withAtt)){html+='<br>📎 '+at.n+' bilagor ('+fsize(at.size)+') ingår inte i någon fullständig fil ännu'}
   st.className='bk-status '+cls;st.innerHTML=html;
   const full=document.getElementById('bk-full');
   if(full){full.style.display='';full.textContent='📎 Fullständig JSON-säkerhetskopia ('+at.n+' bilagor · '+fsize(at.size)+')'}
