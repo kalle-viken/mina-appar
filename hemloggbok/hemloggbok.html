@@ -7169,39 +7169,11 @@ ${a.serialNumber ? `
   ${a.documents ? a.documents.length : 0}
 </div>
 
-<div style="
-  margin-top:10px;
-  display:flex;
-  gap:6px;
-">
-
-  <button
-    class="btn-icon"
-    onclick="
-      event.stopPropagation();
-      showAssetServiceHistory('${String(a.id).replace(/'/g, '&#39;')}');
-    ">
-    🛠 Servicehistorik (${entries.filter(e => String(e.assetId || '') === String(a.id) && e.propertyId === currentProperty).length})
-  </button>
-
-  <button
-    class="btn-icon"
-    onclick="
-      event.stopPropagation();
-      editAsset(${a.id});
-    ">
-    ✏ Redigera
-  </button>
-
-  <button
-    class="btn btn-danger"
-    onclick="
-      event.stopPropagation();
-      deleteAsset(${a.id});
-    ">
-    ✕ Ta bort
-  </button>
-
+<div style="margin-top:12px;display:flex;gap:8px">
+  <button class="btn-icon" style="flex:1;padding:9px 6px;font-size:0.82rem"
+    onclick="event.stopPropagation(); editAsset(${a.id});">✏ Redigera</button>
+  <button class="btn btn-danger" style="flex:1;padding:9px 6px;font-size:0.82rem"
+    onclick="event.stopPropagation(); deleteAsset(${a.id});">✕ Ta bort</button>
 </div>
 
   </div>
