@@ -3595,7 +3595,7 @@
 
       <div class="field">
         <label>Inköpsdatum</label>
-        <input type="date" id="aPurchaseDate">
+        <input type="date" id="aPurchaseDate" onchange="autoWarranty()" oninput="autoWarranty()">
       </div>
 
       <div class="field">
@@ -3605,7 +3605,7 @@
 
       <div class="field">
         <label>Garanti t.o.m.</label>
-        <input type="date" id="aWarranty">
+        <input type="date" id="aWarranty" oninput="aWarrantyAuto=false" onchange="aWarrantyAuto=false">
       </div>
 
       <div class="field">
@@ -5714,6 +5714,18 @@ ${property.name}`);
       inventoryEditId = null;
     }
 
+let aWarrantyAuto = true;
+function autoWarranty() {
+  const pd = document.getElementById('aPurchaseDate').value;
+  const w = document.getElementById('aWarranty');
+  if (!aWarrantyAuto && w.value) return;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(pd || '');
+  if (!m) return;
+  let y = +m[1] + 1, mo = m[2], d = m[3];
+  if (mo === '02' && d === '29') d = '28';
+  w.value = y + '-' + mo + '-' + d;
+  aWarrantyAuto = true;
+}
 function openAssetForm() {
 
   assetEditId = null;
@@ -5726,6 +5738,8 @@ function openAssetForm() {
   document.getElementById('aPrice').value = '';
 
   document.getElementById('aWarranty').value = '';
+  aWarrantyAuto = true;
+  autoWarranty();
 
   document.getElementById('aSerial').value = '';
 
@@ -5801,6 +5815,7 @@ function editAsset(id){
 
   document.getElementById('aWarranty').value =
     a.warranty || '';
+  aWarrantyAuto = !a.warranty;
 
   document.getElementById('aSerial').value =
     a.serialNumber || '';
