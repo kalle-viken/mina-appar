@@ -420,7 +420,7 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
       <div class="cb wash" id="cb-wash" onclick="sCat('wash')"><div class="cb-i">🚿</div><div class="cb-n">Tvätt</div></div>
     </div>
     <div id="f-fu">
-      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="fu-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-fu-o"></span></label><input type="number" id="fu-o" placeholder="52 400" oninput="odoEdited(this)"></div></div>
+      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="fu-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-fu-o"></span></label><input type="number" id="fu-o" placeholder="52 400" oninput="odoEdited(this)" onfocus="odoFocus(this)" onblur="odoBlur(this)"></div></div>
       <div class="fr"><div class="fg"><label>Liter</label><input type="number" step="0.1" id="fu-l" placeholder="45.5" oninput="calcPPL()"></div><div class="fg"><label>Total kostnad (kr)</label><input type="number" id="fu-c" placeholder="890" oninput="calcPPL()"></div></div>
       <div class="fg"><label>Pris/liter — beräknas automatiskt</label><input type="text" id="fu-p" class="calc" readonly placeholder="—" style="color:var(--fu)"></div>
       <div class="fr">
@@ -433,7 +433,7 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
       <button class="sbtn" style="background:var(--fu);color:#0C0E12" onclick="save()">Spara drivmedel</button>
     </div>
     <div id="f-re" style="display:none">
-      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="re-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-re-o"></span></label><input type="number" id="re-o" placeholder="52 400" oninput="odoEdited(this)"></div></div>
+      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="re-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-re-o"></span></label><input type="number" id="re-o" placeholder="52 400" oninput="odoEdited(this)" onfocus="odoFocus(this)" onblur="odoBlur(this)"></div></div>
       <div class="fg"><label>Beskrivning av arbete</label><input type="text" id="re-desc" placeholder="t.ex. Bromsbelägg fram"></div>
       <div class="fr">
         <div class="fg"><label>Verkstad / plats</label>
@@ -446,7 +446,7 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
       <button class="sbtn" style="background:var(--re);color:#fff" onclick="save()">Spara reparation</button>
     </div>
     <div id="f-sv" style="display:none">
-      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="sv-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-sv-o"></span></label><input type="number" id="sv-o" placeholder="52 400" oninput="odoEdited(this)"></div></div>
+      <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="sv-d"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-sv-o"></span></label><input type="number" id="sv-o" placeholder="52 400" oninput="odoEdited(this)" onfocus="odoFocus(this)" onblur="odoBlur(this)"></div></div>
       <div class="fg"><label>Typ av service</label><select id="sv-t"><option>Oljebyte</option><option>Stor service</option><option>Liten service</option><option>Däckbyte</option><option>Luftfilter</option><option>Tandrem</option><option>Kopplingsbyte</option><option>Övrigt</option></select></div>
       <div class="fr">
         <div class="fg"><label>Verkstad / plats</label>
@@ -459,7 +459,7 @@ input[type=checkbox]{-webkit-appearance:checkbox;appearance:auto;width:22px;heig
     </div>
     <div id="f-in" style="display:none">
       <div class="fr"><div class="fg"><label>Datum</label><input type="date" id="in-d"></div><div class="fg"><label>Plats / station</label><input type="text" id="in-loc" placeholder="Dekra Helsingborg"></div></div>
-      <div class="fr"><div class="fg"><label>Kostnad (kr)</label><input type="number" id="in-c" placeholder="650"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-in-o"></span></label><input type="number" id="in-o" placeholder="52 400" oninput="odoEdited(this)"></div></div>
+      <div class="fr"><div class="fg"><label>Kostnad (kr)</label><input type="number" id="in-c" placeholder="650"></div><div class="fg"><label>Mätarställning (km) <span class="sug-hint" id="hint-in-o"></span></label><input type="number" id="in-o" placeholder="52 400" oninput="odoEdited(this)" onfocus="odoFocus(this)" onblur="odoBlur(this)"></div></div>
       <div class="fg" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--sf);border:1px solid var(--bd2);border-radius:var(--rs)"><input type="checkbox" id="in-ok" checked style="width:20px;height:20px;accent-color:var(--in)"><label for="in-ok" style="font-size:15px;margin:0;cursor:pointer">Godkänd besiktning</label></div></div>
       <div class="fg"><label>Anmärkningar</label><textarea id="in-n" placeholder="Anmärkningar..."></textarea></div>
       <button class="sbtn" style="background:var(--in);color:#fff" onclick="save()">Spara besiktning</button>
@@ -1698,6 +1698,20 @@ function openDoc(i){openAttViewer(docList.slice(),i)}
 function resetAddForm(){
   ['fu-s','fu-o','re-o','sv-o','in-o'].forEach(function(id){const el=document.getElementById(id);if(el){el.value='';el.classList.remove('suggested')}});
   const t=document.getElementById('fu-t');if(t){delete t.dataset.touched}
+}
+// Förifyllt värde töms när fältet tappas på, och kommer tillbaka om inget skrivs.
+function odoFocus(el){
+  if(!el.classList.contains('suggested')||el.value==='')return;
+  el.dataset.sug=el.value;el.dataset.ph=el.placeholder||'';
+  el.placeholder='Senast: '+Number(el.value).toLocaleString('sv-SE');
+  el.value='';
+}
+function odoBlur(el){
+  const sug=el.dataset.sug,ph=el.dataset.ph;
+  if(sug===undefined)return;
+  delete el.dataset.sug;delete el.dataset.ph;
+  el.placeholder=ph||'';
+  if(el.value===''){el.value=sug;el.classList.add('suggested');prefillForm()}
 }
 function odoEdited(el){
   el.classList.remove('suggested');
