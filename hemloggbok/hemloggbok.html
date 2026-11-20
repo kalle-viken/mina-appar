@@ -1655,8 +1655,17 @@
       max-width: 88vw;
       max-height: 78vh;
       border-radius: 6px;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5)
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+      transform-origin: center center;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      will-change: transform;
+      cursor: zoom-in
     }
+    .lb-img.zoomed { cursor: grab }
+    .lb-img.dragging { cursor: grabbing }
+    .lb-hint { color:rgba(255,255,255,.55);font-size:.7rem;margin-top:5px;text-align:center }
 
     .lb-close {
       position: absolute;
@@ -3229,7 +3238,7 @@
 
 <div class="field full">
 
-  <label>📷 Bilder & Dokument</label>
+  <label>📎 Bilder & Dokument</label>
 
   <div
     id="invDocuments"
@@ -3249,7 +3258,6 @@
     type="file"
     id="invFilePicker"
     accept="image/*,application/pdf"
-    capture="environment"
     multiple
     style="display:none">
 
@@ -3620,7 +3628,7 @@
 
 <div class="field full">
 
-  <label>📷 Bilder & Dokument</label>
+  <label>📎 Bilder & Dokument</label>
 
   <div id="assetDocumentsBox"
        style="
@@ -3746,7 +3754,7 @@
 
 <div class="field full">
 
-  <label>📷 Bilder & Dokument</label>
+  <label>📎 Bilder & Dokument</label>
 
   <div
     id="docDocuments"
@@ -3818,6 +3826,7 @@
     <button class="lb-close" onclick="lbClose()">✕</button>
     <img class="lb-img" id="lbImg" src="" alt="">
     <div class="lb-cap" id="lbCap"></div>
+    <div class="lb-hint">Nyp för att zooma · Dra för att flytta · Dubbeltryck för att zooma</div>
     <div class="lb-nav" id="lbNav">
       <button onclick="lbMove(-1)">← Föregående</button>
       <button onclick="lbMove(1)">Nästa →</button>
@@ -4202,7 +4211,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.9'; // Hemloggbok v80: färdig version efter genomförda tester
+const APP_VERSION = '5.11'; // Hemloggbok v82: förbättrad filhantering
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -4242,7 +4251,8 @@ const STORAGE_KEY = 'hemloggbok_v3';
     let driftEditId = null;
     let sortK = 'date', sortD = -1, editId = null, contactEditId = null, insEditId = null, roomEditId = null, inventoryEditId = null;
     let pImgs = [], eImgs = [];
-    let lbImgs = [], lbIdx = 0;
+    let lbImgs = [], lbCaps = [], lbIdx = 0;
+    let lbScale = 1, lbX = 0, lbY = 0, lbPointers = new Map(), lbPinchStart = null, lbDragStart = null;
     let activeRoomFilter = null;
     let currentSearchFilter = 'all';
     let invDocuments = [];
@@ -6867,79 +6877,59 @@ function saveDocument() {
   closeModal('documentModal'); documentEditId = null;
 }
 
-function renderDocDocuments(){
-
-  const box =
-    document.getElementById(
-      'docDocuments'
-    );
-
-  if(!docDocuments.length){
-
-    box.innerHTML =
-      'Inga dokument';
-
-    return;
-  }
-
-  box.innerHTML =
-    docDocuments.map(
-      (doc,index) => `
-
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:10px;
-        padding:8px 0;
-      ">
-
-        ${doc.type === 'application/pdf'
-  ? `
-    <div style="
-      width:60px;
-      height:60px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:32px;
-      border:1px solid var(--border);
-      border-radius:6px;
-      background:#f5f5f5;
-    ">
-      📄
-    </div>
-  `
-  : `
-    <img
-      src="${doc.preview}"
-      style="
-        width:60px;
-        height:60px;
-        object-fit:cover;
-        border-radius:6px;
-      ">
-  `
+function attachedFileIsPdf(file) {
+  return !!(file && (file.type === 'application/pdf' ||
+    /^data:application\/pdf/i.test(file.dataUrl || file.preview || '') ||
+    /\.pdf$/i.test(file.name || '')));
 }
 
+function renderAttachedFileRows(files, collection, removeFunction) {
+  if (!files || !files.length) return 'Inga filer';
+  return files.map((file, index) => {
+    const pdf = attachedFileIsPdf(file);
+    const data = file.dataUrl || file.preview || '';
+    const name = x(file.name || (pdf ? 'PDF-dokument' : 'Bild'));
+    const preview = pdf
+      ? '<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:30px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">📄</div>'
+      : (data ? `<img src="${data}" alt="${name}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`
+              : '<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:30px;border:1px solid var(--border);border-radius:6px">🖼️</div>');
+    const openButton = data
+      ? `<button type="button" class="btn btn-sm" onclick="openAttachedFile('${collection}',${index})">${pdf ? 'Öppna PDF' : 'Visa bild'}</button>`
+      : '';
+    const previewButton = data && !pdf
+      ? `<button type="button" style="border:0;background:none;padding:0;cursor:zoom-in" onclick="openAttachedFile('${collection}',${index})" aria-label="Visa ${name} i stor bild">${preview}</button>`
+      : preview;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      ${previewButton}<div style="flex:1;min-width:0;font-size:.85rem;overflow-wrap:anywhere">${name}</div>
+      ${openButton}
+      <button type="button" class="btn btn-sm" onclick="${removeFunction}(${index})" aria-label="Ta bort ${name}">✕</button>
+    </div>`;
+  }).join('');
+}
 
-<div style="flex:1">
-  ${doc.name}
-</div>
+function openAttachedFile(collection, index) {
+  const source = collection === 'doc' ? docDocuments : collection === 'asset' ? assetDocuments : invDocuments;
+  const file = source && source[index];
+  const data = file && (file.dataUrl || file.preview);
+  if (!data) { alert('Filen saknar läsbart innehåll. Välj och bifoga filen igen.'); return; }
+  if (!attachedFileIsPdf(file) && /^data:image\//i.test(data)) {
+    const images = source.map((item, sourceIndex) => ({ item, sourceIndex, data: item && (item.dataUrl || item.preview) }))
+      .filter(entry => entry.data && !attachedFileIsPdf(entry.item) && /^data:image\//i.test(entry.data));
+    const imageIndex = images.findIndex(entry => entry.sourceIndex === index);
+    lbOpen(images.map(entry => entry.data), imageIndex < 0 ? 0 : imageIndex,
+      images.map(entry => entry.item.name || 'Bild'));
+    return;
+  }
+  const opened = window.open(data, '_blank');
+  if (!opened) {
+    const link = document.createElement('a');
+    link.href = data; link.target = '_blank'; link.rel = 'noopener'; link.click();
+  }
+}
 
-<button
-  type="button"
-  class="btn btn-sm"
-  onclick="removeDocDocument(${index})">
-
-  ❌
-
-</button>
-
-      </div>
-
-    `
-    ).join('');
-
+function renderDocDocuments(){
+  const box = document.getElementById('docDocuments');
+  if (box) box.innerHTML = renderAttachedFileRows(docDocuments, 'doc', 'removeDocDocument');
 }
 
 function renderDocumentStats(){
@@ -6964,49 +6954,8 @@ el.textContent =
 }
 
 function renderAssetDocuments(){
-
-  const box =
-    document.getElementById(
-      'assetDocumentsBox'
-    );
-
-  if(!box) return;
-
-  if(!assetDocuments.length){
-
-    box.innerHTML =
-      'Inga filer';
-
-    return;
-  }
-
-  box.innerHTML =
-    assetDocuments.map(
-      (doc,index)=>`
-
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:10px;
-        padding:6px 0;
-      ">
-
-        <div style="flex:1">
-          ${doc.name}
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-sm"
-          onclick="removeAssetDocument(${index})">
-          ❌
-        </button>
-
-      </div>
-
-    `
-    ).join('');
-
+  const box = document.getElementById('assetDocumentsBox');
+  if (box) box.innerHTML = renderAttachedFileRows(assetDocuments, 'asset', 'removeAssetDocument');
 }
 
 function renderDocumentCategoryCounts(){
@@ -7758,9 +7707,70 @@ const data =
     // ══════════════════════════════════════════════════════════════════
     // LIGHTBOX
     // ══════════════════════════════════════════════════════════════════
-    function lbOpen(imgs, idx, cap) { lbImgs = typeof imgs === 'string' ? JSON.parse(imgs) : imgs; lbIdx = idx; document.getElementById('lbImg').src = lbImgs[idx]; document.getElementById('lbCap').textContent = cap || ''; document.getElementById('lbNav').style.display = lbImgs.length > 1 ? 'flex' : 'none'; document.getElementById('lb').classList.add('open'); }
-    function lbClose() { document.getElementById('lb').classList.remove('open'); }
-    function lbMove(d) { lbIdx = (lbIdx + d + lbImgs.length) % lbImgs.length; document.getElementById('lbImg').src = lbImgs[lbIdx]; }
+    function lbResetZoom() {
+      lbScale = 1; lbX = 0; lbY = 0;
+      const img = document.getElementById('lbImg');
+      img.style.transform = 'translate(0px,0px) scale(1)';
+      img.classList.remove('zoomed','dragging');
+    }
+    function lbApplyZoom() {
+      const img = document.getElementById('lbImg');
+      img.style.transform = `translate(${lbX}px,${lbY}px) scale(${lbScale})`;
+      img.classList.toggle('zoomed', lbScale > 1);
+    }
+    function lbOpen(imgs, idx, cap) {
+      lbImgs = typeof imgs === 'string' ? JSON.parse(imgs) : imgs;
+      lbCaps = Array.isArray(cap) ? cap : lbImgs.map(() => cap || '');
+      lbIdx = idx; lbResetZoom();
+      document.getElementById('lbImg').src = lbImgs[idx];
+      document.getElementById('lbCap').textContent = `${lbCaps[idx] || 'Bild'}${lbImgs.length > 1 ? ` · ${idx+1} av ${lbImgs.length}` : ''}`;
+      document.getElementById('lbNav').style.display = lbImgs.length > 1 ? 'flex' : 'none';
+      document.getElementById('lb').classList.add('open');
+    }
+    function lbClose() { document.getElementById('lb').classList.remove('open'); lbResetZoom(); lbPointers.clear(); }
+    function lbMove(d) {
+      if (!lbImgs.length) return;
+      lbIdx = (lbIdx + d + lbImgs.length) % lbImgs.length;
+      lbResetZoom();
+      document.getElementById('lbImg').src = lbImgs[lbIdx];
+      document.getElementById('lbCap').textContent = `${lbCaps[lbIdx] || 'Bild'} · ${lbIdx+1} av ${lbImgs.length}`;
+    }
+    (() => {
+      const img = document.getElementById('lbImg');
+      const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
+      const midpoint = (a,b) => ({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+      img.addEventListener('touchstart', e => {
+        if (!document.getElementById('lb').classList.contains('open')) return;
+        e.preventDefault();
+        const t = [...e.touches];
+        if (t.length === 2) {
+          const a={x:t[0].clientX,y:t[0].clientY}, b={x:t[1].clientX,y:t[1].clientY};
+          lbPinchStart={distance:distance(a,b),scale:lbScale,mid:midpoint(a,b),x:lbX,y:lbY};
+        } else if (t.length === 1 && lbScale > 1) {
+          lbDragStart={x:t[0].clientX,y:t[0].clientY,baseX:lbX,baseY:lbY};
+        }
+      }, {passive:false});
+      img.addEventListener('touchmove', e => {
+        if (!document.getElementById('lb').classList.contains('open')) return;
+        const t=[...e.touches];
+        if (t.length === 2 && lbPinchStart) {
+          e.preventDefault();
+          const a={x:t[0].clientX,y:t[0].clientY}, b={x:t[1].clientX,y:t[1].clientY};
+          const mid=midpoint(a,b);
+          lbScale=Math.max(1,Math.min(5,lbPinchStart.scale*distance(a,b)/Math.max(1,lbPinchStart.distance)));
+          lbX=lbPinchStart.x+(mid.x-lbPinchStart.mid.x); lbY=lbPinchStart.y+(mid.y-lbPinchStart.mid.y);
+          if (lbScale===1) {lbX=0;lbY=0;} lbApplyZoom();
+        } else if (t.length === 1 && lbDragStart && lbScale > 1) {
+          e.preventDefault(); lbX=lbDragStart.baseX+t[0].clientX-lbDragStart.x; lbY=lbDragStart.baseY+t[0].clientY-lbDragStart.y; lbApplyZoom();
+        }
+      }, {passive:false});
+      img.addEventListener('touchend', e => {
+        if (e.touches.length < 2) lbPinchStart=null;
+        if (!e.touches.length) lbDragStart=null;
+      });
+      img.addEventListener('dblclick', e => { e.preventDefault(); if(lbScale>1) lbResetZoom(); else {lbScale=2.5;lbApplyZoom();} });
+      img.addEventListener('wheel', e => { e.preventDefault(); lbScale=Math.max(1,Math.min(5,lbScale+(e.deltaY<0?.25:-.25))); if(lbScale===1){lbX=0;lbY=0;} lbApplyZoom(); }, {passive:false});
+    })();
     document.addEventListener('keydown', e => { if (!document.getElementById('lb').classList.contains('open')) return; if (e.key === 'Escape') lbClose(); if (e.key === 'ArrowRight') lbMove(1); if (e.key === 'ArrowLeft') lbMove(-1); });
 
     // ══════════════════════════════════════════════════════════════════
@@ -9875,61 +9885,8 @@ function openLogEntry(logId){
 }
 
 function renderInvDocuments(){
-
-  const box =
-    document.getElementById('invDocuments');
-
-  if(!invDocuments.length){
-
-    box.innerHTML =
-      'Inga dokument';
-
-    return;
-  }
-
-  box.innerHTML =
-  invDocuments.map((doc,index) => `
-
-    <div style="
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 0;
-      border-bottom:1px solid var(--border);
-    ">
-
-      <img
-        src="${doc.preview}"
-        style="
-          width:60px;
-          height:60px;
-          object-fit:cover;
-          border-radius:6px;
-          border:1px solid var(--border);
-        ">
-
-      <div style="
-        flex:1;
-        font-size:0.85rem;
-      ">
-        ${doc.name}
-
-        </div>
-
-<button
-  type="button"
-  class="btn btn-sm"
-  onclick="removeInvDocument(${index})">
-
-  ❌
-
-</button>
-
-</div>
-
-`).join('');
-
-
+  const box = document.getElementById('invDocuments');
+  if (box) box.innerHTML = renderAttachedFileRows(invDocuments, 'inv', 'removeInvDocument');
 }
 
 function removeInvDocument(index){
@@ -9939,84 +9896,66 @@ function removeInvDocument(index){
   renderInvDocuments();
 
 }
-document
-  .getElementById('invFilePicker')
-  ?.addEventListener('change', e => {
+// Gemensam och kontrollerad filinläsning för inventeringspunkter,
+// inventarier och dokument. Filer lagras lokalt som data-URL i appens databas.
+const ATTACHED_FILE_MAX_BYTES = 10 * 1024 * 1024; // 10 MB per fil
+const ATTACHED_SELECTION_MAX_BYTES = 25 * 1024 * 1024; // 25 MB per val
 
-    [...e.target.files].forEach(file => {
+async function readAttachedFiles(input, target, render, label) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  let selectedBytes = 0;
+  let added = 0;
+  const errors = [];
 
-      const reader =
-        new FileReader();
+  for (const file of files) {
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+    const isImage = /^image\//i.test(file.type || '');
+    if (!isPdf && !isImage) {
+      errors.push(`${file.name}: filtypen stöds inte. Välj en bild eller PDF.`);
+      continue;
+    }
+    if (!file.size || file.size > ATTACHED_FILE_MAX_BYTES) {
+      errors.push(`${file.name}: filen är tom eller större än 10 MB.`);
+      continue;
+    }
+    if (selectedBytes + file.size > ATTACHED_SELECTION_MAX_BYTES) {
+      errors.push(`${file.name}: urvalet får vara högst 25 MB sammanlagt.`);
+      continue;
+    }
+    selectedBytes += file.size;
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Filen kunde inte läsas.'));
+        reader.onerror = () => reject(new Error('Filen kunde inte läsas. Kontrollera att den är tillgänglig och försök igen.'));
+        reader.onabort = () => reject(new Error('Inläsningen avbröts.'));
+        reader.readAsDataURL(file);
+      });
+      target.push({ name: file.name, type: isPdf ? 'application/pdf' : file.type, dataUrl, preview: dataUrl });
+      added++;
+    } catch (err) {
+      errors.push(`${file.name}: ${err && err.message ? err.message : 'kunde inte läsas.'}`);
+    }
+  }
 
-      reader.onload = () => {
+  render();
+  // Töm värdet så att samma fil kan väljas igen efter borttagning eller fel.
+  input.value = '';
+  if (errors.length) {
+    const summary = errors.slice(0, 5).join('\n') + (errors.length > 5 ? `\n…och ${errors.length - 5} ytterligare fil(er).` : '');
+    alert(`${label}: ${added ? added + ' fil(er) bifogades. ' : ''}Några filer kunde inte läsas:\n\n${summary}`);
+  } else if (added) {
+    showToast(`${added} fil(er) bifogade`);
+  }
+}
 
-        invDocuments.push({
-
-          name: file.name,
-
-          dataUrl: reader.result,
-
-          preview: reader.result
-
-        });
-
-        renderInvDocuments();
-
-      };
-
-      reader.readAsDataURL(file);
-
-    });
-
-  });
-
-document
-  .getElementById('docFilePicker')
-  ?.addEventListener('change', e => {
-
-    [...e.target.files].forEach(file => {
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-
-        docDocuments.push({
-          name: file.name,
-          type: file.type,
-          dataUrl: reader.result,
-          preview: reader.result
-        });
-
-        renderDocDocuments();
-      };
-
-      reader.readAsDataURL(file);
-    });
-  });
-
-document
-  .getElementById('assetFilePicker')
-  ?.addEventListener('change', e => {
-
-    [...e.target.files].forEach(file => {
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-
-        assetDocuments.push({
-          name: file.name,
-          type: file.type,
-          dataUrl: reader.result,
-          preview: reader.result
-        });
-
-        renderAssetDocuments();
-      };
-
-      reader.readAsDataURL(file);
-    });
-  });
+document.getElementById('invFilePicker')?.addEventListener('change', e =>
+  readAttachedFiles(e.target, invDocuments, renderInvDocuments, 'Inventeringspunkt'));
+document.getElementById('docFilePicker')?.addEventListener('change', e =>
+  readAttachedFiles(e.target, docDocuments, renderDocDocuments, 'Dokument'));
+document.getElementById('assetFilePicker')?.addEventListener('change', e =>
+  readAttachedFiles(e.target, assetDocuments, renderAssetDocuments, 'Inventarie'));
 
 function renderHistory(mode='full'){
 
