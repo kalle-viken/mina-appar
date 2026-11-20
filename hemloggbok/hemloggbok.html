@@ -4211,7 +4211,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.11'; // Hemloggbok v82: förbättrad filhantering
+const APP_VERSION = '5.12'; // Hemloggbok v83: PDF-öppning via Blob-URL
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -6918,6 +6918,41 @@ function openAttachedFile(collection, index) {
     const imageIndex = images.findIndex(entry => entry.sourceIndex === index);
     lbOpen(images.map(entry => entry.data), imageIndex < 0 ? 0 : imageIndex,
       images.map(entry => entry.item.name || 'Bild'));
+    return;
+  }
+  // iOS/Safari kan visa en tom sida när en PDF öppnas direkt som data-URL.
+  // Gör därför om den sparade data-URL:en till en riktig PDF-Blob och öppna
+  // den via en tillfällig objekt-URL i ett nytt fönster/flik.
+  if (attachedFileIsPdf(file)) {
+    try {
+      const comma = data.indexOf(',');
+      if (comma < 0) throw new Error('PDF-innehållet har ett ogiltigt format.');
+      const header = data.slice(0, comma);
+      const payload = data.slice(comma + 1);
+      let blob;
+      if (/;base64/i.test(header)) {
+        const binary = atob(payload);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        blob = new Blob([bytes], { type: 'application/pdf' });
+      } else {
+        blob = new Blob([decodeURIComponent(payload)], { type: 'application/pdf' });
+      }
+      const objectUrl = URL.createObjectURL(blob);
+      const opened = window.open(objectUrl, '_blank');
+      if (!opened) {
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.click();
+      }
+      // Låt PDF-visaren hinna läsa filen innan objekt-URL:en frigörs.
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 120000);
+    } catch (err) {
+      alert('PDF-filen kunde inte öppnas. Prova att bifoga PDF-filen igen.\n\n' +
+        (err && err.message ? err.message : 'Okänt fel.'));
+    }
     return;
   }
   const opened = window.open(data, '_blank');
