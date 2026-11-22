@@ -4286,7 +4286,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.15'; // Hemloggbok v86: utskriftsknappar i rapportfönster kopplas utan inline-händelser
+const APP_VERSION = '5.16'; // Hemloggbok v86: utskrift från rapportvy i samma fönster för iOS/iPadOS
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -10401,10 +10401,8 @@ function generatePrintReport(selected){
   if (!valid.includes(String(selected))) return;
   const completeReport = String(selected) === '13';
   if (completeReport) selected = '7';
-  // Open the report window immediately within the user click. Browsers may block
-  // window.open() if a prompt() is shown first (reports 11 and 12).
-  const win = window.open('', '_blank');
-  if (!win) { alert('Webbläsaren blockerade rapportfönstret. Tillåt popup-fönster för Hemloggbok och försök igen.'); return; }
+  // Rendera rapporten i samma fönster som appen. Detta är viktigt för
+  // iOS/iPadOS Safari, där utskrift från ett separat popup-fönster kan utebli.
   const propName = properties.find(p => p.id === currentProperty)?.name || currentProperty;
   const reportDate = new Date().toLocaleDateString('sv-SE');
   const esc = value => x(value == null ? '' : String(value));
@@ -10538,9 +10536,9 @@ function generatePrintReport(selected){
   if (selected === '12') {
     const currentYear = new Date().getFullYear();
     const chosenYear = window.prompt('Vilket år ska underhållsplanen gälla?', String(currentYear));
-    if (chosenYear === null) { win.close(); return; }
+    if (chosenYear === null) { return; }
     const year = String(chosenYear).trim();
-    if (!/^\d{4}$/.test(year)) { win.close(); alert('Ange året med fyra siffror, till exempel 2027.'); return; }
+    if (!/^\d{4}$/.test(year)) { alert('Ange året med fyra siffror, till exempel 2027.'); return; }
     const planned = entries
       .filter(e => e.propertyId === currentProperty && isValidISODateOnly(e.nextService) && String(e.nextService).slice(0,4) === year)
       .map(e => {
@@ -10566,9 +10564,9 @@ function generatePrintReport(selected){
     ].filter(y => /^\d{4}$/.test(y)))].sort((a,b)=>b.localeCompare(a));
     const defaultYear = availableYears[0] || String(new Date().getFullYear());
     const chosenYear = window.prompt('Vilket år ska årsrapporten gälla?\nTillgängliga år: ' + (availableYears.join(', ') || 'inga registrerade år'), defaultYear);
-    if (chosenYear === null) { win.close(); return; }
+    if (chosenYear === null) { return; }
     const year = String(chosenYear).trim();
-    if (!/^\d{4}$/.test(year)) { win.close(); alert('Ange året med fyra siffror, till exempel 2026.'); return; }
+    if (!/^\d{4}$/.test(year)) { alert('Ange året med fyra siffror, till exempel 2026.'); return; }
     const bills = utilityBills.filter(b => b.propertyId === currentProperty && utilityBillYear(b) === year);
     const elBills = bills.filter(b => b.type === 'el');
     const waterBills = bills.filter(b => b.type === 'vatten');
@@ -10591,22 +10589,64 @@ function generatePrintReport(selected){
     sections.push(`<section><h2>Genomförda åtgärder – ${esc(year)}</h2>${table(['Datum','Åtgärd','Område','Kategori','Faktisk kostnad'],completed.map(i=>[esc(String(i.completedDate).slice(0,10)),esc(i.title),esc(i.area),esc(i.category),i.actualCost!==''&&i.actualCost!=null&&Number.isFinite(Number(i.actualCost))?money(i.actualCost):'Ej registrerad']))}</section>`);
   }
 
-  win.document.open();
-  win.document.write(`<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hemloggbok – rapport</title><style>
-    @page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;color:#222;margin:28px;font-size:12px}h1{font-size:24px;margin:0 0 5px}h2{font-size:17px;margin:0 0 10px}p{line-height:1.5;orphans:3;widows:3}.meta{color:#666;margin-bottom:24px}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:14px 0}.summary-card{border:1px solid #ddd;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:5px;min-width:0}.summary-card span{color:#555;font-size:10px}.summary-card strong{font-size:15px;overflow-wrap:anywhere}section{margin:0 0 28px;break-inside:auto;page-break-inside:auto}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}th,td{border:1px solid #ccc;padding:7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f1f1f1}tr{break-inside:avoid;page-break-inside:avoid}.table-wrap{width:100%;overflow-wrap:anywhere}.actions{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid #ddd;margin-bottom:18px}button{padding:9px 14px;cursor:pointer}.report-logbook-section .table-wrap{max-width:100%;overflow-wrap:anywhere}.report-logbook-section table{table-layout:fixed;font-size:10px}.report-logbook-section th,.report-logbook-section td{overflow-wrap:anywhere;word-break:normal}@media print{body{margin:0;font-size:10.5px}.actions{display:none}section{break-inside:auto;page-break-inside:auto}.report-logbook-section{break-inside:auto;page-break-inside:auto}h2{break-after:avoid;page-break-after:avoid}.summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));break-inside:avoid}.summary-card{padding:7px}.table-wrap{overflow:visible}table{font-size:9.5px}th,td{padding:5px}thead{display:table-header-group}button{display:none}.report-logbook-section table{font-size:8.5px}.report-logbook-section tr{break-inside:avoid;page-break-inside:avoid}}
-  </style></head><body><div class="actions"><button type="button" id="printReportButton">Skriv ut / Spara som PDF</button> <button type="button" id="closeReportButton">Stäng rapport</button></div><h1>Hemloggbok – ${esc(propName)}${completeReport ? " · Komplett fastighetsrapport" : ""}</h1><div class="meta">Rapportdatum: ${reportDate} · Underlag: uppgifter registrerade i Hemloggbok</div>${sections.join('')}<p class="meta">Rapporten innehåller endast registrerade uppgifter. Saknade värden visas som ej angivna.</p>
-</body></html>`);
-  win.document.close();
-  // Rapportfönstret är ett about:blank-fönster som kan ärva appens CSP.
-  // Inline onclick-attribut blockeras då i vissa webbläsare. Koppla därför
-  // knapparna från huvudfönstrets redan tillåtna JavaScript-kontext.
-  const printButton = win.document.getElementById('printReportButton');
-  const closeButton = win.document.getElementById('closeReportButton');
+  const oldPrintView = document.getElementById('hemPrintView');
+  if (oldPrintView) oldPrintView.remove();
+  const printView = document.createElement('div');
+  printView.id = 'hemPrintView';
+  printView.innerHTML = `
+    <style>
+      @page{size:A4;margin:12mm}
+      #hemPrintView{position:fixed;inset:0;z-index:20000;overflow:auto;background:#fff;color:#222;font-family:Arial,sans-serif}
+      #hemPrintView .report-body{font-size:12px;margin:28px}
+      #hemPrintView h1{font-size:24px;margin:0 0 5px}
+      #hemPrintView h2{font-size:17px;margin:0 0 10px}
+      #hemPrintView p{line-height:1.5;orphans:3;widows:3}
+      #hemPrintView .meta{color:#666;margin-bottom:24px}
+      #hemPrintView .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:14px 0}
+      #hemPrintView .summary-card{border:1px solid #ddd;border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:5px;min-width:0}
+      #hemPrintView .summary-card span{color:#555;font-size:10px}
+      #hemPrintView .summary-card strong{font-size:15px;overflow-wrap:anywhere}
+      #hemPrintView section{margin:0 0 28px;break-inside:auto;page-break-inside:auto}
+      #hemPrintView table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+      #hemPrintView th,#hemPrintView td{border:1px solid #ccc;padding:7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+      #hemPrintView th{background:#f1f1f1}
+      #hemPrintView tr{break-inside:avoid;page-break-inside:avoid}
+      #hemPrintView .table-wrap{width:100%;overflow-wrap:anywhere}
+      #hemPrintView .actions{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid #ddd;margin:0 28px 18px;z-index:1}
+      #hemPrintView button{padding:9px 14px;cursor:pointer}
+      #hemPrintView .report-logbook-section .table-wrap{max-width:100%;overflow-wrap:anywhere}
+      #hemPrintView .report-logbook-section table{table-layout:fixed;font-size:10px}
+      #hemPrintView .report-logbook-section th,#hemPrintView .report-logbook-section td{overflow-wrap:anywhere;word-break:normal}
+      @media print{
+        body>*:not(#hemPrintView){display:none!important}
+        #hemPrintView{position:static!important;inset:auto!important;display:block!important;overflow:visible!important;background:#fff!important;color:#222!important;z-index:auto!important}
+        #hemPrintView .report-body{margin:0;font-size:10.5px}
+        #hemPrintView .actions{display:none!important}
+        #hemPrintView section{break-inside:auto;page-break-inside:auto}
+        #hemPrintView .report-logbook-section{break-inside:auto;page-break-inside:auto}
+        #hemPrintView h2{break-after:avoid;page-break-after:avoid}
+        #hemPrintView .summary-grid{grid-template-columns:repeat(3,minmax(0,1fr));break-inside:avoid}
+        #hemPrintView .summary-card{padding:7px}
+        #hemPrintView .table-wrap{overflow:visible}
+        #hemPrintView table{font-size:9.5px}
+        #hemPrintView th,#hemPrintView td{padding:5px}
+        #hemPrintView thead{display:table-header-group}
+        #hemPrintView button{display:none!important}
+        #hemPrintView .report-logbook-section table{font-size:8.5px}
+        #hemPrintView .report-logbook-section tr{break-inside:avoid;page-break-inside:avoid}
+      }
+    </style>
+    <div class="actions"><button type="button" id="printReportButton">Skriv ut / Spara som PDF</button> <button type="button" id="closeReportButton">Stäng rapport</button></div>
+    <div class="report-body"><h1>Hemloggbok – ${esc(propName)}${completeReport ? " · Komplett fastighetsrapport" : ""}</h1><div class="meta">Rapportdatum: ${reportDate} · Underlag: uppgifter registrerade i Hemloggbok</div>${sections.join('')}<p class="meta">Rapporten innehåller endast registrerade uppgifter. Saknade värden visas som ej angivna.</p></div>`;
+  document.body.appendChild(printView);
+  const printButton = printView.querySelector('#printReportButton');
+  const closeButton = printView.querySelector('#closeReportButton');
   if (printButton) printButton.addEventListener('click', () => {
-    try { win.focus(); win.print(); }
+    // Kör utskriften direkt i användarens klickhändelse i huvudfönstret.
+    try { window.print(); }
     catch (error) { alert('Utskriften kunde inte startas. Prova webbläsarens meny och välj Skriv ut.'); }
   });
-  if (closeButton) closeButton.addEventListener('click', () => win.close());
+  if (closeButton) closeButton.addEventListener('click', () => printView.remove());
 }
 
 function setSearchFilter(button, filter){
