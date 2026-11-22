@@ -1635,6 +1635,66 @@
       color: white;
     }
 
+    /* ── PDF-LÄSARE ── */
+    .pdf-viewer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(15, 12, 8, .96);
+      padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pdf-viewer.open { display: flex; }
+    .pdf-viewer-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      color: #fff;
+    }
+    .pdf-viewer-title {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: .88rem;
+      line-height: 1.25;
+    }
+    .pdf-viewer-bar button, .pdf-viewer-bar a {
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 7px;
+      background: #3b342c;
+      color: #fff;
+      padding: 9px 11px;
+      font: inherit;
+      font-size: .8rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .pdf-viewer-frame-wrap {
+      flex: 1;
+      min-height: 0;
+      background: #fff;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .pdf-viewer-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+      -webkit-overflow-scrolling: touch;
+    }
+    .pdf-viewer-help {
+      color: rgba(255,255,255,.75);
+      text-align: center;
+      font-size: .72rem;
+      padding: 2px 4px;
+    }
+
     /* ── LIGHTBOX ── */
     .lightbox {
       display: none;
@@ -3674,6 +3734,7 @@
        ">
     Inga dokument kopplade
   </div>
+  <small style="color:var(--muted)">Dokument som kopplats till inventarien i Dokumentarkivet visas här. De lagras bara en gång.</small>
 </div>
 
 
@@ -3738,8 +3799,9 @@
       </div>
 
       <div class="field">
-        <label>Koppla till inventarie</label>
-        <select id="dAssetId"><option value="">Ingen koppling</option></select>
+        <label>Koppla till inventarie (du kan välja flera)</label>
+        <select id="dAssetId" multiple size="5" aria-describedby="dAssetHelp" style="min-height:120px"><option value="">Ingen koppling</option></select>
+        <small id="dAssetHelp" style="color:var(--muted)">Håll Ctrl (Windows) eller ⌘ (Mac) nere när du väljer flera. På iPhone/iPad kan du markera flera alternativ direkt.</small>
       </div>
 
       <div class="field">
@@ -3820,6 +3882,19 @@
   </div>
 
 </div>
+
+  <!-- ════ PDF-LÄSARE ════ -->
+  <div class="pdf-viewer" id="pdfViewer" role="dialog" aria-modal="true" aria-label="PDF-läsare">
+    <div class="pdf-viewer-bar">
+      <div class="pdf-viewer-title" id="pdfViewerTitle">PDF-dokument</div>
+      <a id="pdfViewerOpenExternal" href="#" target="_blank" rel="noopener">Öppna separat</a>
+      <button type="button" onclick="closePdfViewer()" aria-label="Stäng PDF">Stäng ✕</button>
+    </div>
+    <div class="pdf-viewer-frame-wrap">
+      <iframe class="pdf-viewer-frame" id="pdfViewerFrame" title="PDF-dokument" allow="fullscreen"></iframe>
+    </div>
+    <div class="pdf-viewer-help">Förstora med nyp/zoom i PDF-visaren. Om dokumentet inte visas, välj ”Öppna separat”.</div>
+  </div>
 
   <!-- ════ LIGHTBOX ════ -->
   <div class="lightbox" id="lb">
@@ -4211,7 +4286,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.12'; // Hemloggbok v83: PDF-öppning via Blob-URL
+const APP_VERSION = '5.14'; // Hemloggbok v85: ett dokument kan kopplas till flera inventarier
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -5756,12 +5831,33 @@ function openAssetForm() {
   assetDocuments = [];
 
   renderAssetDocuments();
+  renderAssetDocumentLinks(null);
 
   document
     .getElementById('assetModal')
     .classList.add('open');
 
 }
+function getDocumentAssetIds(doc) {
+  if (Array.isArray(doc?.assetIds)) return doc.assetIds.map(String);
+  return doc?.assetId ? [String(doc.assetId)] : [];
+}
+
+function getDocumentsForAsset(assetId) {
+  return documents.filter(d => String(d.propertyId) === String(currentProperty) && getDocumentAssetIds(d).includes(String(assetId)));
+}
+
+function renderAssetDocumentLinks(assetId) {
+  const box = document.getElementById('assetDocumentInfo');
+  if (!box) return;
+  const linked = getDocumentsForAsset(assetId);
+  if (!linked.length) {
+    box.innerHTML = 'Inga dokument kopplade från Dokumentarkivet.';
+    return;
+  }
+  box.innerHTML = linked.map(doc => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span>📄 ${x(doc.name || 'Namnlöst dokument')} <small style="color:var(--muted)">${x(doc.category || '')}</small></span><button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation();viewDocument(${Number(doc.id)})">Öppna</button></div>`).join('');
+}
+
 function saveAsset() {
   const name = document.getElementById('aName').value.trim();
   if (!name) { alert('Ange ett namn'); return; }
@@ -5834,6 +5930,7 @@ function editAsset(id){
     assetDocuments =
   [...(a.documents || [])];
   renderAssetDocuments();
+  renderAssetDocumentLinks(a.id);
 
   document
     .getElementById('assetModal')
@@ -5844,7 +5941,7 @@ function deleteAsset(id) {
   const target = assets.find(a => String(a.id) === String(id) && String(a.propertyId) === String(currentProperty));
   if (!target) return false;
   const linkedEntries = entries.filter(e => String(e.propertyId) === String(currentProperty) && String(e.assetId || '') === String(id)).length;
-  const linkedDocuments = documents.filter(d => String(d.propertyId) === String(currentProperty) && String(d.assetId || '') === String(id)).length;
+  const linkedDocuments = documents.filter(d => String(d.propertyId) === String(currentProperty) && getDocumentAssetIds(d).includes(String(id))).length;
   const attachedFiles = Array.isArray(target.documents) ? target.documents.length : 0;
   const details = [];
   if (linkedEntries) details.push(`${linkedEntries} loggposter behålls och kopplas loss`);
@@ -5855,8 +5952,11 @@ function deleteAsset(id) {
   assets = assets.filter(a => !(String(a.id) === String(id) && String(a.propertyId) === String(currentProperty)));
   entries = entries.map(e => String(e.propertyId) === String(currentProperty) && String(e.assetId || '') === String(id)
     ? { ...e, assetId: '' } : e);
-  documents = documents.map(d => String(d.propertyId) === String(currentProperty) && String(d.assetId || '') === String(id)
-    ? { ...d, assetId: '' } : d);
+  documents = documents.map(d => {
+    if (String(d.propertyId) !== String(currentProperty) || !getDocumentAssetIds(d).includes(String(id))) return d;
+    const assetIds = getDocumentAssetIds(d).filter(aid => aid !== String(id));
+    return { ...d, assetIds, assetId: assetIds[0] || '' };
+  });
   saveWithToast('✓ Inventarie borttagen; kopplade poster bevarades');
   renderAssets(); renderInventoryStats(); renderPropertyDashboard(); renderDocumentStats(); renderDocumentCategoryCounts(); renderAll();
   return true;
@@ -6510,9 +6610,10 @@ function searchDocuments(query){
   }
   const matches = documents.filter(d => {
     if(d.propertyId !== currentProperty) return false;
-    const asset = assets.find(a => String(a.id) === String(d.assetId) && a.propertyId === currentProperty);
+    const linkedAssets = assets.filter(a => String(a.propertyId) === String(currentProperty) && getDocumentAssetIds(d).includes(String(a.id)));
+    const assetNames = linkedAssets.flatMap(a => [a.name, a.room]);
     const entry = entries.find(e => String(e.id) === String(d.entryId) && e.propertyId === currentProperty);
-    const text = [d.name, d.category, d.date, d.note, asset?.name, asset?.room, entry?.category, entry ? eDesc(entry) : '', entry?.date]
+    const text = [d.name, d.category, d.date, d.note, ...assetNames, entry?.category, entry ? eDesc(entry) : '', entry?.date]
       .filter(Boolean).join(' ');
     return normalizeSearchText(text).includes(q);
   });
@@ -6739,7 +6840,7 @@ function deleteDocument(id) {
   if (!confirm('Vill du ta bort dokumentet?')) return false;
   documents = documents.filter(d => !(String(d.id) === String(id) && String(d.propertyId) === String(currentProperty)));
   saveWithToast('✓ Dokument borttaget');
-  renderDocumentStats(); renderDocumentCategoryCounts();
+  renderDocumentStats(); renderDocumentCategoryCounts(); renderAssets();
   openDocumentCategory(doc.category);
   return true;
 }
@@ -6760,19 +6861,20 @@ function removeAssetDocument(index){
 
 }
 
-function populateDocumentLinks(assetId = '', entryId = ''){
+function populateDocumentLinks(assetIds = [], entryId = ''){
   const assetSelect = document.getElementById('dAssetId');
   const entrySelect = document.getElementById('dEntryId');
   if(assetSelect){
-    const opts = assets.filter(a => a.propertyId === currentProperty)
+    const selectedIds = (Array.isArray(assetIds) ? assetIds : (assetIds ? [assetIds] : [])).map(String);
+    const opts = assets.filter(a => String(a.propertyId) === String(currentProperty))
       .slice().sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
-    assetSelect.innerHTML = '<option value="">Ingen koppling</option>' + opts.map(a =>
+    assetSelect.innerHTML = opts.map(a =>
       `<option value="${x(String(a.id))}">${x([a.name || 'Namnlös inventarie', a.room].filter(Boolean).join(' · '))}</option>`
     ).join('');
-    assetSelect.value = assetId == null ? '' : String(assetId);
+    Array.from(assetSelect.options).forEach(option => { option.selected = selectedIds.includes(String(option.value)); });
   }
   if(entrySelect){
-    const opts = entries.filter(e => e.propertyId === currentProperty)
+    const opts = entries.filter(e => String(e.propertyId) === String(currentProperty))
       .slice().sort((a,b) => String(b.date || '').localeCompare(String(a.date || '')));
     entrySelect.innerHTML = '<option value="">Ingen koppling</option>' + opts.map(e => {
       const label = [e.date, e.category, eDesc(e), e.room].filter(Boolean).join(' · ');
@@ -6784,10 +6886,8 @@ function populateDocumentLinks(assetId = '', entryId = ''){
 
 function documentLinkLabel(doc) {
   const bits = [];
-  if (doc.assetId) {
-    const a = assets.find(a => String(a.id) === String(doc.assetId) && String(a.propertyId) === String(doc.propertyId));
-    if (a) bits.push('📦 ' + (a.name || 'Inventarie'));
-  }
+  const linkedAssets = assets.filter(a => String(a.propertyId) === String(doc.propertyId) && getDocumentAssetIds(doc).includes(String(a.id)));
+  if (linkedAssets.length) bits.push('📦 ' + linkedAssets.map(a => a.name || 'Inventarie').join(', '));
   if (doc.entryId) {
     const e = entries.find(e => String(e.id) === String(doc.entryId) && String(e.propertyId) === String(doc.propertyId));
     if (e) bits.push('🛠 ' + [e.date, e.category, eDesc(e)].filter(Boolean).join(' · '));
@@ -6831,7 +6931,7 @@ function editDocument(id){
 
   document.getElementById('dNote').value =
     doc.note || '';
-  populateDocumentLinks(doc.assetId || '', doc.entryId || '');
+  populateDocumentLinks(getDocumentAssetIds(doc), doc.entryId || '');
 
   docDocuments =
     [...(doc.images || [])];
@@ -6854,10 +6954,10 @@ function saveDocument() {
     closeModal('documentModal'); documentEditId = null;
     return;
   }
-  const assetId = document.getElementById('dAssetId')?.value || '';
+  const assetIds = Array.from(document.getElementById('dAssetId')?.selectedOptions || []).map(option => String(option.value)).filter(Boolean);
   const entryId = document.getElementById('dEntryId')?.value || '';
-  if (assetId && !assets.some(a => String(a.id) === String(assetId) && String(a.propertyId) === String(currentProperty))) {
-    alert('Den valda inventarien hör inte till den aktiva fastigheten. Dokumentet sparades inte.'); return;
+  if (assetIds.some(assetId => !assets.some(a => String(a.id) === assetId && String(a.propertyId) === String(currentProperty)))) {
+    alert('En vald inventarie hör inte till den aktiva fastigheten. Dokumentet sparades inte.'); return;
   }
   if (entryId && !entries.some(e => String(e.id) === String(entryId) && String(e.propertyId) === String(currentProperty))) {
     alert('Den valda loggposten hör inte till den aktiva fastigheten. Dokumentet sparades inte.'); return;
@@ -6868,12 +6968,12 @@ function saveDocument() {
     category: document.getElementById('dCategory').value,
     date: document.getElementById('dDate').value,
     note: document.getElementById('dNote').value,
-    assetId, entryId, images: [...docDocuments]
+    assetIds, assetId: assetIds[0] || '', entryId, images: [...docDocuments]
   };
   if (existingIndex >= 0) documents[existingIndex] = documentData;
   else documents.push(documentData);
   saveWithToast('✓ Dokument sparat');
-  renderDocumentStats(); renderDocumentCategoryCounts();
+  renderDocumentStats(); renderDocumentCategoryCounts(); renderAssets();
   closeModal('documentModal'); documentEditId = null;
 }
 
@@ -6907,6 +7007,63 @@ function renderAttachedFileRows(files, collection, removeFunction) {
   }).join('');
 }
 
+let activePdfObjectUrl = null;
+
+function pdfDataUrlToBlob(data) {
+  const comma = String(data || '').indexOf(',');
+  if (comma < 0) throw new Error('PDF-innehållet har ett ogiltigt format.');
+  const header = data.slice(0, comma);
+  const payload = data.slice(comma + 1);
+  let bytes;
+  if (/;base64/i.test(header)) {
+    const binary = atob(payload.replace(/\s/g, ''));
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  } else {
+    const decoded = decodeURIComponent(payload);
+    bytes = new TextEncoder().encode(decoded);
+  }
+  // Kontrollera PDF-signaturen innan innehållet skickas till visaren.
+  const signature = String.fromCharCode(...bytes.slice(0, 5));
+  if (signature !== '%PDF-') throw new Error('Filen innehåller inte en giltig PDF-signatur.');
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+function closePdfViewer() {
+  const viewer = document.getElementById('pdfViewer');
+  const frame = document.getElementById('pdfViewerFrame');
+  const external = document.getElementById('pdfViewerOpenExternal');
+  if (frame) frame.src = 'about:blank';
+  if (external) external.removeAttribute('href');
+  if (viewer) viewer.classList.remove('open');
+  document.body.style.overflow = '';
+  if (activePdfObjectUrl) {
+    URL.revokeObjectURL(activePdfObjectUrl);
+    activePdfObjectUrl = null;
+  }
+}
+
+function openPdfInApp(file, data) {
+  try {
+    closePdfViewer();
+    const blob = pdfDataUrlToBlob(data);
+    activePdfObjectUrl = URL.createObjectURL(blob);
+    const viewer = document.getElementById('pdfViewer');
+    const frame = document.getElementById('pdfViewerFrame');
+    const title = document.getElementById('pdfViewerTitle');
+    const external = document.getElementById('pdfViewerOpenExternal');
+    if (!viewer || !frame || !external) throw new Error('PDF-läsaren kunde inte startas.');
+    if (title) title.textContent = file.name || 'PDF-dokument';
+    external.href = activePdfObjectUrl;
+    frame.src = activePdfObjectUrl + '#toolbar=1&navpanes=0&view=FitH';
+    viewer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } catch (err) {
+    alert('PDF-filen kunde inte visas. Prova att bifoga PDF-filen igen.\n\n' +
+      (err && err.message ? err.message : 'Okänt fel.'));
+  }
+}
+
 function openAttachedFile(collection, index) {
   const source = collection === 'doc' ? docDocuments : collection === 'asset' ? assetDocuments : invDocuments;
   const file = source && source[index];
@@ -6920,39 +7077,8 @@ function openAttachedFile(collection, index) {
       images.map(entry => entry.item.name || 'Bild'));
     return;
   }
-  // iOS/Safari kan visa en tom sida när en PDF öppnas direkt som data-URL.
-  // Gör därför om den sparade data-URL:en till en riktig PDF-Blob och öppna
-  // den via en tillfällig objekt-URL i ett nytt fönster/flik.
   if (attachedFileIsPdf(file)) {
-    try {
-      const comma = data.indexOf(',');
-      if (comma < 0) throw new Error('PDF-innehållet har ett ogiltigt format.');
-      const header = data.slice(0, comma);
-      const payload = data.slice(comma + 1);
-      let blob;
-      if (/;base64/i.test(header)) {
-        const binary = atob(payload);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        blob = new Blob([bytes], { type: 'application/pdf' });
-      } else {
-        blob = new Blob([decodeURIComponent(payload)], { type: 'application/pdf' });
-      }
-      const objectUrl = URL.createObjectURL(blob);
-      const opened = window.open(objectUrl, '_blank');
-      if (!opened) {
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.click();
-      }
-      // Låt PDF-visaren hinna läsa filen innan objekt-URL:en frigörs.
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 120000);
-    } catch (err) {
-      alert('PDF-filen kunde inte öppnas. Prova att bifoga PDF-filen igen.\n\n' +
-        (err && err.message ? err.message : 'Okänt fel.'));
-    }
+    openPdfInApp(file, data);
     return;
   }
   const opened = window.open(data, '_blank');
@@ -6961,6 +7087,13 @@ function openAttachedFile(collection, index) {
     link.href = data; link.target = '_blank'; link.rel = 'noopener'; link.click();
   }
 }
+
+// Stäng PDF-läsaren med Escape. Objektadressen frigörs först när läsaren stängs.
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && document.getElementById('pdfViewer')?.classList.contains('open')) {
+    closePdfViewer();
+  }
+});
 
 function renderDocDocuments(){
   const box = document.getElementById('docDocuments');
@@ -7162,8 +7295,8 @@ ${a.serialNumber ? `
   color:var(--muted);
   margin-top:6px;
 ">
-  📎 Dokument:
-  ${a.documents ? a.documents.length : 0}
+  📎 Dokument: ${((a.documents || []).length + getDocumentsForAsset(a.id).length)}
+  ${getDocumentsForAsset(a.id).length ? `<div style="font-size:.75rem;color:var(--muted);margin-top:3px">${getDocumentsForAsset(a.id).map(d => '📄 ' + x(d.name || 'Namnlöst dokument')).join('<br>')}</div>` : ''}
 </div>
 
 <div style="margin-top:12px;display:flex;gap:8px">
