@@ -4286,7 +4286,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.16'; // Hemloggbok v86: utskrift från rapportvy i samma fönster för iOS/iPadOS
+const APP_VERSION = '5.17'; // Hemloggbok: öppna utskriftsrapport som separat HTML i Safari för iOS/iPadOS
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -10387,7 +10387,7 @@ function openPrintCenter(){
         ${reports.map(([id,icon,title,desc]) => `<button type="button" onclick="document.getElementById('printCenterOverlay').remove();generatePrintReport('${id}')" style="display:flex;align-items:center;gap:12px;text-align:left;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);cursor:pointer;min-height:82px;"><span style="font-size:25px;width:34px;text-align:center;">${icon}</span><span><strong style="display:block;font-size:.96rem;margin-bottom:4px;">${title}</strong><span style="display:block;color:var(--muted);font-size:.8rem;line-height:1.4;">${desc}</span></span></button>`).join('')}
       </div>
       <button type="button" onclick="document.getElementById('printCenterOverlay').remove();generatePrintReport('7')" style="margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:14px;background:var(--accent);color:white;border:0;border-radius:12px;font-weight:700;font-size:.95rem;cursor:pointer;">📚 Skapa alla rapporter samlat</button>
-      <p style="margin-top:14px;color:var(--muted);font-size:.82rem;line-height:1.5;">Rapporten öppnas i ett nytt fönster. Där kan du skriva ut eller välja <strong>Spara som PDF</strong>. Endast uppgifter för den valda fastigheten tas med.</p>
+      <p style="margin-top:14px;color:var(--muted);font-size:.82rem;line-height:1.5;">På iPhone och iPad öppnas rapporten separat i Safari. Där kan du använda Dela-menyn och välja <strong>Skriv ut</strong> eller spara som PDF. Endast uppgifter för den valda fastigheten tas med.</p>
       <div style="display:flex;justify-content:flex-end;margin-top:16px;"><button type="button" onclick="document.getElementById('printCenterOverlay').remove()" style="padding:10px 18px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer;">Avbryt</button></div>
     </div>`;
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -10401,8 +10401,7 @@ function generatePrintReport(selected){
   if (!valid.includes(String(selected))) return;
   const completeReport = String(selected) === '13';
   if (completeReport) selected = '7';
-  // Rendera rapporten i samma fönster som appen. Detta är viktigt för
-  // iOS/iPadOS Safari, där utskrift från ett separat popup-fönster kan utebli.
+  // Rendera rapporten i appen först. På iOS öppnas den sedan som en fristående HTML-rapport i Safari.
   const propName = properties.find(p => p.id === currentProperty)?.name || currentProperty;
   const reportDate = new Date().toLocaleDateString('sv-SE');
   const esc = value => x(value == null ? '' : String(value));
@@ -10636,15 +10635,55 @@ function generatePrintReport(selected){
         #hemPrintView .report-logbook-section tr{break-inside:avoid;page-break-inside:avoid}
       }
     </style>
-    <div class="actions"><button type="button" id="printReportButton">Skriv ut / Spara som PDF</button> <button type="button" id="closeReportButton">Stäng rapport</button></div>
+    <div class="actions"><button type="button" id="openSafariReportButton">Öppna rapport i Safari</button> <button type="button" id="closeReportButton">Stäng rapport</button></div>
     <div class="report-body"><h1>Hemloggbok – ${esc(propName)}${completeReport ? " · Komplett fastighetsrapport" : ""}</h1><div class="meta">Rapportdatum: ${reportDate} · Underlag: uppgifter registrerade i Hemloggbok</div>${sections.join('')}<p class="meta">Rapporten innehåller endast registrerade uppgifter. Saknade värden visas som ej angivna.</p></div>`;
   document.body.appendChild(printView);
-  const printButton = printView.querySelector('#printReportButton');
+  const openSafariButton = printView.querySelector('#openSafariReportButton');
   const closeButton = printView.querySelector('#closeReportButton');
-  if (printButton) printButton.addEventListener('click', () => {
-    // Kör utskriften direkt i användarens klickhändelse i huvudfönstret.
-    try { window.print(); }
-    catch (error) { alert('Utskriften kunde inte startas. Prova webbläsarens meny och välj Skriv ut.'); }
+  if (openSafariButton) openSafariButton.addEventListener('click', () => {
+    // Skapa en fristående HTML-fil med rapporten. En vanlig länk med target=_blank
+    // gör att iOS kan lämna hemskärmsappen och öppna rapporten i Safari.
+    try {
+      const reportMarkup = printView.innerHTML;
+      const reportCss = printView.querySelector('style')?.textContent || '';
+      const standaloneHtml = `<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="no">
+<title>Hemloggbok – ${esc(propName)} – rapport</title>
+<style>
+html,body{margin:0;padding:0;background:#fff;color:#222;font-family:Arial,sans-serif;-webkit-text-size-adjust:100%}
+${reportCss}
+#hemPrintView{position:relative!important;inset:auto!important;min-height:100vh;overflow:visible!important}
+#hemPrintView .actions{position:sticky;top:0;padding:12px 16px;margin:0 0 14px;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:8px;flex-wrap:wrap}
+#hemPrintView .actions button{font-size:15px;padding:11px 15px;border:1px solid #bbb;border-radius:8px;background:#f5f5f5;color:#222}
+#hemPrintView .report-body{margin:22px}
+@media print{#hemPrintView{min-height:0!important}#hemPrintView .actions{display:none!important}#hemPrintView .report-body{margin:0!important}}
+</style>
+</head>
+<body><div id="hemPrintView">${reportMarkup}</div>
+<script>
+document.getElementById('printReportButton')?.addEventListener('click',function(){window.print();});
+document.getElementById('closeReportButton')?.addEventListener('click',function(){window.close();});
+<\/script>
+</body></html>`;
+      const reportBlob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
+      const reportUrl = URL.createObjectURL(reportBlob);
+      const link = document.createElement('a');
+      link.href = reportUrl;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      // Låt Safari hinna läsa blobben innan webbadressen frigörs.
+      window.setTimeout(() => URL.revokeObjectURL(reportUrl), 120000);
+    } catch (error) {
+      alert('Rapporten kunde inte öppnas i Safari. Prova att öppna Hemloggbok i Safari och skapa rapporten därifrån.');
+    }
   });
   if (closeButton) closeButton.addEventListener('click', () => printView.remove());
 }
