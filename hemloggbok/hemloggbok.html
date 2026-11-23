@@ -2187,7 +2187,10 @@
     .sc-add-row button:hover {
       background: #f5ede0
     }
-  </style>
+  
+.home6-wrap{display:flex;flex-direction:column;gap:18px;padding-bottom:24px}.home6-head{background:linear-gradient(135deg,#173f31,#315f49);color:#fff;border-radius:18px;padding:20px;box-shadow:0 5px 18px #173f3118}.home6-head h2{margin:0 0 5px;color:#fff;font-size:1.45rem}.home6-head p{margin:0;color:#e2eee6;font-size:.9rem}.home6-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#e8eee8;padding:5px;border-radius:13px;margin-top:16px}.home6-switch button{border:0;border-radius:9px;padding:11px 5px;background:transparent;color:#315342;font-weight:700;font-size:.9rem;min-height:42px}.home6-switch button.active{background:#fff;color:#173f31;box-shadow:0 1px 5px #00000016}.home6-sub{font-size:.82rem;color:#e1eee5;margin-top:9px}.home6-section{background:var(--surface,#fff);border:1px solid var(--border,#dfe6df);border-radius:16px;padding:15px;min-width:0}.home6-section h3{margin:0 0 12px;font-size:1.02rem;color:var(--text,#26352c)}.home6-muted{font-size:.82rem;color:var(--muted,#718076)}.home6-alerts{display:grid;grid-template-columns:1fr;gap:9px}.home6-alert{display:flex;align-items:center;gap:10px;padding:11px;border-radius:12px;background:#f5f6ef;border:1px solid #e6e9dc;min-width:0}.home6-alert.warn{background:#fff8e9;border-color:#f0dfb5}.home6-alert.danger{background:#fff1ef;border-color:#edceca}.home6-alert .mark{font-size:1.15rem;flex:none}.home6-alert .body{flex:1;min-width:0}.home6-alert strong{display:block;font-size:.88rem}.home6-alert small{display:block;color:var(--muted,#718076);margin-top:2px;overflow-wrap:anywhere}.home6-alert button{border:1px solid #d5dfd5;background:#fff;border-radius:9px;padding:8px 10px;color:#315342;font-weight:650;flex:none}.home6-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.home6-quick button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid #dce6dc;background:#f5f8f3;color:#244936;border-radius:13px;padding:13px 11px;min-height:66px;font-weight:700}.home6-quick .ico{font-size:1.35rem}.home6-quick small{display:block;font-weight:400;color:#68786d;margin-top:2px}.home6-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.home6-stat{border:1px solid #e0e8df;background:linear-gradient(145deg,#f8faf6,#edf3ec);border-radius:14px;padding:13px;min-width:0;text-align:left;color:inherit;cursor:pointer}.home6-stat .num{font-size:1.35rem;font-weight:750;color:#244936;line-height:1.15}.home6-stat .label{font-weight:700;margin-top:5px;font-size:.88rem}.home6-stat .detail{font-size:.76rem;color:#718076;margin-top:3px;overflow-wrap:anywhere}.home6-activity{display:flex;flex-direction:column;gap:0}.home6-activity-row{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--border,#e3e8e2)}.home6-activity-row:last-child{border-bottom:0}.home6-activity-row .dot{width:9px;height:9px;background:#78977f;border-radius:50%;margin-top:6px;flex:none}.home6-activity-row strong{font-size:.87rem;display:block}.home6-activity-row small{color:var(--muted,#718076);font-size:.78rem}.home6-empty{padding:12px;border-radius:11px;background:#f3f7f1;color:#526b58;font-size:.86rem}.home6-all-choice{display:none;margin-top:10px;padding:12px;background:#f5f8f3;border:1px solid #dce6dc;border-radius:12px}.home6-all-choice.open{display:block}.home6-all-choice strong{display:block;margin-bottom:8px}.home6-choice-buttons{display:flex;gap:8px;flex-wrap:wrap}.home6-choice-buttons button{border:1px solid #cbd9cd;background:#fff;border-radius:9px;padding:9px 12px;color:#244936;font-weight:650}@media(min-width:700px){.home6-wrap{gap:20px}.home6-head{padding:24px}.home6-alerts{grid-template-columns:repeat(2,minmax(0,1fr))}.home6-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.home6-quick{grid-template-columns:repeat(4,minmax(0,1fr))}.home6-quick button{min-height:82px;flex-direction:column;align-items:flex-start;justify-content:center}.home6-section{padding:18px}}@media(min-width:1100px){.home6-wrap{max-width:1250px;margin:0 auto}.home6-main-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:18px;align-items:start}.home6-main-grid>.home6-section{height:100%}}
+
+</style>
 <!-- <link rel="icon" type="image/png" href="favicon.png"> -->
 </head>
 
@@ -2231,29 +2234,26 @@
   <main>
 
 <div class="tab-content active" id="tab-home">
-
-  <div class="page-header">
-    <div>
-      <h2>🏠 Hemloggbok</h2>
-      <p>
-        Samla historik, dokument,
-        inventarier och driftkostnader
-        för dina fastigheter.
-      </p>
-    </div>
+  <div id="propertyCards" class="room-grid" style="display:none"></div>
+  <div class="home6-wrap">
+    <section class="home6-head"><h2>Hemloggbok</h2><p>Överblick och snabb åtkomst till dina fastigheter</p>
+      <div class="home6-switch" role="group" aria-label="Välj överblick">
+        <button type="button" data-home6-scope="villa" onclick="setHome6Scope('villa')">Huset</button><button type="button" data-home6-scope="stuga" onclick="setHome6Scope('stuga')">Stugan</button><button type="button" data-home6-scope="all" onclick="setHome6Scope('all')">Båda</button>
+      </div><div class="home6-sub" id="home6PropertyLabel">Huset</div>
+      <div class="home6-all-choice" id="home6PropertyChoice"><strong>Välj fastighet för registreringen</strong><div class="home6-choice-buttons" id="home6PropertyChoiceButtons"></div></div>
+    </section>
+    <div class="home6-main-grid"><section class="home6-section"><h3>🔔 Att uppmärksamma</h3><div id="home6Alerts" class="home6-alerts"></div></section>
+      <section class="home6-section"><h3>＋ Snabbregistrering</h3><div class="home6-quick">
+        <button type="button" onclick="home6Quick('asset')"><span class="ico">📦</span><span>Ny inventarie<small>Registrera en sak</small></span></button>
+        <button type="button" onclick="home6Quick('document')"><span class="ico">📄</span><span>Nytt dokument<small>Spara fil eller uppgift</small></span></button>
+        <button type="button" onclick="home6Quick('entry')"><span class="ico">📝</span><span>Ny loggbokspost<small>Dokumentera arbete</small></span></button>
+        <button type="button" onclick="home6Quick('cost')"><span class="ico">💳</span><span>Ny kostnad<small>Drift eller faktura</small></span></button>
+      </div></section></div>
+    <section class="home6-section"><h3>Översikt</h3><div class="home6-stats" id="home6Stats"></div></section>
+    <section class="home6-section"><h3>Senaste aktivitet</h3><div class="home6-activity" id="home6Activity"></div></section>
   </div>
-
-<div id="firstStartBox"
-     class="info-card"
-     style="display:none;margin-bottom:20px">
 </div>
 
-  <div id="propertyCards"
-       class="room-grid">
-  </div>
-
-</div>
-    
     <!-- ════════ LOGG ════════ -->
     <div class="tab-content" id="tab-logg">
       <div class="reminders" id="reminders">
@@ -4286,7 +4286,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '5.17'; // Hemloggbok: öppna utskriftsrapport som separat HTML i Safari för iOS/iPadOS
+const APP_VERSION = '6.0-test'; // Startsida ovanpå oförändrad 5.17-datalagring
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -4979,7 +4979,103 @@ async function save() {
     // ══════════════════════════════════════════════════════════════════
     // TABS
     // ══════════════════════════════════════════════════════════════════
-    function switchTab(name, btn) {
+    // Hemloggbok 6.0 startsida. "Båda" är endast ett läsfilter; befintliga register och lagring ändras inte.
+let home6Scope = 'villa';
+let home6PendingAction = null;
+function home6PropertyName(id) {
+  const p = properties.find(v => String(v.id) === String(id));
+  if (!p) return String(id || 'Okänd fastighet');
+  return p.id === 'villa' ? 'Huset' : (p.name || 'Fastighet');
+}
+function home6VisibleProperties() {
+  return properties.filter(p => !p.archived && (home6Scope === 'all' || String(p.id) === String(home6Scope)));
+}
+function home6DateLabel(v) {
+  if (!v) return '';
+  const d = new Date(String(v).slice(0,10) + 'T00:00:00');
+  return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString('sv-SE');
+}
+function setHome6Scope(scope) {
+  if (scope !== 'all' && !properties.some(p => String(p.id) === String(scope) && !p.archived)) return;
+  home6Scope = scope; renderHome6();
+}
+function home6Quick(action) {
+  const eligible = properties.filter(p => !p.archived);
+  if (home6Scope !== 'all' && eligible.some(p => String(p.id) === String(home6Scope))) {
+    home6Launch(action, home6Scope); return;
+  }
+  home6PendingAction = action;
+  const box = document.getElementById('home6PropertyChoice');
+  const buttons = document.getElementById('home6PropertyChoiceButtons');
+  buttons.innerHTML = eligible.map(p => `<button type="button" onclick="home6ChooseProperty('${x(String(p.id))}')">${x(p.id === 'villa' ? 'Huset' : (p.name || 'Fastighet'))}</button>`).join('');
+  box.classList.add('open'); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function home6ChooseProperty(id) {
+  const action = home6PendingAction; home6PendingAction = null;
+  document.getElementById('home6PropertyChoice')?.classList.remove('open');
+  if (action) home6Launch(action, id);
+}
+function home6Launch(action, propertyId) {
+  if (!properties.some(p => String(p.id) === String(propertyId) && !p.archived)) return;
+  if (String(currentProperty) !== String(propertyId)) changeProperty(propertyId);
+  if (action === 'asset') { switchTab('inventarier'); openAssetForm(); }
+  else if (action === 'document') { switchTab('documents'); openDocumentForm(); }
+  else if (action === 'entry') { switchTab('logg'); toggleForm(); }
+  else if (action === 'cost') {
+    const choice = prompt('Vilken kostnad vill du registrera?\nSkriv 1 för löpande driftskostnad.\nSkriv 2 för faktisk el- eller vattenfaktura.');
+    if (choice === '1') { switchTab('drift'); openDriftForm(); }
+    else if (choice === '2') { switchTab('drift'); resetUtilityBillForm(); const el=document.getElementById('utilityBillsSection'); if(el){el.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('ubDate')?.focus();} else showToast('Öppna fakturaregistreringen under Löpande driftskostnader.'); }
+  }
+}
+function home6OpenTab(tab) { switchTab(tab); }
+function home6OpenItem(pid, tab) {
+  if (pid && properties.some(p => String(p.id) === String(pid))) changeProperty(pid);
+  switchTab(tab);
+}
+function renderHome6() {
+  const root = document.getElementById('home6Stats'); if (!root) return;
+  const visible = home6VisibleProperties();
+  document.querySelectorAll('[data-home6-scope]').forEach(b => b.classList.toggle('active', b.dataset.home6Scope === home6Scope));
+  const label = document.getElementById('home6PropertyLabel');
+  if (label) label.textContent = home6Scope === 'all' ? 'Samlad överblick · alla aktiva fastigheter' : (home6PropertyName(home6Scope) + (houseInfo[home6Scope]?.address ? ' · ' + houseInfo[home6Scope].address : ''));
+  const ids = visible.map(p => String(p.id));
+  const belongs = item => ids.includes(String(item.propertyId || currentProperty));
+  const counts = arr => visible.map(p => ({name:home6PropertyName(p.id),count:arr.filter(v => String(v.propertyId || p.id) === String(p.id)).length}));
+  const assetsNow = assets.filter(belongs), docsNow = documents.filter(belongs), contractsNow = insurances.filter(belongs);
+  const activeContracts = contractsNow.filter(c => c.status !== 'inactive' && !c.archived);
+  const actionsNow = inventory.filter(belongs).filter(i => i.status !== 'Klar' && i.status !== 'Arkiverad');
+  const byProp = arr => arr.map(v => `${v.name} ${v.count}`).join(' · ') || 'Inga poster';
+  root.innerHTML = [
+    ['📦','Inventarier',assetsNow.length,byProp(counts(assets)),'inventarier'],
+    ['📄','Dokument',docsNow.length,byProp(counts(documents)),'dokument'],
+    ['📑','Aktiva avtal',activeContracts.length,byProp(counts(activeContracts)),'forsakringar'],
+    ['🛠','Åtgärder',actionsNow.length,byProp(counts(actionsNow)),'inventering']
+  ].map(([icon,title,n,detail,tab]) => `<button type="button" class="home6-stat" onclick="home6OpenTab('${tab}')"><div class="num">${icon} ${n}</div><div class="label">${title}</div><div class="detail">${x(detail)}</div></button>`).join('');
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const alerts = [];
+  entries.filter(belongs).forEach(e => {
+    if (e.nextService) { const d = new Date(String(e.nextService).slice(0,10)+'T00:00:00'); if (!Number.isNaN(d.getTime()) && d < today) alerts.push({kind:'danger',icon:'🛠',title:'Underhåll förfallet',name:e.description||e.title||(Array.isArray(e.items)?e.items.map(i=>i.desc).filter(Boolean).join(', '):'Loggbokspost'),date:e.nextService,pid:e.propertyId,tab:'logg'}); }
+  });
+  contractsNow.filter(c => !c.archived).forEach(c => {
+    const date = c.renewal || c.endDate;
+    if (date) { const d = new Date(String(date).slice(0,10)+'T00:00:00'); if (!Number.isNaN(d.getTime()) && d < today && c.status !== 'inactive') alerts.push({kind:'warn',icon:'📑',title:'Avtal behöver ses över',name:c.company||c.type||c.name||'Avtal',date,pid:c.propertyId,tab:'forsakringar'}); }
+  });
+  assetsNow.forEach(a => { if (a.warranty) { const d = new Date(String(a.warranty).slice(0,10)+'T00:00:00'); if (!Number.isNaN(d.getTime()) && d < today) alerts.push({kind:'warn',icon:'🛡',title:'Garanti har gått ut',name:a.name||'Inventarie',date:a.warranty,pid:a.propertyId,tab:'inventarier'}); } });
+  actionsNow.forEach(a => { if (a.plannedDate) { const d = new Date(String(a.plannedDate).slice(0,10)+'T00:00:00'); if (!Number.isNaN(d.getTime()) && d < today) alerts.push({kind:'danger',icon:'📌',title:'Åtgärd försenad',name:a.title||a.name||'Planerad åtgärd',date:a.plannedDate,pid:a.propertyId,tab:'inventering'}); } });
+  alerts.sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  const alertBox = document.getElementById('home6Alerts');
+  if (alertBox) alertBox.innerHTML = alerts.length ? alerts.slice(0,6).map(a => `<div class="home6-alert ${a.kind}"><span class="mark">${a.icon}</span><div class="body"><strong>${x(a.title)}</strong><small>${x(a.name)} · ${x(home6PropertyName(a.pid))} · ${home6DateLabel(a.date)}</small></div><button type="button" onclick="home6OpenItem('${x(String(a.pid))}','${a.tab}')">Öppna</button></div>`).join('') : '<div class="home6-empty">✓ Inget förfallet hittades i de registrerade uppgifterna.</div>';
+
+  const activity = [];
+  entries.filter(belongs).forEach(e => { if (e.date) activity.push({date:e.date,title:'Loggbokspost',name:e.description||e.title||(Array.isArray(e.items)?e.items.map(i=>i.desc).filter(Boolean).join(', '):'Registrerat arbete'),pid:e.propertyId,tab:'logg'}); });
+  inventory.filter(belongs).forEach(i => { if (i.completedDate) activity.push({date:i.completedDate,title:'Åtgärd slutförd',name:i.title||i.name||'Åtgärd',pid:i.propertyId,tab:'inventering'}); });
+  activity.sort((a,b) => String(b.date).localeCompare(String(a.date)));
+  const act = document.getElementById('home6Activity');
+  if (act) act.innerHTML = activity.length ? activity.slice(0,5).map(a => `<div class="home6-activity-row"><span class="dot"></span><div><strong>${x(a.title)} · ${x(a.name)}</strong><small>${x(home6PropertyName(a.pid))} · ${home6DateLabel(a.date)}</small></div></div>`).join('') : '<div class="home6-muted">Inga daterade aktiviteter att visa ännu.</div>';
+}
+
+function switchTab(name, btn) {
 
       if(name === 'logg'){
   clearRoomFilter();
@@ -4991,6 +5087,7 @@ async function save() {
   btn.classList.add('active');
 }
       document.getElementById('tab-' + name).classList.add('active');
+      if (name === 'home') renderHome6();
       if (name === 'statistik') renderStatTab();
       if (name === 'drift') renderDrift();
       if (name === 'rum') renderRooms();
@@ -5235,7 +5332,8 @@ ${!(
     `
 + archivedHtml;
 
-   }
+  if (typeof renderHome6 === 'function') renderHome6();
+}
 
 function openProperty(id){
 
