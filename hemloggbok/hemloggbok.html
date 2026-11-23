@@ -1701,7 +1701,7 @@
       position: fixed;
       inset: 0;
       background: rgba(15, 12, 8, 0.94);
-      z-index: 300;
+      z-index: 1200;
       align-items: center;
       justify-content: center;
       flex-direction: column
@@ -3887,13 +3887,17 @@
   <div class="pdf-viewer" id="pdfViewer" role="dialog" aria-modal="true" aria-label="PDF-läsare">
     <div class="pdf-viewer-bar">
       <div class="pdf-viewer-title" id="pdfViewerTitle">PDF-dokument</div>
-      <a id="pdfViewerOpenExternal" href="#" target="_blank" rel="noopener">Öppna separat</a>
+      <a id="pdfViewerOpenExternal" href="#" target="_blank" rel="noopener">Öppna PDF</a>
       <button type="button" onclick="closePdfViewer()" aria-label="Stäng PDF">Stäng ✕</button>
     </div>
-    <div class="pdf-viewer-frame-wrap">
-      <iframe class="pdf-viewer-frame" id="pdfViewerFrame" title="PDF-dokument" allow="fullscreen"></iframe>
+    <div class="pdf-viewer-frame-wrap" style="display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#222">
+      <div>
+        <div style="font-size:2.5rem;margin-bottom:12px">📄</div>
+        <strong>PDF-filen är klar att öppnas</strong>
+        <p style="margin:8px 0 0;font-size:.85rem;line-height:1.5">Öppna PDF-filen separat för att visa den med iPhones/iPads inbyggda PDF-visare. Där kan du zooma, läsa och dela dokumentet.</p>
+      </div>
     </div>
-    <div class="pdf-viewer-help">Förstora med nyp/zoom i PDF-visaren. Om dokumentet inte visas, välj ”Öppna separat”.</div>
+    <div class="pdf-viewer-help">När du är klar går du tillbaka till Hemloggbok och trycker på Stäng.</div>
   </div>
 
   <!-- ════ LIGHTBOX ════ -->
@@ -6880,18 +6884,12 @@ function viewDocument(id){
           class="info-card"
           style="margin-top:10px">
 
-          <a
-            href="${img.dataUrl}"
-            target="_blank"
-            style="
-              text-decoration:none;
-              font-size:18px;
-              font-weight:600;
-            ">
-
-            📄 ${img.name}
-
-          </a>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="openDocumentAttachment(${Number(doc.id)}, ${doc.images.indexOf(img)})">
+            📄 Öppna PDF – ${x(img.name || 'Kvitto')}
+          </button>
 
         </div>
 
@@ -6906,12 +6904,15 @@ function viewDocument(id){
         style="margin-top:10px">
 
         <img
-          src="${img.dataUrl}"
-          onclick="lbOpen(['${img.dataUrl}'],0,'${doc.name}')"
+          src="${img.dataUrl || img.preview || ''}"
+          onclick="openDocumentAttachment(${Number(doc.id)}, ${doc.images.indexOf(img)})"
+          alt="${x(img.name || doc.name || 'Bild')}"
           style="
             max-width:250px;
+            max-height:220px;
+            object-fit:contain;
             border-radius:12px;
-            cursor:pointer;
+            cursor:zoom-in;
             box-shadow:0 2px 8px rgba(0,0,0,.15);
           ">
 
@@ -7121,7 +7122,6 @@ function pdfDataUrlToBlob(data) {
     const decoded = decodeURIComponent(payload);
     bytes = new TextEncoder().encode(decoded);
   }
-  // Kontrollera PDF-signaturen innan innehållet skickas till visaren.
   const signature = String.fromCharCode(...bytes.slice(0, 5));
   if (signature !== '%PDF-') throw new Error('Filen innehåller inte en giltig PDF-signatur.');
   return new Blob([bytes], { type: 'application/pdf' });
@@ -7129,10 +7129,11 @@ function pdfDataUrlToBlob(data) {
 
 function closePdfViewer() {
   const viewer = document.getElementById('pdfViewer');
-  const frame = document.getElementById('pdfViewerFrame');
   const external = document.getElementById('pdfViewerOpenExternal');
-  if (frame) frame.src = 'about:blank';
-  if (external) external.removeAttribute('href');
+  if (external) {
+    external.removeAttribute('href');
+    external.removeAttribute('download');
+  }
   if (viewer) viewer.classList.remove('open');
   document.body.style.overflow = '';
   if (activePdfObjectUrl) {
@@ -7147,18 +7148,44 @@ function openPdfInApp(file, data) {
     const blob = pdfDataUrlToBlob(data);
     activePdfObjectUrl = URL.createObjectURL(blob);
     const viewer = document.getElementById('pdfViewer');
-    const frame = document.getElementById('pdfViewerFrame');
     const title = document.getElementById('pdfViewerTitle');
     const external = document.getElementById('pdfViewerOpenExternal');
-    if (!viewer || !frame || !external) throw new Error('PDF-läsaren kunde inte startas.');
+    if (!viewer || !external) throw new Error('PDF-läsaren kunde inte startas.');
     if (title) title.textContent = file.name || 'PDF-dokument';
     external.href = activePdfObjectUrl;
-    frame.src = activePdfObjectUrl + '#toolbar=1&navpanes=0&view=FitH';
+    external.target = '_blank';
+    external.rel = 'noopener';
+    external.textContent = 'Öppna PDF';
     viewer.classList.add('open');
     document.body.style.overflow = 'hidden';
   } catch (err) {
-    alert('PDF-filen kunde inte visas. Prova att bifoga PDF-filen igen.\n\n' +
+    alert('PDF-filen kunde inte förberedas. Prova att bifoga PDF-filen igen.\n\n' +
       (err && err.message ? err.message : 'Okänt fel.'));
+  }
+}
+
+// Öppna en fil som är bifogad till ett dokument i Dokumentarkivet.
+// Samma visare används för PDF och samma bildvisare för foton i hela appen.
+function openDocumentAttachment(documentId, fileIndex) {
+  const doc = documents.find(d =>
+    String(d.id) === String(documentId) && String(d.propertyId) === String(currentProperty)
+  );
+  const file = doc && Array.isArray(doc.images) ? doc.images[fileIndex] : null;
+  if (!file) {
+    alert('Filen kunde inte hittas. Öppna dokumentet igen och försök på nytt.');
+    return;
+  }
+  const data = file.dataUrl || file.preview || '';
+  if (!data) {
+    alert('Filen saknar läsbart innehåll. Bifoga filen igen.');
+    return;
+  }
+  if (attachedFileIsPdf(file)) {
+    openPdfInApp(file, data);
+  } else if (/^data:image\//i.test(data)) {
+    lbOpen([data], 0, [file.name || doc.name || 'Bild']);
+  } else {
+    alert('Den här filtypen kan inte visas här.');
   }
 }
 
