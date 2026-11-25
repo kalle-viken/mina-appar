@@ -6876,7 +6876,7 @@ function viewDocument(id){
 
   html += doc.images.map(img => {
 
-    if(img.type === 'application/pdf'){
+    if(attachedFileIsPdf(img)){
 
       return `
 
@@ -7142,30 +7142,34 @@ function closePdfViewer() {
   }
 }
 
-function openPdfInApp(file, data) {
+// Öppna PDF i en separat webbläsarflik. Samma princip som Utskriftscentralens
+// "Öppna rapport i Safari": en vanlig länk klickas direkt i användarens klickhändelse.
+// Det gör att iOS kan lämna hemskärmsappen och visa PDF-filen i Safaris PDF-visare.
+function openPdfInBrowser(file, data) {
+  let objectUrl = null;
   try {
-    closePdfViewer();
     const blob = pdfDataUrlToBlob(data);
-    activePdfObjectUrl = URL.createObjectURL(blob);
-    const viewer = document.getElementById('pdfViewer');
-    const title = document.getElementById('pdfViewerTitle');
-    const external = document.getElementById('pdfViewerOpenExternal');
-    if (!viewer || !external) throw new Error('PDF-läsaren kunde inte startas.');
-    if (title) title.textContent = file.name || 'PDF-dokument';
-    external.href = activePdfObjectUrl;
-    external.target = '_blank';
-    external.rel = 'noopener';
-    external.textContent = 'Öppna PDF';
-    viewer.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    link.setAttribute('aria-label', 'Öppna ' + (file && file.name ? file.name : 'PDF-dokument') + ' i webbläsaren');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    // Behåll adressen en stund så Safari hinner läsa hela PDF-filen innan den frigörs.
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10 * 60 * 1000);
   } catch (err) {
-    alert('PDF-filen kunde inte förberedas. Prova att bifoga PDF-filen igen.\n\n' +
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    alert('PDF-filen kunde inte öppnas. Prova att bifoga PDF-filen igen.\n\n' +
       (err && err.message ? err.message : 'Okänt fel.'));
   }
 }
 
 // Öppna en fil som är bifogad till ett dokument i Dokumentarkivet.
-// Samma visare används för PDF och samma bildvisare för foton i hela appen.
+// PDF-filer öppnas i webbläsaren och foton i appens bildvisare.
 function openDocumentAttachment(documentId, fileIndex) {
   const doc = documents.find(d =>
     String(d.id) === String(documentId) && String(d.propertyId) === String(currentProperty)
@@ -7181,7 +7185,7 @@ function openDocumentAttachment(documentId, fileIndex) {
     return;
   }
   if (attachedFileIsPdf(file)) {
-    openPdfInApp(file, data);
+    openPdfInBrowser(file, data);
   } else if (/^data:image\//i.test(data)) {
     lbOpen([data], 0, [file.name || doc.name || 'Bild']);
   } else {
@@ -7203,7 +7207,7 @@ function openAttachedFile(collection, index) {
     return;
   }
   if (attachedFileIsPdf(file)) {
-    openPdfInApp(file, data);
+    openPdfInBrowser(file, data);
     return;
   }
   const opened = window.open(data, '_blank');
