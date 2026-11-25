@@ -4289,7 +4289,7 @@
 // VERSION
 // ════════════════════════════════
 
-const APP_VERSION = '6.0-test'; // Startsida ovanpå oförändrad 5.17-datalagring
+const APP_VERSION = '6.0-test-35'; // Startsida ovanpå oförändrad 5.17-datalagring
 const STORAGE_KEY = 'hemloggbok_v3';
 
 // ════════════════════════════════
@@ -7281,6 +7281,9 @@ function openPdfInBrowser(file, data) {
     const title = document.getElementById('pdfViewerTitle');
     if (!viewer || !external) throw new Error('PDF-fönstret kunde inte visas.');
 
+    // PDF-läsaren ska alltid ligga över inventarie- och dokumentfönster.
+    // Det är särskilt viktigt när en fil öppnas medan inventarien redigeras.
+    viewer.style.zIndex = '12001';
     external.href = objectUrl;
     external.target = '_blank';
     external.rel = 'noopener';
@@ -7321,27 +7324,46 @@ function openDocumentAttachment(documentId, fileIndex) {
 }
 
 function openAttachedFile(collection, index) {
-  const source = collection === 'doc' ? docDocuments : collection === 'asset' ? assetDocuments : invDocuments;
-  const file = source && source[index];
-  const data = file && (file.dataUrl || file.preview);
-  if (!data) { alert('Filen saknar läsbart innehåll. Välj och bifoga filen igen.'); return; }
-  if (!attachedFileIsPdf(file) && /^data:image\//i.test(data)) {
-    const images = source.map((item, sourceIndex) => ({ item, sourceIndex, data: item && (item.dataUrl || item.preview) }))
-      .filter(entry => entry.data && !attachedFileIsPdf(entry.item) && /^data:image\//i.test(entry.data));
-    const imageIndex = images.findIndex(entry => entry.sourceIndex === index);
-    lbOpen(images.map(entry => entry.data), imageIndex < 0 ? 0 : imageIndex,
-      images.map(entry => entry.item.name || 'Bild'));
+  // Läs i första hand från den öppna formulärkopian, men hämta från den
+  // sparade inventarien om formulärets tillfälliga lista inte längre är aktuell.
+  let source;
+  if (collection === 'doc') {
+    source = docDocuments;
+  } else if (collection === 'asset') {
+    source = assetDocuments;
+    const savedAsset = assets.find(a => String(a.id) === String(assetEditId) && String(a.propertyId) === String(currentProperty));
+    if ((!Array.isArray(source) || !source[index]) && savedAsset && Array.isArray(savedAsset.documents)) {
+      source = savedAsset.documents;
+    }
+  } else {
+    source = invDocuments;
+  }
+
+  if (!Array.isArray(source) || !Number.isInteger(Number(index)) || Number(index) < 0) {
+    alert('Filen kunde inte hittas. Stäng inventarien och öppna den igen.');
     return;
   }
+  const file = source[Number(index)];
+  const data = file && (file.dataUrl || file.preview);
+  if (!file) {
+    alert('Filen kunde inte hittas i den valda inventarien. Stäng inventarien och öppna den igen.');
+    return;
+  }
+  if (!data) { alert('Filen finns registrerad men saknar läsbart innehåll. Bifoga filen igen.'); return; }
+
   if (attachedFileIsPdf(file)) {
     openPdfInBrowser(file, data);
     return;
   }
-  const opened = window.open(data, '_blank');
-  if (!opened) {
-    const link = document.createElement('a');
-    link.href = data; link.target = '_blank'; link.rel = 'noopener'; link.click();
+  if (/^data:image\//i.test(data)) {
+    const images = source.map((item, sourceIndex) => ({ item, sourceIndex, data: item && (item.dataUrl || item.preview) }))
+      .filter(entry => entry.data && !attachedFileIsPdf(entry.item) && /^data:image\//i.test(entry.data));
+    const imageIndex = images.findIndex(entry => entry.sourceIndex === Number(index));
+    lbOpen(images.map(entry => entry.data), imageIndex < 0 ? 0 : imageIndex,
+      images.map(entry => entry.item.name || 'Bild'));
+    return;
   }
+  alert('Den här filtypen kan inte visas här.');
 }
 
 // Stäng PDF-läsaren med Escape. Objektadressen frigörs först när läsaren stängs.
@@ -7857,6 +7879,86 @@ const years =
     // ══════════════════════════════════════════════════════════════════
     // HEADER
     // ══════════════════════════════════════════════════════════════════
+    // Normalisera exporthistorik innan den visas eller sparas. Importerade
+    // metadata betraktas som data, inte som betrodd appstatus.
+    function normalizeExportHistory(items, limit = 8){
+      if (!Array.isArray(items)) return [];
+      const allowedCounts = ['entries','assets','documents','contacts','properties','driftCosts','utilityBills','attachments'];
+      const cleanNumberMap = (source, keys) => {
+        const result = {};
+        if (!source || typeof source !== 'object' || Array.isArray(source)) return result;
+        keys.forEach(key => {
+          const value = Number(source[key]);
+          if (Number.isFinite(value) && value >= 0) result[key] = Math.floor(value);
+        });
+        return result;
+      };
+      const seen = new Set();
+      return items.map(item => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+        const rawTimestamp = typeof item.timestamp === 'string' || typeof item.timestamp === 'number'
+          ? item.timestamp : '';
+        const parsedTimestamp = rawTimestamp === '' ? NaN : new Date(rawTimestamp).getTime();
+        if (!Number.isFinite(parsedTimestamp)) return null;
+        // Spara datumet i ett enhetligt format. Samma export kan ha fått olika
+        // filnamn efter att den flyttats mellan enheter; tid + omfattning
+        // identifierar därför exporttillfället bättre än filnamnet ensamt.
+        const timestamp = new Date(parsedTimestamp).toISOString();
+        const filename = typeof item.filename === 'string' ? item.filename.trim().slice(0, 240) : '';
+        const rawScopeForKey = item.scope && typeof item.scope === 'object' && !Array.isArray(item.scope) ? item.scope : {};
+        const scopeTypeForKey = ['all_properties','single_property'].includes(rawScopeForKey.type) ? rawScopeForKey.type : '';
+        const scopeLabelForKey = typeof rawScopeForKey.label === 'string' ? rawScopeForKey.label.trim().slice(0, 160).toLocaleLowerCase('sv-SE') : '';
+        const key = timestamp + '|' + scopeTypeForKey + '|' + scopeLabelForKey;
+        if (seen.has(key)) return null;
+        seen.add(key);
+        const rawScope = item.scope && typeof item.scope === 'object' ? item.scope : {};
+        const scopeType = ['all_properties','single_property'].includes(rawScope.type) ? rawScope.type : '';
+        const scope = {
+          type: scopeType,
+          label: typeof rawScope.label === 'string' ? rawScope.label.slice(0, 160) : '',
+          propertyNames: Array.isArray(rawScope.propertyNames)
+            ? rawScope.propertyNames.filter(name => typeof name === 'string').slice(0, 20).map(name => name.slice(0, 100)) : []
+        };
+        const size = Number(item.sizeBytes);
+        const clean = {
+          timestamp,
+          filename,
+          sizeBytes: Number.isFinite(size) && size >= 0 ? Math.floor(size) : 0,
+          scope,
+          counts: cleanNumberMap(item.counts, allowedCounts),
+          fileTypes: cleanNumberMap(item.fileTypes, ['pdf','images','other']),
+          integrity: cleanNumberMap(item.integrity, ['total','embedded','missing'])
+        };
+        return clean;
+      }).filter(Boolean)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, Math.max(0, Math.min(50, Number(limit) || 8)));
+    }
+
+    // Granska historikens kvalitet utan att ändra eller spara något.
+    function inspectExportHistory(items){
+      if (!Array.isArray(items)) return { total: 0, valid: 0, invalid: 0, duplicates: 0 };
+      const valid = normalizeExportHistory(items, 50);
+      const rawValidCount = items.filter(item => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+        const value = item.timestamp;
+        return (typeof value === 'string' || typeof value === 'number') && value !== '' && Number.isFinite(new Date(value).getTime());
+      }).length;
+      return {
+        total: items.length,
+        valid: valid.length,
+        invalid: Math.max(0, items.length - rawValidCount),
+        duplicates: Math.max(0, rawValidCount - valid.length)
+      };
+    }
+
+    function inspectBackupIntegrity(meta){
+      const integrity = meta && meta.integrity && typeof meta.integrity === 'object' ? meta.integrity : {};
+      const total = Number(integrity.total), embedded = Number(integrity.embedded), missing = Number(integrity.missing);
+      if (![total, embedded, missing].every(Number.isFinite) || [total, embedded, missing].some(value => value < 0)) return 'saknas eller är ofullständiga';
+      return Math.floor(embedded) + Math.floor(missing) === Math.floor(total) ? 'stämmer' : 'avviker – kontrollera bilagorna';
+    }
+
     function renderBackupStatus(){
       const box = document.getElementById('homeBackupStatus');
       if (!box) return;
@@ -7883,7 +7985,9 @@ const years =
         ['Kontakter','contacts'],['Fastigheter','properties'],['Driftkostnader','driftCosts'],['Energifakturor','utilityBills'],['Bifogade filer','attachments']
       ].filter(([,key]) => count(key) !== null).map(([label,key]) => `${label}: ${count(key)}`).join(' · ');
       const selectedProperty = properties.find(property => String(property.id) === String(currentProperty) && !property.archived);
-      const history = Array.isArray(meta.history) ? meta.history.slice(0, 8) : [];
+      // Visa alltid de senaste registrerade exporter först. Filtrera bort
+      // poster med ogiltiga datum så att en skadad historikpost inte stör vyn.
+      const history = normalizeExportHistory(meta.history, 8);
       const historyHtml = history.length ? `<div style="margin-top:14px"><strong>Senaste exporter</strong><div style="display:grid;gap:8px;margin-top:8px">${history.map(item => {
         const historyDate = new Date(item.timestamp || '');
         const historyDateText = Number.isNaN(historyDate.getTime()) ? 'Okänt datum' : historyDate.toLocaleString('sv-SE');
@@ -7893,9 +7997,9 @@ const years =
         return `<div style="padding:9px 10px;border:1px solid var(--border,#ddd);border-radius:9px"><div><strong>${x(historyDateText)}</strong></div><div>${x(historyScope)}</div><div style="font-size:.86rem;color:var(--muted)">${x(historyContent)} · ${fmtBytes(item.sizeBytes)}</div>${item.filename ? `<div style="font-size:.8rem;color:var(--muted);overflow-wrap:anywhere">${x(item.filename)}</div>` : ''}</div>`;
       }).join('')}</div></div>` : '';
       const exportButtons = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0"><button class="btn" type="button" onclick="exportJSON()">💾 Samlad backup</button>${selectedProperty ? `<button class="btn btn-secondary" type="button" onclick="exportJSON('${x(String(selectedProperty.id))}')">🏠 Backup för ${x(selectedProperty.name || 'vald fastighet')}</button>` : ''}</div>`;
-      const importButton = `${exportButtons}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">📥 Sammanfoga backup<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this,'merge')"></label><label class="btn" style="cursor:pointer">↩ Återställ från backup<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this,'restore')"></label></div>`;
+      const importButton = `${exportButtons}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">📥 Sammanfoga backup<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this,'merge')"></label><label class="btn" style="cursor:pointer">↩ Återställ från backup<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this,'restore')"></label><button class="btn btn-secondary" type="button" onclick="exportBackupHistoryCSV()">📄 Exportera historik (CSV)</button></div>`;
       if (!lastBackup) {
-        box.innerHTML = `<h3>🛡️ Backupöversikt</h3><p><strong>Ingen backup registrerad ännu.</strong></p><p>Skapa en JSON-backup via exportfunktionen innan du gör större ändringar. Förvara gärna kopian på en annan enhet eller i en säker molntjänst.</p>${importButton}`;
+        box.innerHTML = `<h3>🛡️ Backupöversikt</h3><p><strong>Ingen aktuell backup registrerad.</strong></p><p>Skapa en JSON-backup via exportfunktionen innan du gör större ändringar. Förvara gärna kopian på en annan enhet eller i en säker molntjänst.</p>${historyHtml}<p style="font-size:.88rem;color:var(--muted)">Exporthistoriken lagras lokalt i denna webbläsare. Den visar registrerade exporter, inte filer som finns i Filer/iCloud.</p>${importButton}`;
         return;
       }
       const backupDate = new Date(lastBackup);
@@ -7914,7 +8018,45 @@ const years =
         ${importButton}`;
     }
     
-function renderFirstStart(){
+// Exportera lokal backuphistorik som CSV med semikolon för svensk Excel.
+    async function exportBackupHistoryCSV(){
+      const history = normalizeExportHistory(lastBackupMeta && lastBackupMeta.history, 8);
+      if (!history.length) {
+        alert('Det finns ingen registrerad exporthistorik att exportera ännu.');
+        return;
+      }
+      // Skydda CSV mot formelinjektion när filen öppnas i Excel/Numbers.
+      // Textfält som börjar med =, +, -, @ eller kontrolltecken får apostrof.
+      const csvCell = value => {
+        let text = String(value == null ? '' : value);
+        if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
+        return '"' + text.replace(/"/g, '""') + '"';
+      };
+      const headers = ['Datum och tid','Omfattning','Fastigheter','Filnamn','Storlek (byte)','Loggboksposter','Inventarier','Dokument','Kontakter','Fastigheter (antal)','Driftkostnader','Energifakturor','Bilagor','PDF','Bilder','Övriga filer','Bilagor totalt','Bilagor inbäddade','Bilagor saknade'];
+      const rows = history.map(item => {
+        const scope = item.scope || {};
+        const counts = item.counts || {};
+        const types = item.fileTypes || {};
+        const integrity = item.integrity || {};
+        const date = new Date(item.timestamp);
+        const dateText = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('sv-SE');
+        return [dateText, scope.label || (scope.type === 'single_property' ? 'Separat fastighetsbackup' : 'Samlad backup'),
+          (scope.propertyNames || []).join(', '), item.filename, item.sizeBytes,
+          counts.entries, counts.assets, counts.documents, counts.contacts, counts.properties,
+          counts.driftCosts, counts.utilityBills, counts.attachments, types.pdf, types.images,
+          types.other, integrity.total, integrity.embedded, integrity.missing];
+      });
+      const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(csvCell).join(';')).join('\r\n');
+      const filename = 'hemloggbok_exporthistorik_' + new Date().toISOString().slice(0,10) + '.csv';
+      try {
+        await dl(csv, 'text/csv;charset=utf-8', filename);
+      } catch (err) {
+        console.error('Export av backuphistorik misslyckades:', err);
+        alert('Kunde inte exportera backuphistoriken: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    function renderFirstStart(){
 
   const box =
     document.getElementById(
@@ -8285,6 +8427,9 @@ const data =
       let exportData;
       let exportMeta;
       let payload;
+      const backupFilename = propertyScopeId != null
+        ? 'hemloggbok_backup_' + String((properties.find(property => String(property.id) === String(propertyScopeId)) || {}).name || 'fastighet').toLowerCase().replace(/[^a-z0-9åäö-]+/gi, '_') + '_' + ds() + '.json'
+        : 'hemloggbok_samlad_backup_alla_fastigheter_' + ds() + '.json';
 
       // Steg 1: bygg och validera filen innan vi försöker starta nedladdningen.
       // Fel här betyder att någon backupfil inte kunde skapas.
@@ -8355,7 +8500,23 @@ const data =
         // Spara backupens omfattning i metadata så en separat fastighetsbackup
         // kan återställas avgränsat och skiljas från en samlad backup.
         const scope = propertyScope || { type: 'all_properties', label: 'Samlad backup – alla fastigheter', propertyNames };
-        exportMeta = { timestamp: exportTimestamp, sizeBytes: 0, counts, fileTypes, integrity, scope };
+        // Baka in även den lokala exporthistoriken i backupfilen så att den
+        // kan följa med vid flytt till en annan enhet. Den aktuella exporten
+        // läggs först; filstorleken uppdateras i stabiliseringsloopen nedan.
+        const previousHistory = normalizeExportHistory(lastBackupMeta && lastBackupMeta.history, 7);
+        const historyEntry = {
+          timestamp: exportTimestamp,
+          filename: backupFilename,
+          sizeBytes: 0,
+          scope: JSON.parse(JSON.stringify(scope)),
+          counts: JSON.parse(JSON.stringify(counts)),
+          fileTypes: JSON.parse(JSON.stringify(fileTypes)),
+          integrity: JSON.parse(JSON.stringify(integrity))
+        };
+        exportMeta = {
+          timestamp: exportTimestamp, sizeBytes: 0, counts, fileTypes, integrity, scope,
+          history: [historyEntry, ...previousHistory.filter(item => item && item.timestamp !== exportTimestamp)].slice(0, 8)
+        };
         exportData.backupFormat = 'Hemloggbok';
         exportData.backupVersion = 1;
         exportData.lastBackup = exportTimestamp;
@@ -8368,13 +8529,45 @@ const data =
         for (let i = 0; i < 20; i++) {
           payload = JSON.stringify(exportData, null, 2);
           const sizeBytes = new Blob([payload], { type: 'application/json' }).size;
-          if (exportMeta.sizeBytes === sizeBytes) {
+          if (exportMeta.sizeBytes === sizeBytes && exportMeta.history[0].sizeBytes === sizeBytes) {
             sizeStable = true;
             break;
           }
           exportMeta.sizeBytes = sizeBytes;
+          exportMeta.history[0].sizeBytes = sizeBytes;
         }
         if (!sizeStable) throw new Error('Kunde inte fastställa backupfilens storleksmetadata.');
+
+        // Slutkontroll av den faktiska JSON-texten som ska laddas ned.
+        // Kontrollerar filens grundstruktur, metadataantal och separat scope
+        // efter serialisering – innan någon fil skickas till webbläsaren.
+        const verifiedPayload = JSON.parse(payload);
+        if (verifiedPayload.backupFormat !== 'Hemloggbok' || Number(verifiedPayload.backupVersion) !== 1) {
+          throw new Error('Backupfilens formatmärkning kunde inte verifieras.');
+        }
+        if (!Array.isArray(verifiedPayload.properties) || !verifiedPayload.properties.length) {
+          throw new Error('Backupfilen saknar fastighetslista efter serialisering.');
+        }
+        const verifiedCounts = verifiedPayload.lastBackupMeta && verifiedPayload.lastBackupMeta.counts;
+        if (!verifiedCounts || ['entries','assets','documents','contacts','properties','driftCosts','utilityBills'].some(key =>
+          Number(verifiedCounts[key]) !== (Array.isArray(verifiedPayload[key]) ? verifiedPayload[key].length : 0))) {
+          throw new Error('Backupfilens innehållsantal stämmer inte efter serialisering.');
+        }
+        const verifiedScope = verifiedPayload.lastBackupMeta && verifiedPayload.lastBackupMeta.scope;
+        if (propertyScopeId != null) {
+          const expectedId = String(propertyScopeId);
+          if (!verifiedScope || verifiedScope.type !== 'single_property' || String(verifiedScope.propertyId) !== expectedId ||
+              verifiedPayload.properties.length !== 1 || String(verifiedPayload.properties[0].id) !== expectedId) {
+            throw new Error('Den separata backupens fastighetsavgränsning kunde inte verifieras.');
+          }
+          for (const key of ['entries','contacts','insurances','rooms','driftCosts','utilityBills','inventory','assets','documents']) {
+            if ((verifiedPayload[key] || []).some(item => !item || String(item.propertyId) !== expectedId)) {
+              throw new Error(`Den separata backupen innehåller poster utanför vald fastighet (${key}).`);
+            }
+          }
+        } else if (!verifiedScope || verifiedScope.type !== 'all_properties') {
+          throw new Error('Den samlade backupens omfattning kunde inte verifieras.');
+        }
       } catch (err) {
         console.error('Backupen kunde inte byggas:', err);
         alert('Kunde inte skapa backup: ' + (err && err.message ? err.message : String(err)));
@@ -8384,9 +8577,6 @@ const data =
       // Steg 2: starta nedladdningen. Om detta steg lyckas ska ett senare fel i
       // statusindikatorn inte felaktigt rapporteras som om själva filen misslyckades.
       try {
-        const backupFilename = propertyScopeId != null
-          ? 'hemloggbok_backup_' + String((properties.find(property => String(property.id) === String(propertyScopeId)) || {}).name || 'fastighet').toLowerCase().replace(/[^a-z0-9åäö-]+/gi, '_') + '_' + ds() + '.json'
-          : 'hemloggbok_samlad_backup_alla_fastigheter_' + ds() + '.json';
         await dl(payload, 'application/json', backupFilename);
       } catch (err) {
         console.error('Nedladdningen kunde inte startas:', err);
@@ -8397,7 +8587,7 @@ const data =
       // Steg 3: registrera exportstatus separat. Detta är best effort; filen har
       // redan skickats till webbläsarens nedladdningsflöde.
       lastBackup = exportTimestamp;
-      const previousHistory = Array.isArray(lastBackupMeta && lastBackupMeta.history) ? lastBackupMeta.history : [];
+      const previousHistory = normalizeExportHistory(lastBackupMeta && lastBackupMeta.history, 8);
       const historyEntry = {
         timestamp: exportTimestamp,
         filename: backupFilename,
@@ -8847,6 +9037,27 @@ const data =
       if (data.lastBackupMeta && Number.isFinite(Number(data.lastBackupMeta.sizeBytes))) {
         lines.push(`Registrerad filstorlek: ${(Number(data.lastBackupMeta.sizeBytes) / 1024).toFixed(1)} kB`);
       }
+      // Jämför centrala innehållsantal med exportmetadata. Avvikelse är en
+      // varning för kontroll, inte ett automatiskt importstopp.
+      const declaredCounts = data.lastBackupMeta && data.lastBackupMeta.counts;
+      if (declaredCounts && typeof declaredCounts === 'object') {
+        const countChecks = [
+          ['entries','loggboksposter'],['assets','inventarier'],['documents','dokument'],
+          ['contacts','kontakter'],['properties','fastigheter'],['driftCosts','driftkostnader'],
+          ['utilityBills','energifakturor']
+        ];
+        const mismatches = countChecks.filter(([key]) => Number.isFinite(Number(declaredCounts[key])) && Number(declaredCounts[key]) !== count(key));
+        if (mismatches.length) {
+          lines.push(`⚠ Innehållsantal avviker från backupens metadata för: ${mismatches.map(([,label]) => label).join(', ')}. Kontrollera filen innan du fortsätter.`);
+        } else {
+          lines.push('✓ Innehållsantal stämmer med backupens metadata.');
+        }
+      } else {
+        lines.push('Obs: backupen saknar innehållsantal i metadata; innehållet har räknats direkt från filen.');
+      }
+      if (data.lastBackupMeta && data.lastBackupMeta.integrity) {
+        lines.push(`Kontroll av bilagornas metadata: ${inspectBackupIntegrity(data.lastBackupMeta)}`);
+      }
       const scopeMeta = data.lastBackupMeta && data.lastBackupMeta.scope;
       if (scopeMeta && (scopeMeta.type === 'all_properties' || scopeMeta.type === 'single_property')) {
         lines.push(`Backupens omfattning: ${scopeMeta.label || (scopeMeta.type === 'single_property' ? 'Separat fastighetsbackup' : 'Samlad backup – alla fastigheter')}`);
@@ -8854,9 +9065,59 @@ const data =
           lines.push(`Fastigheter i backupen: ${scopeMeta.propertyNames.join(', ')}`);
         }
       }
+      // Visa även historiken som följer med filen innan användaren godkänner import.
+      // Endast normaliserade poster visas; metadata påverkar inte importen i förhandsvisningen.
+      const importedHistoryRaw = data.lastBackupMeta && data.lastBackupMeta.history;
+      const importedHistory = normalizeExportHistory(importedHistoryRaw, 50);
+      if (Array.isArray(importedHistoryRaw)) {
+        const historyQuality = inspectExportHistory(importedHistoryRaw);
+        lines.push(`Exporthistorik i backupen: ${historyQuality.valid} giltiga poster av ${historyQuality.total}`);
+        if (historyQuality.invalid) lines.push(`⚠ ${historyQuality.invalid} poster har ogiltiga datum eller format och filtreras bort.`);
+        if (historyQuality.duplicates) lines.push(`ℹ ${historyQuality.duplicates} dubbletter filtreras bort innan historiken sparas.`);
+        importedHistory.slice(0, 3).forEach((item, index) => {
+          const historyDate = new Date(item.timestamp);
+          const dateText = Number.isNaN(historyDate.getTime()) ? 'okänt datum' : historyDate.toLocaleString('sv-SE');
+          const scopeText = item.scope && item.scope.label ? item.scope.label : 'Backup';
+          lines.push(`  ${index + 1}. ${dateText} – ${scopeText}${item.filename ? ` – ${item.filename}` : ''}`);
+        });
+        if (importedHistory.length > 3) lines.push(`  … och ${importedHistory.length - 3} ytterligare historikposter`);
+        if (importedHistoryRaw.length !== importedHistory.length) {
+          lines.push(`⚠ ${importedHistoryRaw.length - importedHistory.length} historikposter filtreras bort eftersom de är ogiltiga eller dubbletter.`);
+        }
+      } else {
+        lines.push('Exporthistorik: saknas i backupen (äldre backupformat eller tidigare export).');
+      }
       if (data.backupFormat && data.backupFormat !== 'Hemloggbok') lines.push(`Varning: okänt backupformat (${data.backupFormat})`);
       if (data.backupVersion != null && Number(data.backupVersion) > 1) lines.push(`Varning: backupversion ${data.backupVersion} är nyare än denna appversion.`);
       if (!data.backupFormat) lines.push('Obs: äldre backup utan formatmärkning.');
+
+      // Strukturell kontroll: upptäck poster som pekar på fastigheter som
+      // saknas i filen samt dubbletter av ID inom samma lista/fastighet.
+      // Detta är en granskningsvarning och ändrar inte äldre backupdata.
+      const propertyIds = new Set((Array.isArray(data.properties) ? data.properties : [])
+        .filter(property => property && property.id != null).map(property => String(property.id)));
+      const referenceLists = [
+        ['entries','loggboksposter'],['contacts','kontakter'],['insurances','försäkringar'],
+        ['rooms','rum/områden'],['driftCosts','driftkostnader'],['utilityBills','energifakturor'],
+        ['inventory','övrig inventarielista'],['assets','inventarier'],['documents','dokument']
+      ];
+      let orphanReferences = 0;
+      let duplicateIds = 0;
+      referenceLists.forEach(([key]) => {
+        const seen = new Set();
+        (Array.isArray(data[key]) ? data[key] : []).forEach(item => {
+          if (!item || typeof item !== 'object') return;
+          if (item.propertyId != null && String(item.propertyId) && propertyIds.size && !propertyIds.has(String(item.propertyId))) orphanReferences++;
+          if (item.id != null) {
+            const identity = `${String(item.propertyId || '')}::${String(item.id)}`;
+            if (seen.has(identity)) duplicateIds++;
+            seen.add(identity);
+          }
+        });
+      });
+      if (orphanReferences) lines.push(`⚠ ${orphanReferences} poster hänvisar till fastighets-ID som saknas i backupens fastighetslista.`);
+      if (duplicateIds) lines.push(`⚠ ${duplicateIds} dubbletter av post-ID hittades inom samma fastighet/lista.`);
+      if (!orphanReferences && !duplicateIds) lines.push('✓ Inga saknade fastighetsreferenser eller dubbla post-ID hittades i listorna.');
       return lines.join('\n');
     }
 
@@ -8904,6 +9165,61 @@ const data =
       if (compared) lines.push(singleScope
         ? 'Endast poster som hör till den angivna fastigheten ersätts. Övriga fastigheter, deras poster och globala säsongslistor lämnas oförändrade.'
         : 'Vid återställning ersätts dessa listor av backupens innehåll. Poster som saknas i backupen tas alltså bort från den här enheten.');
+
+      // Visa även effekten på information som lagras som objekt i stället
+      // för vanliga poster. Äldre backupfiler utan fält ska inte beskrivas
+      // som att de raderar lokala uppgifter.
+      const countAttachments = (source, propertyFilter) => {
+        const groups = [
+          ['entries', 'images'], ['assets', 'documents'],
+          ['inventory', 'documents'], ['documents', 'images']
+        ];
+        return groups.reduce((total, [key, field]) => {
+          const list = Array.isArray(source && source[key]) ? source[key] : [];
+          return total + list.filter(item => !propertyFilter || (item && item.propertyId != null && String(item.propertyId) === propertyFilter))
+            .reduce((n, item) => n + (Array.isArray(item && item[field]) ? item[field].length : 0), 0);
+        }, 0);
+      };
+      const localScopeFilter = singleScope ? scopeId : '';
+      const localAttachmentCount = countAttachments({ entries, assets, inventory, documents }, localScopeFilter);
+      const backupAttachmentCount = countAttachments(data, singleScope ? scopeId : '');
+      const attachmentFieldsPresent = ['entries','assets','inventory','documents'].some(key => Array.isArray(data[key]));
+      if (attachmentFieldsPresent) {
+        lines.push(`Bifogade filer i berörda poster: ${localAttachmentCount} lokala → ${backupAttachmentCount} från backupen.`);
+      }
+
+      const localHouseInfoCount = singleScope
+        ? (houseInfo && Object.prototype.hasOwnProperty.call(houseInfo, scopeId) ? 1 : 0)
+        : Object.keys(houseInfo || {}).length;
+      const backupHouseInfoCount = data.houseInfo && typeof data.houseInfo === 'object'
+        ? (singleScope ? (Object.prototype.hasOwnProperty.call(data.houseInfo, scopeId) ? 1 : 0) : Object.keys(data.houseInfo).length)
+        : null;
+      if (data.houseInfo && typeof data.houseInfo === 'object') {
+        lines.push(`Fastighetsinformation: ${localHouseInfoCount} lokala grupper → ${backupHouseInfoCount} från backupen.`);
+      } else {
+        lines.push('Fastighetsinformation: fältet saknas i backupen – lokala uppgifter lämnas oförändrade.');
+      }
+
+      const budgetPrefix = singleScope ? scopeId + '::' : '';
+      const localBudgetCount = Object.keys(budgets || {}).filter(key => !budgetPrefix || String(key).startsWith(budgetPrefix)).length;
+      const backupBudgetCount = data.budgets && typeof data.budgets === 'object'
+        ? Object.keys(data.budgets).filter(key => !budgetPrefix || String(key).startsWith(budgetPrefix)).length
+        : null;
+      if (data.budgets && typeof data.budgets === 'object') {
+        lines.push(`Budgetposter: ${localBudgetCount} lokala → ${backupBudgetCount} från backupen.`);
+      } else {
+        lines.push('Budgetposter: fältet saknas i backupen – lokala uppgifter lämnas oförändrade.');
+      }
+
+      if (!singleScope) {
+        if (data.seasonal && typeof data.seasonal === 'object') {
+          lines.push(`Gemensamma säsongslistor: ${Object.keys(seasonal || {}).length} lokala grupper → ${Object.keys(data.seasonal).length} från backupen.`);
+        } else {
+          lines.push('Gemensamma säsongslistor: fältet saknas i backupen – lokala uppgifter lämnas oförändrade.');
+        }
+      } else {
+        lines.push('Gemensamma säsongslistor: påverkas inte av en separat fastighetsåterställning.');
+      }
       return lines.join('\n');
     }
 
@@ -9098,20 +9414,13 @@ Fortsätta?`;
             // Exporthistoriken beskriver vad som har exporterats i just denna
             // webbläsare. En importerad backup får uppdatera backupens metadata,
             // men ska inte radera den lokala historiken.
-            const localExportHistory = Array.isArray(previousImportState.lastBackupMeta && previousImportState.lastBackupMeta.history)
-              ? previousImportState.lastBackupMeta.history : [];
-            const importedExportHistory = Array.isArray(d.lastBackupMeta.history)
-              ? d.lastBackupMeta.history : [];
-            const seenHistoryTimestamps = new Set();
-            const preservedExportHistory = [...localExportHistory, ...importedExportHistory]
-              .filter(item => {
-                if (!item || !item.timestamp) return false;
-                const key = String(item.timestamp) + '|' + String(item.filename || '');
-                if (seenHistoryTimestamps.has(key)) return false;
-                seenHistoryTimestamps.add(key);
-                return true;
-              })
-              .slice(0, 8);
+            const localExportHistory = normalizeExportHistory(
+              previousImportState.lastBackupMeta && previousImportState.lastBackupMeta.history, 50);
+            const importedExportHistory = normalizeExportHistory(d.lastBackupMeta.history, 50);
+            // Lokal historik kommer först: om samma export finns både lokalt
+            // och i filen behålls den lokala posten och importen skapar ingen dubblett.
+            const preservedExportHistory = normalizeExportHistory(
+              [...localExportHistory, ...importedExportHistory], 8);
             lastBackupMeta = {
               ...d.lastBackupMeta,
               history: preservedExportHistory
