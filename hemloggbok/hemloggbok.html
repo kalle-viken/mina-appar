@@ -2237,9 +2237,7 @@
   <div id="propertyCards" class="room-grid" style="display:none"></div>
   <div class="home6-wrap">
     <section class="home6-head"><h2>Hemloggbok</h2><p>Överblick och snabb åtkomst till dina fastigheter</p>
-      <div class="home6-switch" role="group" aria-label="Välj överblick">
-        <button type="button" data-home6-scope="villa" onclick="setHome6Scope('villa')">Huset</button><button type="button" data-home6-scope="stuga" onclick="setHome6Scope('stuga')">Stugan</button><button type="button" data-home6-scope="all" onclick="setHome6Scope('all')">Båda</button>
-      </div><div class="home6-sub" id="home6PropertyLabel">Huset</div>
+      <div class="home6-switch" id="home6SwitchButtons" role="group" aria-label="Välj fastighet eller överblick"></div><div class="home6-sub" id="home6PropertyLabel">Huset</div>
       <div class="home6-all-choice" id="home6PropertyChoice"><strong>Välj fastighet för registreringen</strong><div class="home6-choice-buttons" id="home6PropertyChoiceButtons"></div></div>
     </section>
     <div class="home6-main-grid"><section class="home6-section"><h3>🔔 Att uppmärksamma</h3><div id="home6Alerts" class="home6-alerts"></div></section>
@@ -4994,6 +4992,10 @@ function home6PropertyName(id) {
 function home6VisibleProperties() {
   return properties.filter(p => !p.archived && (home6Scope === 'all' || String(p.id) === String(home6Scope)));
 }
+function home6PropertyButtonName(p) {
+  if (String(p.id) === 'villa') return 'Huset';
+  return p.name || (String(p.id) === 'stuga' ? 'Stugan' : 'Fastighet');
+}
 function home6DateLabel(v) {
   if (!v) return '';
   const d = new Date(String(v).slice(0,10) + 'T00:00:00');
@@ -5038,7 +5040,17 @@ function home6OpenItem(pid, tab) {
 }
 function renderHome6() {
   const root = document.getElementById('home6Stats'); if (!root) return;
+  const activeProperties = properties.filter(p => !p.archived);
+  if (home6Scope !== 'all' && !activeProperties.some(p => String(p.id) === String(home6Scope))) {
+    home6Scope = activeProperties.length ? String(activeProperties[0].id) : 'all';
+  }
   const visible = home6VisibleProperties();
+  const switchBox = document.getElementById('home6SwitchButtons');
+  if (switchBox) {
+    const propertyButtons = activeProperties.map(p => `<button type="button" data-home6-scope="${x(String(p.id))}" onclick="setHome6Scope('${x(String(p.id))}')">${x(home6PropertyButtonName(p))}</button>`);
+    if (activeProperties.length > 1) propertyButtons.push(`<button type="button" data-home6-scope="all" onclick="setHome6Scope('all')">${activeProperties.length === 2 ? 'Båda' : 'Alla'}</button>`);
+    switchBox.innerHTML = propertyButtons.join('');
+  }
   document.querySelectorAll('[data-home6-scope]').forEach(b => b.classList.toggle('active', b.dataset.home6Scope === home6Scope));
   const label = document.getElementById('home6PropertyLabel');
   if (label) label.textContent = home6Scope === 'all' ? 'Samlad överblick · alla aktiva fastigheter' : (home6PropertyName(home6Scope) + (houseInfo[home6Scope]?.address ? ' · ' + houseInfo[home6Scope].address : ''));
@@ -5076,7 +5088,7 @@ function renderHome6() {
   inventory.filter(belongs).forEach(i => { if (i.completedDate) activity.push({date:i.completedDate,title:'Åtgärd slutförd',name:i.title||i.name||'Åtgärd',pid:i.propertyId,tab:'inventering'}); });
   activity.sort((a,b) => String(b.date).localeCompare(String(a.date)));
   const act = document.getElementById('home6Activity');
-  if (act) act.innerHTML = activity.length ? activity.slice(0,5).map(a => `<div class="home6-activity-row"><span class="dot"></span><div><strong>${x(a.title)} · ${x(a.name)}</strong><small>${x(home6PropertyName(a.pid))} · ${home6DateLabel(a.date)}</small></div></div>`).join('') : '<div class="home6-muted">Inga daterade aktiviteter att visa ännu.</div>';
+  if (act) act.innerHTML = activity.length ? activity.slice(0,3).map(a => `<div class="home6-activity-row"><span class="dot"></span><div><strong>${x(a.title)} · ${x(a.name)}</strong><small>${x(home6PropertyName(a.pid))} · ${home6DateLabel(a.date)}</small></div></div>`).join('') : '<div class="home6-muted">Inga daterade aktiviteter att visa ännu.</div>';
 }
 
 function switchTab(name, btn) {
